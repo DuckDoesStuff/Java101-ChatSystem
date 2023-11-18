@@ -1,19 +1,20 @@
 package Server;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import SampleDataStructure.PackageDataStructure;
 class ClientHandler {
     Socket clientSocket;
     String host;
     int port;
     BufferedReader in;
     PrintWriter out;
+
+    ObjectOutputStream objOut;
+    ObjectInputStream objIn;
     ClientHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
         host = clientSocket.getInetAddress().getHostAddress();
@@ -21,6 +22,9 @@ class ClientHandler {
         try {
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            objOut = new ObjectOutputStream(clientSocket.getOutputStream());
+            objIn = new ObjectInputStream(clientSocket.getInputStream());
         } catch (IOException e) {
             System.out.println("Error creating input stream");
             throw new RuntimeException(e);
@@ -28,8 +32,18 @@ class ClientHandler {
     }
     public void run() {
         System.out.println("Client connected: " + host + ":" + port);
-        receiveMessage();
-        sendMessage("Hello, client!");
+//        receiveMessage();
+//        sendMessage("Hello, client!");
+
+        receivePackageData();
+        PackageDataStructure packageData =
+                new PackageDataStructure(
+                        "From server",
+                        "To client",
+                        "Some random thing in content",
+                        1234
+                );
+        sendPackageData(packageData);
     }
 
     public void receiveMessage() {
@@ -50,6 +64,26 @@ class ClientHandler {
         System.out.println("Sending message: " + message + " to client " + host + ":" + port);
         out.println(message);
     }
+
+    public void receivePackageData() {
+        try {
+            PackageDataStructure packageData = (PackageDataStructure) objIn.readObject();
+            System.out.println("Package data received from client " + host + ":" + port);
+            System.out.println("Package data: " + packageData);
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error receiving package data");
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void sendPackageData(PackageDataStructure packageData) {
+        try {
+            objOut.writeObject(packageData);
+        } catch (IOException e) {
+            System.out.println("Error sending package data");
+            throw new RuntimeException(e);
+        }
+    }
 }
 public class ServerModule {
     ServerSocket socket;
@@ -69,11 +103,15 @@ public class ServerModule {
             System.out.println("Server closed");
         }));
         try {
-            Socket clientSocket = socket.accept();
-            ClientHandler clientHandler = new ClientHandler(clientSocket);
-            Thread clientThread = new Thread(clientHandler::run);
-            clientThread.start();
-            clientThreads.add(clientThread);
+            int connected = 0;
+            while(connected < 2) {
+                Socket clientSocket = socket.accept();
+                ClientHandler clientHandler = new ClientHandler(clientSocket);
+                Thread clientThread = new Thread(clientHandler::run);
+                clientThread.start();
+                clientThreads.add(clientThread);
+                connected++;
+            }
         } catch (IOException e) {
             System.out.println("Error accepting client connection");
             throw new RuntimeException(e);

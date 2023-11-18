@@ -1,8 +1,8 @@
 package Client;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.*;
+
+import SampleDataStructure.PackageDataStructure;
 
 public class ClientModule {
     Socket socket;
@@ -10,11 +10,17 @@ public class ClientModule {
     int port;
     BufferedReader in;
     PrintWriter out;
+
+    ObjectOutputStream objOut;
+    ObjectInputStream objIn;
     ClientModule(String host, int port) {
         try {
             socket = new Socket(host, port);
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            objOut = new ObjectOutputStream(socket.getOutputStream());
+            objIn = new ObjectInputStream(socket.getInputStream());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -39,5 +45,24 @@ public class ClientModule {
     public void sendMessage(String message) {
         System.out.println("Sending message: " + message);
         out.println(message);
+    }
+    public void sendPackageData(PackageDataStructure packageData) {
+        try {
+            objOut.writeObject(packageData);
+        } catch (IOException e) {
+            System.out.println("Error sending package data");
+            throw new RuntimeException(e);
+        }
+    }
+    public PackageDataStructure receivePackageData() {
+        PackageDataStructure packageData;
+        try {
+            System.out.println("Waiting for package data from server...");
+            packageData = (PackageDataStructure) objIn.readObject();
+            System.out.println("Package data received from server");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return packageData;
     }
 }
