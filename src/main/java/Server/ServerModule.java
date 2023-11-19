@@ -1,40 +1,27 @@
 package Server;
 
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.*;
 import java.util.ArrayList;
 
 import SampleDataStructure.PackageDataStructure;
 class ClientHandler {
-    Socket clientSocket;
-    String host;
-    int port;
-    BufferedReader in;
-    PrintWriter out;
-
-    ObjectOutputStream objOut;
-    ObjectInputStream objIn;
-    ClientHandler(Socket clientSocket) {
+    AsynchronousSocketChannel clientSocket;
+    SocketAddress serverAddress;
+    ClientHandler(AsynchronousSocketChannel clientSocket) {
         this.clientSocket = clientSocket;
-        host = clientSocket.getInetAddress().getHostAddress();
-        port = clientSocket.getPort();
         try {
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
-
-            objOut = new ObjectOutputStream(clientSocket.getOutputStream());
-            objIn = new ObjectInputStream(clientSocket.getInputStream());
+            serverAddress = clientSocket.getRemoteAddress();
         } catch (IOException e) {
             System.out.println("Error creating input stream");
             throw new RuntimeException(e);
         }
     }
-    public void run() {
-        System.out.println("Client connected: " + host + ":" + port);
-//        receiveMessage();
-//        sendMessage("Hello, client!");
-
+    public void run() throws IOException {
+        System.out.println("Client connected: " + clientSocket.getRemoteAddress());
         receivePackageData();
         PackageDataStructure packageData =
                 new PackageDataStructure(
@@ -46,51 +33,52 @@ class ClientHandler {
         sendPackageData(packageData);
     }
 
-    public void receiveMessage() {
-        String clientMessage;
-        try {
-            System.out.println("Waiting for message from client...");
-            while(!in.ready()) {}
-            System.out.println("Message received from client");
-
-            clientMessage = in.readLine();
-            System.out.println("Client " + host + ":" + port + " says: " + clientMessage);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void sendMessage(String message) {
-        System.out.println("Sending message: " + message + " to client " + host + ":" + port);
-        out.println(message);
-    }
-
     public void receivePackageData() {
-        try {
-            PackageDataStructure packageData = (PackageDataStructure) objIn.readObject();
-            System.out.println("Package data received from client " + host + ":" + port);
-            System.out.println("Package data: " + packageData);
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Error receiving package data");
-            throw new RuntimeException(e);
-        }
+        final PackageDataStructure[] packageData = new PackageDataStructure[1];
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        clientSocket.read(buffer, null, new CompletionHandler<Integer, Object>() {
+            @Override
+            public void completed(Integer result, Object attachment) {
+                System.out.println("Package data received from client");
+                buffer.flip();
+                packageData[0] = (PackageDataStructure) attachment;
+                System.out.println("Package data: " + packageData[0]);
+            }
+
+            @Override
+            public void failed(Throwable exc, Object attachment) {
+                System.out.println("Error receiving package data");
+                throw new RuntimeException(exc);
+            }
+        });
     }
 
     public void sendPackageData(PackageDataStructure packageData) {
-        try {
-            objOut.writeObject(packageData);
-        } catch (IOException e) {
-            System.out.println("Error sending package data");
-            throw new RuntimeException(e);
-        }
+        byte[] data = packageData.data;
+        ByteBuffer buffer = ByteBuffer.wrap(data);
+        clientSocket.write(buffer, null, new CompletionHandler<Integer, Object>() {
+            @Override
+            public void completed(Integer result, Object attachment) {
+                System.out.println("Sending package data to client");
+                System.out.println("Package data: " + packageData);
+                System.out.println("Package data sent to client");
+            }
+
+            @Override
+            public void failed(Throwable exc, Object attachment) {
+                System.out.println("Error sending package data");
+                throw new RuntimeException(exc);
+            }
+        });
     }
 }
 public class ServerModule {
-    ServerSocket socket;
+    AsynchronousServerSocketChannel serverSocket;
     ArrayList<Thread> clientThreads = new ArrayList<>();
     ServerModule(int port) {
         try {
-            socket = new ServerSocket(port);
+            serverSocket = AsynchronousServerSocketChannel.open();
+            serverSocket.bind(new InetSocketAddress("localhost", port));
         } catch (Exception e) {
             System.out.println("Error creating server socket: " + e.getMessage());
             throw new RuntimeException(e);
@@ -103,14 +91,34 @@ public class ServerModule {
             System.out.println("Server closed");
         }));
         try {
-            int connected = 0;
-            while(connected < 2) {
-                Socket clientSocket = socket.accept();
-                ClientHandler clientHandler = new ClientHandler(clientSocket);
-                Thread clientThread = new Thread(clientHandler::run);
-                clientThread.start();
-                clientThreads.add(clientThread);
-                connected++;
+            while(true) {
+                serverSocket.accept(null, new CompletionHandler<AsynchronousSocketChannel, Object>() {
+                    @Override
+                    public void completed(AsynchronousSocketChannel completionResult, Object attachment) {
+                        if(serverSocket.isOpen())
+                            serverSocket.accept(null, this);
+
+                        System.out.println("Client connected");
+                        ClientHandler clientHandler = new ClientHandler(completionResult);
+                        Thread clientThread = new Thread(() -> {
+                            try {
+                                clientHandler.run();
+                            } catch (IOException e) {
+                                System.out.println("Error handling client");
+                                throw new RuntimeException(e);
+                            }
+                        });
+                        clientThread.start();
+                        clientThreads.add(clientThread);
+                    }
+
+                    @Override
+                    public void failed(Throwable exc, Object attachment) {
+                        System.out.println("Error accepting client connection");
+                        throw new RuntimeException(exc);
+                    }
+                });
+                System.in.read();
             }
         } catch (IOException e) {
             System.out.println("Error accepting client connection");
@@ -123,7 +131,7 @@ public class ServerModule {
             clientThread.interrupt();
         }
         try {
-            socket.close();
+            serverSocket.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

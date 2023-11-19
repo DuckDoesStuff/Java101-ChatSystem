@@ -1,68 +1,67 @@
 package Client;
-import java.io.*;
-import java.net.*;
 
 import SampleDataStructure.PackageDataStructure;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.CompletionHandler;
+
 public class ClientModule {
-    Socket socket;
+    AsynchronousSocketChannel clientSocket;
     String host;
     int port;
-    BufferedReader in;
-    PrintWriter out;
-
-    ObjectOutputStream objOut;
-    ObjectInputStream objIn;
     ClientModule(String host, int port) {
         try {
-            socket = new Socket(host, port);
-            out = new PrintWriter(socket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            objOut = new ObjectOutputStream(socket.getOutputStream());
-            objIn = new ObjectInputStream(socket.getInputStream());
-        } catch (Exception e) {
+            clientSocket = AsynchronousSocketChannel.open();
+            this.host = host;
+            this.port = port;
+            InetSocketAddress serverAddress = new InetSocketAddress(host, port);
+            if(clientSocket.connect(serverAddress) == null) {
+                System.out.println("Connected to server");
+            }
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.host = socket.getInetAddress().getHostAddress();
-        this.port = socket.getPort();
-        System.out.println("Connected to server: " + host + ":" + port);
     }
     //Define other client methods here
-    public void receiveMessage() {
-        String serverMessage;
-        try {
-            System.out.println("Waiting for message from server...");
-            while(!in.ready()) {}
-            System.out.println("Message received from server");
-
-            serverMessage = in.readLine();
-            System.out.println("Server " + host + ":" + port + " says: " + serverMessage);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-    public void sendMessage(String message) {
-        System.out.println("Sending message: " + message);
-        out.println(message);
-    }
     public void sendPackageData(PackageDataStructure packageData) {
-        try {
-            objOut.writeObject(packageData);
-        } catch (IOException e) {
-            System.out.println("Error sending package data");
-            throw new RuntimeException(e);
-        }
+        byte[] data = packageData.data;
+        ByteBuffer buffer = ByteBuffer.wrap(data);
+        clientSocket.write(buffer, null, new CompletionHandler<Integer, Object>() {
+            @Override
+            public void completed(Integer result, Object attachment) {
+                System.out.println("Sending package data to server");
+                System.out.println("Package data: " + packageData);
+                System.out.println("Package data sent to server");
+            }
+
+            @Override
+            public void failed(Throwable exc, Object attachment) {
+                System.out.println("Error sending package data");
+                throw new RuntimeException(exc);
+            }
+        });
     }
     public PackageDataStructure receivePackageData() {
-        PackageDataStructure packageData;
-        try {
-            System.out.println("Waiting for package data from server...");
-            packageData = (PackageDataStructure) objIn.readObject();
-            System.out.println("Package data received from server");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return packageData;
+        final PackageDataStructure[] packageData = new PackageDataStructure[1];
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        clientSocket.read(buffer, null, new CompletionHandler<Integer, Object>() {
+            @Override
+            public void completed(Integer result, Object attachment) {
+                System.out.println("Package data received from server");
+                buffer.flip();
+                packageData[0] = (PackageDataStructure) attachment;
+                System.out.println("Package data: " + packageData[0]);
+            }
+
+            @Override
+            public void failed(Throwable exc, Object attachment) {
+                System.out.println("Error receiving package data");
+                throw new RuntimeException(exc);
+            }
+        });
+        return packageData[0];
     }
 }
