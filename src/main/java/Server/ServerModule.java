@@ -8,6 +8,7 @@ import java.nio.channels.*;
 import java.util.ArrayList;
 
 import SampleDataStructure.PackageDataStructure;
+
 class ClientHandler {
     AsynchronousSocketChannel clientSocket;
     SocketAddress serverAddress;
@@ -41,7 +42,7 @@ class ClientHandler {
             public void completed(Integer result, Object attachment) {
                 System.out.println("Package data received from client");
                 buffer.flip();
-                packageData[0] = (PackageDataStructure) attachment;
+                packageData[0] = new PackageDataStructure(buffer.array());
                 System.out.println("Package data: " + packageData[0]);
             }
 

@@ -47,12 +47,13 @@ public class ClientModule {
     public PackageDataStructure receivePackageData() {
         final PackageDataStructure[] packageData = new PackageDataStructure[1];
         ByteBuffer buffer = ByteBuffer.allocate(1024);
+        System.out.println("What");
         clientSocket.read(buffer, null, new CompletionHandler<Integer, Object>() {
             @Override
             public void completed(Integer result, Object attachment) {
                 System.out.println("Package data received from server");
                 buffer.flip();
-                packageData[0] = (PackageDataStructure) attachment;
+                packageData[0] = new PackageDataStructure(buffer.array());
                 System.out.println("Package data: " + packageData[0]);
             }
 
