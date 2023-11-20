@@ -23,7 +23,6 @@ class ClientHandler {
     }
     public void run() throws IOException {
         System.out.println("Client connected: " + clientSocket.getRemoteAddress());
-        receivePackageData();
         PackageDataStructure packageData =
                 new PackageDataStructure(
                         "From server",
@@ -32,6 +31,7 @@ class ClientHandler {
                         1234
                 );
         sendPackageData(packageData);
+        receivePackageData();
     }
 
     public void receivePackageData() {

@@ -2,6 +2,9 @@ package Client;
 
 import SampleDataStructure.PackageDataStructure;
 
+import java.io.IOException;
+import java.nio.channels.ReadPendingException;
+
 public class Main {
     public static void main(String[] args) {
         ClientModule client = new ClientModule("localhost", 4000);
@@ -13,8 +16,12 @@ public class Main {
                     1234
                 );
 
+        client.receivePackageData();
         client.sendPackageData(packageData);
-        PackageDataStructure pd = client.receivePackageData();
-        System.out.println("Received from server: " + pd);
+        try {
+            System.in.read();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

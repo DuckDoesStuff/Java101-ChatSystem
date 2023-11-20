@@ -44,10 +44,9 @@ public class ClientModule {
             }
         });
     }
-    public PackageDataStructure receivePackageData() {
+    public void receivePackageData() {
         final PackageDataStructure[] packageData = new PackageDataStructure[1];
         ByteBuffer buffer = ByteBuffer.allocate(1024);
-        System.out.println("What");
         clientSocket.read(buffer, null, new CompletionHandler<Integer, Object>() {
             @Override
             public void completed(Integer result, Object attachment) {
@@ -63,6 +62,5 @@ public class ClientModule {
                 throw new RuntimeException(exc);
             }
         });
-        return packageData[0];
     }
 }
