@@ -1,22 +1,15 @@
 package Client;
 
-import SampleDataStructure.PackageDataStructure;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        ClientModule client = new ClientModule("localhost", 4000);
-//        client.sendMessage("Hello, world!");
-//        client.receiveMessage();
-        PackageDataStructure packageData =
-                new PackageDataStructure(
-                    "From client",
-                    "To server",
-                    "Some random thing in content",
-                    1234
-                );
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter your username: ");
+        String username = scanner.nextLine();
 
-        client.sendPackageData(packageData);
-        PackageDataStructure pd = client.receivePackageData();
-        System.out.println("Received from server: " + pd);
+        ClientModule client = new ClientModule("localhost", 4000, username);
+        Thread clientThread = new Thread(client);
+        clientThread.start();
     }
 }

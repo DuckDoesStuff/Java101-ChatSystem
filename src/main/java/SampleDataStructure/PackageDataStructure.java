@@ -9,13 +9,9 @@ public class PackageDataStructure implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    String from;
-    String to;
-    String content;
-    int password;
-    public PackageDataStructure(String from, String to, String content, int password) {
-        this.from = from;
-        this.to = to;
+    public String content;
+    public int password;
+    public PackageDataStructure(String content, int password) {
         this.content = content;
         this.password = password;
     }
@@ -23,6 +19,6 @@ public class PackageDataStructure implements Serializable {
     //System.out.println()
     @Override
     public String toString() {
-        return "From: " + from + "\nTo: " + to + "\nContent: " + content + "\nPassword: " + password;
+        return "Content: " + content + "\nPassword: " + password;
     }
 }

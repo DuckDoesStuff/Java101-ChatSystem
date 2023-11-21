@@ -6,70 +6,63 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import SampleDataStructure.PackageDataStructure;
-class ClientHandler {
+class ClientHandler implements Runnable {
+    public static ArrayList<ClientHandler> clients = new ArrayList<>();
     Socket clientSocket;
-    String host;
-    int port;
-    BufferedReader in;
-    PrintWriter out;
 
-    ObjectOutputStream objOut;
-    ObjectInputStream objIn;
+    ObjectOutputStream out;
+    ObjectInputStream in;
+    String username;
+
     ClientHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
-        host = clientSocket.getInetAddress().getHostAddress();
-        port = clientSocket.getPort();
         try {
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
-
-            objOut = new ObjectOutputStream(clientSocket.getOutputStream());
-            objIn = new ObjectInputStream(clientSocket.getInputStream());
+            out = new ObjectOutputStream(clientSocket.getOutputStream());
+            in = new ObjectInputStream(clientSocket.getInputStream());
         } catch (IOException e) {
-            System.out.println("Error creating input stream");
+            System.out.println("Error creating object streams");
             throw new RuntimeException(e);
         }
     }
+
+    @Override
     public void run() {
-        System.out.println("Client connected: " + host + ":" + port);
-//        receiveMessage();
-//        sendMessage("Hello, client!");
+        System.out.println("Client connected: " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
+        PackageDataStructure firstPackage = receivePackageData();
+        username = firstPackage.content;
+        System.out.println("Client username: " + username);
 
-        receivePackageData();
-        PackageDataStructure packageData =
-                new PackageDataStructure(
-                        "From server",
-                        "To client",
-                        "Some random thing in content",
-                        1234
-                );
-        sendPackageData(packageData);
-    }
+        while(clientSocket.isConnected()) {
+            PackageDataStructure packageData;
+            try {
+                packageData = receivePackageData();
+            }catch (Exception e) {
+                System.out.println("Error receiving package data");
+                closeConnection();
+                break;
+            }
 
-    public void receiveMessage() {
-        String clientMessage;
-        try {
-            System.out.println("Waiting for message from client...");
-            while(!in.ready()) {}
-            System.out.println("Message received from client");
-
-            clientMessage = in.readLine();
-            System.out.println("Client " + host + ":" + port + " says: " + clientMessage);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            if (packageData.content.equals("/exit")) {
+                PackageDataStructure pd = new PackageDataStructure(
+                        " has left the chat",
+                        0);
+                System.out.println(username + " has left the chat");
+                broadcast(packageData);
+                closeConnection();
+                break;
+            }else if (packageData.content.startsWith("/msg")){
+                String[] split = packageData.content.split(" ");
+                String user = split[1];
+                sendToClient(packageData, user);
+            }else {
+                broadcast(packageData);
+            }
         }
     }
 
-    public void sendMessage(String message) {
-        System.out.println("Sending message: " + message + " to client " + host + ":" + port);
-        out.println(message);
-    }
-
-    public void receivePackageData() {
+    public PackageDataStructure receivePackageData() {
         try {
-            PackageDataStructure packageData = (PackageDataStructure) objIn.readObject();
-            System.out.println("Package data received from client " + host + ":" + port);
-            System.out.println("Package data: " + packageData);
+            return (PackageDataStructure) in.readObject();
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Error receiving package data");
             throw new RuntimeException(e);
@@ -78,16 +71,52 @@ class ClientHandler {
 
     public void sendPackageData(PackageDataStructure packageData) {
         try {
-            objOut.writeObject(packageData);
+            out.writeObject(packageData);
         } catch (IOException e) {
             System.out.println("Error sending package data");
             throw new RuntimeException(e);
         }
     }
+
+    //Define other client methods here
+
+    public void closeConnection() {
+        try {
+            in.close();
+            out.close();
+            clientSocket.close();
+            clients.remove(this);
+        } catch (IOException e) {
+            System.out.println("Error closing client socket");
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void broadcast(PackageDataStructure packageData) {
+        System.out.println(username + ": " + packageData.content);
+        for (ClientHandler client : clients) {
+            if(client.username.equals(username))
+                continue;
+            client.sendPackageData(packageData);
+        }
+    }
+
+    public void sendToClient(PackageDataStructure packageData, String username) {
+        for (ClientHandler client : clients) {
+            if(client.username.equals(username)) {
+                client.sendPackageData(packageData);
+                break;
+            }
+        }
+        System.out.println("User not found");
+    }
 }
+
+
 public class ServerModule {
     ServerSocket socket;
-    ArrayList<Thread> clientThreads = new ArrayList<>();
+
+
     ServerModule(int port) {
         try {
             socket = new ServerSocket(port);
@@ -97,37 +126,35 @@ public class ServerModule {
         }
         System.out.println("Server is now on port " + port);
     }
+
     public void startServer() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             stopServer();
             System.out.println("Server closed");
         }));
-        try {
-            int connected = 0;
-            while(connected < 2) {
+
+        int connected = 0;
+        while(connected < 2) {
+            try {
                 Socket clientSocket = socket.accept();
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
-                Thread clientThread = new Thread(clientHandler::run);
+                Thread clientThread = new Thread(clientHandler);
                 clientThread.start();
-                clientThreads.add(clientThread);
                 connected++;
+            } catch (IOException e) {
+                System.out.println("Error accepting client connection");
             }
-        } catch (IOException e) {
-            System.out.println("Error accepting client connection");
-            throw new RuntimeException(e);
         }
     }
 
     public void stopServer() {
-        for(Thread clientThread : clientThreads) {
-            clientThread.interrupt();
-        }
         try {
-            socket.close();
+            if (socket != null)
+                socket.close();
         } catch (IOException e) {
+            System.out.println("Error closing server socket");
             throw new RuntimeException(e);
         }
     }
     //Define other client methods here
-
 }
