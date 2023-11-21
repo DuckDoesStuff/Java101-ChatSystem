@@ -3,7 +3,10 @@ package Server;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Scanner;
 
 import SampleDataStructure.PackageDataStructure;
 class ClientHandler implements Runnable {
@@ -19,6 +22,7 @@ class ClientHandler implements Runnable {
         try {
             out = new ObjectOutputStream(clientSocket.getOutputStream());
             in = new ObjectInputStream(clientSocket.getInputStream());
+            clients.add(this);
         } catch (IOException e) {
             System.out.println("Error creating object streams");
             throw new RuntimeException(e);
@@ -53,9 +57,15 @@ class ClientHandler implements Runnable {
             }else if (packageData.content.startsWith("/msg")){
                 String[] split = packageData.content.split(" ");
                 String user = split[1];
-                sendToClient(packageData, user);
+                PackageDataStructure pd = new PackageDataStructure(
+                        "MSG from " + username + ": " + packageData.content,
+                        0);
+                sendToClient(pd, user);
             }else {
-                broadcast(packageData);
+                PackageDataStructure pd = new PackageDataStructure(
+                        username + ": " + packageData.content,
+                        0);
+                broadcast(pd);
             }
         }
     }
@@ -93,7 +103,11 @@ class ClientHandler implements Runnable {
     }
 
     public void broadcast(PackageDataStructure packageData) {
-        System.out.println(username + ": " + packageData.content);
+        System.out.println(packageData.content);
+        if(clients.isEmpty()) {
+            System.out.println("No other clients connected");
+            return;
+        }
         for (ClientHandler client : clients) {
             if(client.username.equals(username))
                 continue;
@@ -105,7 +119,7 @@ class ClientHandler implements Runnable {
         for (ClientHandler client : clients) {
             if(client.username.equals(username)) {
                 client.sendPackageData(packageData);
-                break;
+                return;
             }
         }
         System.out.println("User not found");
@@ -115,7 +129,7 @@ class ClientHandler implements Runnable {
 
 public class ServerModule {
     ServerSocket socket;
-
+    boolean isRunning;
 
     ServerModule(int port) {
         try {
@@ -128,21 +142,30 @@ public class ServerModule {
     }
 
     public void startServer() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            stopServer();
-            System.out.println("Server closed");
-        }));
-
-        int connected = 0;
-        while(connected < 2) {
+        Scanner scanner = new Scanner(System.in);
+        new Thread(() -> {
+            while (true) {
+                if(Objects.equals(scanner.nextLine(), "/exit")) {
+                    stopServer();
+                    break;
+                }
+                else
+                    System.out.println("Invalid command");
+            }
+        }).start();
+        isRunning = true;
+        while(isRunning) {
             try {
                 Socket clientSocket = socket.accept();
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
                 Thread clientThread = new Thread(clientHandler);
                 clientThread.start();
-                connected++;
+            } catch (SocketException e) {
+               System.out.println("Server socket closed");
+                break;
             } catch (IOException e) {
                 System.out.println("Error accepting client connection");
+                break;
             }
         }
     }
@@ -151,6 +174,7 @@ public class ServerModule {
         try {
             if (socket != null)
                 socket.close();
+            isRunning = false;
         } catch (IOException e) {
             System.out.println("Error closing server socket");
             throw new RuntimeException(e);
