@@ -8,11 +8,14 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Scanner;
 
-import SampleDataStructure.PackageDataStructure;
+import DataStructure.PackageDataStructure;
+import DataStructure.UserInfo;
+
 class ClientHandler implements Runnable {
     public static ArrayList<ClientHandler> clients = new ArrayList<>();
     public static ArrayList<GroupChat> groups = new ArrayList<>();
     Socket clientSocket;
+    UserInfo user;
 
     ObjectOutputStream out;
     ObjectInputStream in;
@@ -35,6 +38,8 @@ class ClientHandler implements Runnable {
         System.out.println("Client connected: " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
         PackageDataStructure firstPackage = receivePackageData();
         username = firstPackage.content;
+        user = new UserInfo(username);
+
         System.out.println("Client username: " + username);
 
         while(clientSocket.isConnected()) {
@@ -77,6 +82,18 @@ class ClientHandler implements Runnable {
                 String groupName = split[1];
                 String content = split[2];
                 sendToGroupMembers(new PackageDataStructure(content, 0), groupName);
+            }
+            else if (packageData.content.startsWith("/addfriend")) {
+                String[] split = packageData.content.split(" ");
+                String username = split[1];
+                user.addFriend(username);
+            }
+            else if (packageData.content.startsWith("/friendlist")) {
+                String content = "";
+                for(String name : user.friendList) {
+                    content += name + " ";
+                }
+                sendToClient(new PackageDataStructure(content, 0), username);
             }
             else {
                 PackageDataStructure pd = new PackageDataStructure(

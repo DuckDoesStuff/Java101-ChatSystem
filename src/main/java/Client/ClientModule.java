@@ -3,7 +3,7 @@ import java.io.*;
 import java.net.*;
 import java.util.Scanner;
 
-import SampleDataStructure.PackageDataStructure;
+import DataStructure.PackageDataStructure;
 
 public class ClientModule implements Runnable {
     Socket clientSocket;

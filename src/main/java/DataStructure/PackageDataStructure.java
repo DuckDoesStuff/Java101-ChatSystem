@@ -1,4 +1,4 @@
-package SampleDataStructure;
+package DataStructure;
 
 import java.io.Serial;
 import java.io.Serializable;
