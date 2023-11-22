@@ -11,6 +11,7 @@ import java.util.Scanner;
 import SampleDataStructure.PackageDataStructure;
 class ClientHandler implements Runnable {
     public static ArrayList<ClientHandler> clients = new ArrayList<>();
+    public static ArrayList<GroupChat> groups = new ArrayList<>();
     Socket clientSocket;
 
     ObjectOutputStream out;
@@ -61,7 +62,23 @@ class ClientHandler implements Runnable {
                         "MSG from " + username + ": " + packageData.content,
                         0);
                 sendToClient(pd, user);
-            }else {
+            }else if (packageData.content.startsWith("/newgroup")){
+                //</newgroup groupname user1 user2 user3...>
+                String[] split = packageData.content.split(" ");
+                String groupName = split[1];
+                GroupChat newGroup = new GroupChat(groupName);
+                for (int i = 2; i < split.length; i++){
+                    newGroup.addMember(split[i]);
+                }
+                groups.add(newGroup);
+            }
+            else if (packageData.content.startsWith("/chatgroup")){
+                String[] split = packageData.content.split(" ");
+                String groupName = split[1];
+                String content = split[2];
+                sendToGroupMembers(new PackageDataStructure(content, 0), groupName);
+            }
+            else {
                 PackageDataStructure pd = new PackageDataStructure(
                         username + ": " + packageData.content,
                         0);
@@ -123,6 +140,20 @@ class ClientHandler implements Runnable {
             }
         }
         System.out.println("User not found");
+    }
+
+    public void sendToGroupMembers(PackageDataStructure packageData, String groupName){
+        for (GroupChat group: groups){
+            if (Objects.equals(group.getGroupName(), groupName)){
+                for (String username: group.groupMembers){
+                    sendToClient(packageData, username);
+                }
+                return;
+            }
+            else{
+                continue;
+            }
+        }
     }
 }
 
