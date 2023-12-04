@@ -4,12 +4,16 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Scanner;
 
 import DataStructure.PackageDataStructure;
 import DataStructure.UserInfo;
+import Database.DB;
+import User.UserController;
+import User.UserModel;
 
 class ClientHandler implements Runnable {
     public static ArrayList<ClientHandler> clients = new ArrayList<>();
@@ -21,7 +25,10 @@ class ClientHandler implements Runnable {
     ObjectInputStream in;
     String username;
 
-    ClientHandler(Socket clientSocket) {
+    UserController userController;
+    Connection conn;
+
+    ClientHandler(Socket clientSocket, Connection conn) {
         this.clientSocket = clientSocket;
         try {
             out = new ObjectOutputStream(clientSocket.getOutputStream());
@@ -31,14 +38,21 @@ class ClientHandler implements Runnable {
             System.out.println("Error creating object streams");
             throw new RuntimeException(e);
         }
+        userController = new UserController(conn);
     }
 
     @Override
     public void run() {
         System.out.println("Client connected: " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
-        PackageDataStructure firstPackage = receivePackageData();
-        username = firstPackage.content;
-        user = new UserInfo(username);
+//        PackageDataStructure firstPackage = receivePackageData();
+//        username = firstPackage.content;
+
+        //Testing the new features
+        if(!authUser()) {
+            System.out.println("Authentication failed");
+            closeConnection();
+            return;
+        }
 
         System.out.println("Client username: " + username);
 
@@ -172,13 +186,61 @@ class ClientHandler implements Runnable {
             }
         }
     }
+
+    public boolean authUser() {
+        PackageDataStructure pd = receivePackageData();
+        if(pd.content.equals("/login")) {
+            PackageDataStructure usernamePD = receivePackageData();
+            PackageDataStructure passwordPD = receivePackageData();
+            PackageDataStructure resultPD = new PackageDataStructure("", 0);
+            if(userController.loginUser(usernamePD.content, passwordPD.content)) {
+                this.username = usernamePD.content;
+                System.out.println("User" + this.username + " has logged in");
+                resultPD.content = "success";
+                sendPackageData(resultPD);
+                return true;
+            }
+            else {
+                resultPD.content = "failed";
+                sendPackageData(resultPD);
+                return false;
+            }
+        }
+        else if(pd.content.equals("/register")) {
+            PackageDataStructure usernamePD = receivePackageData();
+            PackageDataStructure emailPD = receivePackageData();
+            PackageDataStructure passwordPD = receivePackageData();
+            System.out.println("Username: " + usernamePD.content);
+            System.out.println("Email: " + emailPD.content);
+            System.out.println("Password: " + passwordPD.content);
+            PackageDataStructure resultPD = new PackageDataStructure("", 0);
+            if(userController.registerUser(usernamePD.content, passwordPD.content, emailPD.content)) {
+                this.username = usernamePD.content;
+                System.out.println("User" + this.username + " has been registered");
+                resultPD.content = "success";
+                sendPackageData(resultPD);
+                return true;
+            }
+            else {
+                System.out.println("Error registering user");
+                resultPD.content = "failed";
+                sendPackageData(resultPD);
+                return false;
+            }
+        }
+        else {
+            System.out.println("Invalid command");
+            return false;
+        }
+    }
 }
 
 
 public class ServerModule {
     ServerSocket socket;
     boolean isRunning;
-
+    DB db;
+    Connection conn;
     ServerModule(int port) {
         try {
             socket = new ServerSocket(port);
@@ -187,6 +249,8 @@ public class ServerModule {
             throw new RuntimeException(e);
         }
         System.out.println("Server is now on port " + port);
+        db = new DB();
+        conn = db.getConnection();
     }
 
     public void startServer() {
@@ -205,7 +269,7 @@ public class ServerModule {
         while(isRunning) {
             try {
                 Socket clientSocket = socket.accept();
-                ClientHandler clientHandler = new ClientHandler(clientSocket);
+                ClientHandler clientHandler = new ClientHandler(clientSocket, conn);
                 Thread clientThread = new Thread(clientHandler);
                 clientThread.start();
             } catch (SocketException e) {

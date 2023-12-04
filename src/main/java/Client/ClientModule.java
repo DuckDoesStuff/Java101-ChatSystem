@@ -1,9 +1,12 @@
 package Client;
 import java.io.*;
 import java.net.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Scanner;
 
 import DataStructure.PackageDataStructure;
+import org.postgresql.shaded.com.ongres.scram.common.bouncycastle.pbkdf2.Pack;
 
 public class ClientModule implements Runnable {
     Socket clientSocket;
@@ -12,8 +15,9 @@ public class ClientModule implements Runnable {
     ObjectInputStream in;
     String username;
     Scanner scanner;
+    boolean loggedIn = false;
 
-    ClientModule(String host, int port, String username) {
+    ClientModule(String host, int port) {
         try {
             clientSocket = new Socket(host, port);
             out = new ObjectOutputStream(clientSocket.getOutputStream());
@@ -22,7 +26,6 @@ public class ClientModule implements Runnable {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        this.username = username;
         System.out.println("Connected to server: " +
                 clientSocket.getInetAddress().getHostAddress() + ":" +
                 clientSocket.getPort());
@@ -30,14 +33,16 @@ public class ClientModule implements Runnable {
 
     @Override
     public void run() {
-        packageListener();
-        PackageDataStructure firstPackage = new PackageDataStructure(
-                username,
-                0
-        );
-        sendPackageData(firstPackage);
+//        PackageDataStructure firstPackage = new PackageDataStructure(
+//                username,
+//                0
+//        );
+//        sendPackageData(firstPackage);
+        loggedIn = authUser();
 
-        while(clientSocket.isConnected()) {
+        packageListener();
+
+        while(clientSocket.isConnected() && loggedIn) {
             String content = scanner.nextLine();
             if(clientSocket.isClosed()) {
                 System.out.println("Connection closed");
@@ -56,6 +61,7 @@ public class ClientModule implements Runnable {
         try {
             packageData = (PackageDataStructure) in.readObject();
         } catch (Exception e) {
+            System.out.println("Error receiving package data");
             throw new RuntimeException(e);
         }
         return packageData;
@@ -66,10 +72,74 @@ public class ClientModule implements Runnable {
             out.writeObject(packageData);
         } catch (Exception e) {
             System.out.println("Error sending package data");
+            throw new RuntimeException(e);
         }
     }
 
     //Define other client methods here
+
+    public boolean authUser() {
+        System.out.println("Login or Register? (l/r)");
+        String loginOrRegister = scanner.nextLine();
+        if (loginOrRegister.equals("l")) {
+            System.out.println("Enter your username: ");
+            username = scanner.nextLine();
+            System.out.println("Enter your password: ");
+            String password = scanner.nextLine();
+
+            PackageDataStructure loginPD = new PackageDataStructure(
+                    "/login",
+                    0
+            );
+            PackageDataStructure usernamePD = new PackageDataStructure(
+                    username,
+                    0
+            );
+            PackageDataStructure passwordPD = new PackageDataStructure(
+                    password,
+                    0
+            );
+
+            sendPackageData(loginPD);
+            sendPackageData(usernamePD);
+            sendPackageData(passwordPD);
+            return receivePackageData().content.equals("success");
+
+        } else if (loginOrRegister.equals("r")) {
+            System.out.println("Enter your username: ");
+            String username = scanner.nextLine();
+            System.out.println("Enter your email: ");
+            String email = scanner.nextLine();
+            System.out.println("Enter your password: ");
+            String password = scanner.nextLine();
+
+            PackageDataStructure registerPD = new PackageDataStructure(
+                    "/register",
+                    0
+            );
+            PackageDataStructure usernamePD = new PackageDataStructure(
+                    username,
+                    0
+            );
+            PackageDataStructure emailPD = new PackageDataStructure(
+                    email,
+                    0
+            );
+            PackageDataStructure passwordPD = new PackageDataStructure(
+                    password,
+                    0
+            );
+
+            sendPackageData(registerPD);
+            sendPackageData(usernamePD);
+            sendPackageData(emailPD);
+            sendPackageData(passwordPD);
+            return receivePackageData().content.equals("success");
+        } else {
+            System.out.println("Invalid input");
+            return false;
+        }
+    }
 
     public void closeConnection() {
         try {
