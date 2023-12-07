@@ -12,8 +12,8 @@ import java.util.Scanner;
 import DataStructure.PackageDataStructure;
 import DataStructure.UserInfo;
 import Database.DB;
+import Friend.FriendController;
 import User.UserController;
-import User.UserModel;
 
 class ClientHandler implements Runnable {
     public static ArrayList<ClientHandler> clients = new ArrayList<>();
@@ -26,6 +26,7 @@ class ClientHandler implements Runnable {
     String username;
 
     UserController userController;
+    FriendController friendController;
     Connection conn;
 
     ClientHandler(Socket clientSocket, Connection conn) {
@@ -39,6 +40,7 @@ class ClientHandler implements Runnable {
             throw new RuntimeException(e);
         }
         userController = new UserController(conn);
+        friendController = new FriendController(conn);
     }
 
     @Override
@@ -61,7 +63,7 @@ class ClientHandler implements Runnable {
             try {
                 packageData = receivePackageData();
             }catch (Exception e) {
-                System.out.println("Error receiving package data");
+                System.out.println("Error receiving package data in main loop");
                 closeConnection();
                 break;
             }
@@ -74,14 +76,16 @@ class ClientHandler implements Runnable {
                 broadcast(packageData);
                 closeConnection();
                 break;
-            }else if (packageData.content.startsWith("/msg")){
+            }
+            else if (packageData.content.startsWith("/msg")){
                 String[] split = packageData.content.split(" ");
                 String user = split[1];
                 PackageDataStructure pd = new PackageDataStructure(
                         "MSG from " + username + ": " + packageData.content,
                         0);
                 sendToClient(pd, user);
-            }else if (packageData.content.startsWith("/newgroup")){
+            }
+            else if (packageData.content.startsWith("/newgroup")){
                 //</newgroup groupname user1 user2 user3...>
                 String[] split = packageData.content.split(" ");
                 String groupName = split[1];
@@ -97,17 +101,49 @@ class ClientHandler implements Runnable {
                 String content = split[2];
                 sendToGroupMembers(new PackageDataStructure(content, 0), groupName);
             }
-            else if (packageData.content.startsWith("/addfriend")) {
-                String[] split = packageData.content.split(" ");
-                String username = split[1];
-                user.addFriend(username);
-            }
-            else if (packageData.content.startsWith("/friendlist")) {
-                String content = "";
-                for(String name : user.friendList) {
-                    content += name + " ";
+            else if (packageData.content.equals("/addfriend")) {
+                PackageDataStructure friendUsernamePD = receivePackageData();
+                String friendUsername = friendUsernamePD.content;
+                PackageDataStructure resultPD = new PackageDataStructure("", 0);
+                if(friendController.sendRequest(username, friendUsername)) {
+                    System.out.println("Friend request sent");
+                    resultPD.content = "success";
                 }
-                sendToClient(new PackageDataStructure(content, 0), username);
+                else {
+                    System.out.println("Error sending friend request");
+                    resultPD.content = "failed";
+                }
+                sendPackageData(resultPD);
+            }
+            else if (packageData.content.equals("/acceptfriend")) {
+                PackageDataStructure friendUsernamePD = receivePackageData();
+                String friendUsername = friendUsernamePD.content;
+                PackageDataStructure resultPD = new PackageDataStructure("", 0);
+                if(friendController.acceptRequest(friendUsername, username)) {
+                    System.out.println("Friend request accepted");
+                    resultPD.content = "success";
+                }
+                else {
+                    System.out.println("Error accepting friend request");
+                    resultPD.content = "failed";
+                }
+                sendPackageData(resultPD);
+            }
+            else if (packageData.content.equals("/requests")) {
+                ArrayList<String> requests = friendController.getRequestList(username);
+                PackageDataStructure requestsPD = new PackageDataStructure("", 0);
+                for (String request : requests) {
+                    requestsPD.content += request + "\n";
+                }
+                sendPackageData(requestsPD);
+            }
+            else if (packageData.content.equals("/friends")) {
+                ArrayList<String> friends = friendController.getFriendList(username);
+                PackageDataStructure friendsPD = new PackageDataStructure("", 0);
+                for (String friend : friends) {
+                    friendsPD.content += friend + "\n";
+                }
+                sendPackageData(friendsPD);
             }
             else {
                 PackageDataStructure pd = new PackageDataStructure(

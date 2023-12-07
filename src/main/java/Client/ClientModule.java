@@ -48,11 +48,49 @@ public class ClientModule implements Runnable {
                 System.out.println("Connection closed");
                 break;
             }
-            PackageDataStructure packageData = new PackageDataStructure(
-                    content,
-                    0
-            );
-            sendPackageData(packageData);
+
+            if(content.startsWith("/addfriend")) {
+                String friendUsername = content.substring(11);
+                PackageDataStructure addFriendPD = new PackageDataStructure(
+                        "/addfriend",
+                        0
+                );
+                PackageDataStructure friendUsernamePD = new PackageDataStructure(
+                        friendUsername,
+                        0
+                );
+                sendPackageData(addFriendPD);
+                sendPackageData(friendUsernamePD);
+            }
+            else if (content.startsWith("/acceptfriend")){
+                String friendUsername = content.substring(14);
+                PackageDataStructure acceptFriendPD = new PackageDataStructure(
+                        "/acceptfriend",
+                        0
+                );
+                PackageDataStructure friendUsernamePD = new PackageDataStructure(
+                        friendUsername,
+                        0
+                );
+                sendPackageData(acceptFriendPD);
+                sendPackageData(friendUsernamePD);
+            }
+            else if (content.equals("/exit")) {
+                PackageDataStructure exitPD = new PackageDataStructure(
+                        "/exit",
+                        0
+                );
+                sendPackageData(exitPD);
+                closeConnection();
+                break;
+            }
+            else {
+                PackageDataStructure messagePD = new PackageDataStructure(
+                        content,
+                        0
+                );
+                sendPackageData(messagePD);
+            }
         }
     }
 

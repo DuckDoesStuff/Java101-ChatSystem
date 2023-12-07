@@ -49,6 +49,14 @@ public class DB {
                     " PRIMARY KEY (userID, friendID))";
             stmt.execute(sql3);
             conn.commit();
+
+            String sql4 = "CREATE TABLE IF NOT EXISTS username_userid (" +
+                    " username VARCHAR(255) NOT NULL UNIQUE, " +
+                    " userID INT," +
+                    " FOREIGN KEY (userID) REFERENCES users(userID)," +
+                    " PRIMARY KEY (username, userID))";
+            stmt.execute(sql4);
+            conn.commit();
         } catch (Exception e) {
             System.out.println("Error connecting to the database");
             throw new RuntimeException(e);
