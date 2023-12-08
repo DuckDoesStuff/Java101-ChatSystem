@@ -93,9 +93,11 @@ public class SignUpUI extends JFrame {
 
         maleRadioButton = new JRadioButton("Male");
         maleRadioButton.setFont(new Font("Arial", Font.PLAIN, 17));
+        maleRadioButton.setBackground(new Color(227, 235, 240));
         maleRadioButton.setBounds(220, 225, 90, 40);
         femaleRadioButton = new JRadioButton("Female");
         femaleRadioButton.setFont(new Font("Arial", Font.PLAIN, 17));
+        femaleRadioButton.setBackground(new Color(227, 235, 240));
         femaleRadioButton.setBounds(310, 225, 90, 40);
 
         // Group button
