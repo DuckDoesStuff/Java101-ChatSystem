@@ -3,73 +3,160 @@ package Server;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Scanner;
 
-import SampleDataStructure.PackageDataStructure;
-class ClientHandler {
+import DataStructure.PackageDataStructure;
+import DataStructure.UserInfo;
+import Database.DB;
+import Friend.FriendController;
+import User.UserController;
+
+class ClientHandler implements Runnable {
+    public static ArrayList<ClientHandler> clients = new ArrayList<>();
+    public static ArrayList<GroupChat> groups = new ArrayList<>();
     Socket clientSocket;
-    String host;
-    int port;
-    BufferedReader in;
-    PrintWriter out;
+    UserInfo user;
 
-    ObjectOutputStream objOut;
-    ObjectInputStream objIn;
-    ClientHandler(Socket clientSocket) {
+    ObjectOutputStream out;
+    ObjectInputStream in;
+    String username;
+
+    UserController userController;
+    FriendController friendController;
+    Connection conn;
+
+    ClientHandler(Socket clientSocket, Connection conn) {
         this.clientSocket = clientSocket;
-        host = clientSocket.getInetAddress().getHostAddress();
-        port = clientSocket.getPort();
         try {
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
-
-            objOut = new ObjectOutputStream(clientSocket.getOutputStream());
-            objIn = new ObjectInputStream(clientSocket.getInputStream());
+            out = new ObjectOutputStream(clientSocket.getOutputStream());
+            in = new ObjectInputStream(clientSocket.getInputStream());
+            clients.add(this);
         } catch (IOException e) {
-            System.out.println("Error creating input stream");
+            System.out.println("Error creating object streams");
             throw new RuntimeException(e);
         }
+        userController = new UserController(conn);
+        friendController = new FriendController(conn);
     }
+
+    @Override
     public void run() {
-        System.out.println("Client connected: " + host + ":" + port);
-//        receiveMessage();
-//        sendMessage("Hello, client!");
+        System.out.println("Client connected: " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
+//        PackageDataStructure firstPackage = receivePackageData();
+//        username = firstPackage.content;
 
-        receivePackageData();
-        PackageDataStructure packageData =
-                new PackageDataStructure(
-                        "From server",
-                        "To client",
-                        "Some random thing in content",
-                        1234
-                );
-        sendPackageData(packageData);
-    }
+        //Testing the new features
+        if(!authUser()) {
+            System.out.println("Authentication failed");
+            closeConnection();
+            return;
+        }
 
-    public void receiveMessage() {
-        String clientMessage;
-        try {
-            System.out.println("Waiting for message from client...");
-            while(!in.ready()) {}
-            System.out.println("Message received from client");
+        System.out.println("Client username: " + username);
 
-            clientMessage = in.readLine();
-            System.out.println("Client " + host + ":" + port + " says: " + clientMessage);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        while(clientSocket.isConnected()) {
+            PackageDataStructure packageData;
+            try {
+                packageData = receivePackageData();
+            }catch (Exception e) {
+                System.out.println("Error receiving package data in main loop");
+                closeConnection();
+                break;
+            }
+
+            if (packageData.content.equals("/exit")) {
+                PackageDataStructure pd = new PackageDataStructure(
+                        " has left the chat",
+                        0);
+                System.out.println(username + " has left the chat");
+                broadcast(packageData);
+                closeConnection();
+                break;
+            }
+            else if (packageData.content.startsWith("/msg")){
+                String[] split = packageData.content.split(" ");
+                String user = split[1];
+                PackageDataStructure pd = new PackageDataStructure(
+                        "MSG from " + username + ": " + packageData.content,
+                        0);
+                sendToClient(pd, user);
+            }
+            else if (packageData.content.startsWith("/newgroup")){
+                //</newgroup groupname user1 user2 user3...>
+                String[] split = packageData.content.split(" ");
+                String groupName = split[1];
+                GroupChat newGroup = new GroupChat(groupName);
+                for (int i = 2; i < split.length; i++){
+                    newGroup.addMember(split[i]);
+                }
+                groups.add(newGroup);
+            }
+            else if (packageData.content.startsWith("/chatgroup")){
+                String[] split = packageData.content.split(" ");
+                String groupName = split[1];
+                String content = split[2];
+                sendToGroupMembers(new PackageDataStructure(content, 0), groupName);
+            }
+            else if (packageData.content.equals("/addfriend")) {
+                PackageDataStructure friendUsernamePD = receivePackageData();
+                String friendUsername = friendUsernamePD.content;
+                PackageDataStructure resultPD = new PackageDataStructure("", 0);
+                if(friendController.sendRequest(username, friendUsername)) {
+                    System.out.println("Friend request sent");
+                    resultPD.content = "success";
+                }
+                else {
+                    System.out.println("Error sending friend request");
+                    resultPD.content = "failed";
+                }
+                sendPackageData(resultPD);
+            }
+            else if (packageData.content.equals("/acceptfriend")) {
+                PackageDataStructure friendUsernamePD = receivePackageData();
+                String friendUsername = friendUsernamePD.content;
+                PackageDataStructure resultPD = new PackageDataStructure("", 0);
+                if(friendController.acceptRequest(friendUsername, username)) {
+                    System.out.println("Friend request accepted");
+                    resultPD.content = "success";
+                }
+                else {
+                    System.out.println("Error accepting friend request");
+                    resultPD.content = "failed";
+                }
+                sendPackageData(resultPD);
+            }
+            else if (packageData.content.equals("/requests")) {
+                ArrayList<String> requests = friendController.getRequestList(username);
+                PackageDataStructure requestsPD = new PackageDataStructure("", 0);
+                for (String request : requests) {
+                    requestsPD.content += request + "\n";
+                }
+                sendPackageData(requestsPD);
+            }
+            else if (packageData.content.equals("/friends")) {
+                ArrayList<String> friends = friendController.getFriendList(username);
+                PackageDataStructure friendsPD = new PackageDataStructure("", 0);
+                for (String friend : friends) {
+                    friendsPD.content += friend + "\n";
+                }
+                sendPackageData(friendsPD);
+            }
+            else {
+                PackageDataStructure pd = new PackageDataStructure(
+                        username + ": " + packageData.content,
+                        0);
+                broadcast(pd);
+            }
         }
     }
 
-    public void sendMessage(String message) {
-        System.out.println("Sending message: " + message + " to client " + host + ":" + port);
-        out.println(message);
-    }
-
-    public void receivePackageData() {
+    public PackageDataStructure receivePackageData() {
         try {
-            PackageDataStructure packageData = (PackageDataStructure) objIn.readObject();
-            System.out.println("Package data received from client " + host + ":" + port);
-            System.out.println("Package data: " + packageData);
+            return (PackageDataStructure) in.readObject();
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Error receiving package data");
             throw new RuntimeException(e);
@@ -78,16 +165,118 @@ class ClientHandler {
 
     public void sendPackageData(PackageDataStructure packageData) {
         try {
-            objOut.writeObject(packageData);
+            out.writeObject(packageData);
         } catch (IOException e) {
             System.out.println("Error sending package data");
             throw new RuntimeException(e);
         }
     }
+
+    //Define other client methods here
+
+    public void closeConnection() {
+        try {
+            in.close();
+            out.close();
+            clientSocket.close();
+            clients.remove(this);
+        } catch (IOException e) {
+            System.out.println("Error closing client socket");
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void broadcast(PackageDataStructure packageData) {
+        System.out.println(packageData.content);
+        if(clients.isEmpty()) {
+            System.out.println("No other clients connected");
+            return;
+        }
+        for (ClientHandler client : clients) {
+            if(client.username.equals(username))
+                continue;
+            client.sendPackageData(packageData);
+        }
+    }
+
+    public void sendToClient(PackageDataStructure packageData, String username) {
+        for (ClientHandler client : clients) {
+            if(client.username.equals(username)) {
+                client.sendPackageData(packageData);
+                return;
+            }
+        }
+        System.out.println("User not found");
+    }
+
+    public void sendToGroupMembers(PackageDataStructure packageData, String groupName){
+        for (GroupChat group: groups){
+            if (Objects.equals(group.getGroupName(), groupName)){
+                for (String username: group.groupMembers){
+                    sendToClient(packageData, username);
+                }
+                return;
+            }
+            else{
+                continue;
+            }
+        }
+    }
+
+    public boolean authUser() {
+        PackageDataStructure pd = receivePackageData();
+        if(pd.content.equals("/login")) {
+            PackageDataStructure usernamePD = receivePackageData();
+            PackageDataStructure passwordPD = receivePackageData();
+            PackageDataStructure resultPD = new PackageDataStructure("", 0);
+            if(userController.loginUser(usernamePD.content, passwordPD.content)) {
+                this.username = usernamePD.content;
+                System.out.println("User" + this.username + " has logged in");
+                resultPD.content = "success";
+                sendPackageData(resultPD);
+                return true;
+            }
+            else {
+                resultPD.content = "failed";
+                sendPackageData(resultPD);
+                return false;
+            }
+        }
+        else if(pd.content.equals("/register")) {
+            PackageDataStructure usernamePD = receivePackageData();
+            PackageDataStructure emailPD = receivePackageData();
+            PackageDataStructure passwordPD = receivePackageData();
+            System.out.println("Username: " + usernamePD.content);
+            System.out.println("Email: " + emailPD.content);
+            System.out.println("Password: " + passwordPD.content);
+            PackageDataStructure resultPD = new PackageDataStructure("", 0);
+            if(userController.registerUser(usernamePD.content, passwordPD.content, emailPD.content)) {
+                this.username = usernamePD.content;
+                System.out.println("User" + this.username + " has been registered");
+                resultPD.content = "success";
+                sendPackageData(resultPD);
+                return true;
+            }
+            else {
+                System.out.println("Error registering user");
+                resultPD.content = "failed";
+                sendPackageData(resultPD);
+                return false;
+            }
+        }
+        else {
+            System.out.println("Invalid command");
+            return false;
+        }
+    }
 }
+
+
 public class ServerModule {
     ServerSocket socket;
-    ArrayList<Thread> clientThreads = new ArrayList<>();
+    boolean isRunning;
+    DB db;
+    Connection conn;
     ServerModule(int port) {
         try {
             socket = new ServerSocket(port);
@@ -96,38 +285,48 @@ public class ServerModule {
             throw new RuntimeException(e);
         }
         System.out.println("Server is now on port " + port);
+        db = new DB();
+        conn = db.getConnection();
     }
+
     public void startServer() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            stopServer();
-            System.out.println("Server closed");
-        }));
-        try {
-            int connected = 0;
-            while(connected < 2) {
-                Socket clientSocket = socket.accept();
-                ClientHandler clientHandler = new ClientHandler(clientSocket);
-                Thread clientThread = new Thread(clientHandler::run);
-                clientThread.start();
-                clientThreads.add(clientThread);
-                connected++;
+        Scanner scanner = new Scanner(System.in);
+        new Thread(() -> {
+            while (true) {
+                if(Objects.equals(scanner.nextLine(), "/exit")) {
+                    stopServer();
+                    break;
+                }
+                else
+                    System.out.println("Invalid command");
             }
-        } catch (IOException e) {
-            System.out.println("Error accepting client connection");
-            throw new RuntimeException(e);
+        }).start();
+        isRunning = true;
+        while(isRunning) {
+            try {
+                Socket clientSocket = socket.accept();
+                ClientHandler clientHandler = new ClientHandler(clientSocket, conn);
+                Thread clientThread = new Thread(clientHandler);
+                clientThread.start();
+            } catch (SocketException e) {
+               System.out.println("Server socket closed");
+                break;
+            } catch (IOException e) {
+                System.out.println("Error accepting client connection");
+                break;
+            }
         }
     }
 
     public void stopServer() {
-        for(Thread clientThread : clientThreads) {
-            clientThread.interrupt();
-        }
         try {
-            socket.close();
+            if (socket != null)
+                socket.close();
+            isRunning = false;
         } catch (IOException e) {
+            System.out.println("Error closing server socket");
             throw new RuntimeException(e);
         }
     }
     //Define other client methods here
-
 }
