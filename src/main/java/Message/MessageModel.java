@@ -1,23 +1,23 @@
 package Message;
 
+import java.time.LocalDateTime;
+
 public class MessageModel {
-    String messageID; // Primary Key
+    int messageID; // Primary Key
     String chatID;
     int sendUserID;
-    int receiveUserID;
     String content;
-    String time;
+    LocalDateTime time;
 
-    public MessageModel(String messageID, String chatID, int sendUserID, int receiveUserID, String content, String time){
+    public MessageModel(int messageID, String chatID, int sendUserID, String content, LocalDateTime time){
         this.messageID = messageID;
         this.chatID = chatID;
         this.sendUserID = sendUserID;
-        this.receiveUserID = receiveUserID;
         this.content = content;
         this.time = time;
     }
 
-    public String getMessageID(){
+    public int getMessageID(){
         return messageID;
     }
 
@@ -29,15 +29,11 @@ public class MessageModel {
         return sendUserID;
     }
 
-    public int getReceiveUserID(){
-        return receiveUserID;
-    }
-
     public String getContent(){
         return content;
     }
 
-    public String getTime(){
+    public LocalDateTime getTime(){
         return time;
     }
 }

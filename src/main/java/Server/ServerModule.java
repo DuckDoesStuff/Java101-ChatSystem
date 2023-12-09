@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Scanner;
 
+import Chat.ChatModel;
+import Chat.ChatService;
+import ChatMember.ChatMemberService;
 import DataStructure.PackageDataStructure;
 import DataStructure.UserInfo;
 import Database.DB;
@@ -25,6 +28,9 @@ class ClientHandler implements Runnable {
     ObjectInputStream in;
     String username;
 
+    ChatService chatService;
+
+    ChatMemberService chatMemberService;
     UserController userController;
     FriendController friendController;
     Connection conn;
@@ -41,6 +47,8 @@ class ClientHandler implements Runnable {
         }
         userController = new UserController(conn);
         friendController = new FriendController(conn);
+        chatService = new ChatService(conn);
+        chatMemberService = new ChatMemberService(conn);
     }
 
     @Override
@@ -122,6 +130,9 @@ class ClientHandler implements Runnable {
                 if(friendController.acceptRequest(friendUsername, username)) {
                     System.out.println("Friend request accepted");
                     resultPD.content = "success";
+                    ChatModel newChat = chatService.addChat(false, username + " and " + friendUsername);
+                    chatMemberService.addChatMember(newChat.getChatID(), userController.getUserIDFromUsername(username));
+                    chatMemberService.addChatMember(newChat.getChatID(), userController.getUserIDFromUsername(friendUsername));
                 }
                 else {
                     System.out.println("Error accepting friend request");

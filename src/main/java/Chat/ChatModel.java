@@ -2,17 +2,26 @@ package Chat;
 
 public class ChatModel {
 
-    String chatID; // Primary Key
+    int chatID; // Primary Key
     boolean isGroup; // for distinguishing between 1v1 and group chat
     String name;
 
-    public ChatModel(String chatID, boolean isGroup, String name){
+    public ChatModel(boolean isGroup, String name){
+        //this.chatID = chatID;
+        this.isGroup = isGroup;
+        this.name = name;
+    }
+
+    public ChatModel(int chatID, boolean isGroup, String name){
         this.chatID = chatID;
         this.isGroup = isGroup;
         this.name = name;
     }
 
-    public String getChatID(){
+    public void setChatID(int chatID){
+        this.chatID = chatID;
+    }
+    public int getChatID(){
         return chatID;
     }
 
