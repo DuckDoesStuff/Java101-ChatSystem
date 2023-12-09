@@ -3,9 +3,9 @@ package User;
 import java.sql.*;
 import java.util.ArrayList;
 
-public class UserController {
+public class UserService {
     Connection conn;
-    public UserController(Connection conn) {
+    public UserService(Connection conn) {
         this.conn = conn;
     }
 

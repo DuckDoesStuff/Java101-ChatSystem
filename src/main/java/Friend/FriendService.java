@@ -17,9 +17,9 @@ class FriendRequestModel {
     }
 }
 
-public class FriendController {
+public class FriendService {
     Connection conn;
-    public FriendController(Connection conn) {
+    public FriendService(Connection conn) {
         this.conn = conn;
     }
 

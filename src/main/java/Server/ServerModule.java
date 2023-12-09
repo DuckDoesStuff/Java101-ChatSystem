@@ -12,8 +12,8 @@ import java.util.Scanner;
 import DataStructure.PackageDataStructure;
 import DataStructure.UserInfo;
 import Database.DB;
-import Friend.FriendController;
-import User.UserController;
+import Friend.FriendService;
+import User.UserService;
 
 class ClientHandler implements Runnable {
     public static ArrayList<ClientHandler> clients = new ArrayList<>();
@@ -25,8 +25,8 @@ class ClientHandler implements Runnable {
     ObjectInputStream in;
     String username;
 
-    UserController userController;
-    FriendController friendController;
+    UserService userService;
+    FriendService friendService;
     Connection conn;
 
     ClientHandler(Socket clientSocket, Connection conn) {
@@ -39,8 +39,8 @@ class ClientHandler implements Runnable {
             System.out.println("Error creating object streams");
             throw new RuntimeException(e);
         }
-        userController = new UserController(conn);
-        friendController = new FriendController(conn);
+        userService = new UserService(conn);
+        friendService = new FriendService(conn);
     }
 
     @Override
@@ -105,7 +105,7 @@ class ClientHandler implements Runnable {
                 PackageDataStructure friendUsernamePD = receivePackageData();
                 String friendUsername = friendUsernamePD.content;
                 PackageDataStructure resultPD = new PackageDataStructure("", 0);
-                if(friendController.sendRequest(username, friendUsername)) {
+                if(friendService.sendRequest(username, friendUsername)) {
                     System.out.println("Friend request sent");
                     resultPD.content = "success";
                 }
@@ -119,7 +119,7 @@ class ClientHandler implements Runnable {
                 PackageDataStructure friendUsernamePD = receivePackageData();
                 String friendUsername = friendUsernamePD.content;
                 PackageDataStructure resultPD = new PackageDataStructure("", 0);
-                if(friendController.acceptRequest(friendUsername, username)) {
+                if(friendService.acceptRequest(friendUsername, username)) {
                     System.out.println("Friend request accepted");
                     resultPD.content = "success";
                 }
@@ -130,18 +130,28 @@ class ClientHandler implements Runnable {
                 sendPackageData(resultPD);
             }
             else if (packageData.content.equals("/requests")) {
-                ArrayList<String> requests = friendController.getRequestList(username);
+                ArrayList<String> requests = friendService.getRequestList(username);
                 PackageDataStructure requestsPD = new PackageDataStructure("", 0);
-                for (String request : requests) {
-                    requestsPD.content += request + "\n";
+                if (requests == null || requests.isEmpty()){
+                    requestsPD.content = "No friend requests";
+                }else{
+                    requestsPD.content = "Friend requests:\n";
+                    for (String request : requests) {
+                        requestsPD.content += request + "\n";
+                    }
                 }
                 sendPackageData(requestsPD);
             }
             else if (packageData.content.equals("/friends")) {
-                ArrayList<String> friends = friendController.getFriendList(username);
+                ArrayList<String> friends = friendService.getFriendList(username);
                 PackageDataStructure friendsPD = new PackageDataStructure("", 0);
-                for (String friend : friends) {
-                    friendsPD.content += friend + "\n";
+                if (friends == null || friends.isEmpty()){
+                    friendsPD.content = "No friends";
+                }else{
+                    friendsPD.content = "Friends:\n";
+                    for (String friend : friends) {
+                        friendsPD.content += friend + "\n";
+                    }
                 }
                 sendPackageData(friendsPD);
             }
@@ -229,7 +239,7 @@ class ClientHandler implements Runnable {
             PackageDataStructure usernamePD = receivePackageData();
             PackageDataStructure passwordPD = receivePackageData();
             PackageDataStructure resultPD = new PackageDataStructure("", 0);
-            if(userController.loginUser(usernamePD.content, passwordPD.content)) {
+            if(userService.loginUser(usernamePD.content, passwordPD.content)) {
                 this.username = usernamePD.content;
                 System.out.println("User" + this.username + " has logged in");
                 resultPD.content = "success";
@@ -250,7 +260,7 @@ class ClientHandler implements Runnable {
             System.out.println("Email: " + emailPD.content);
             System.out.println("Password: " + passwordPD.content);
             PackageDataStructure resultPD = new PackageDataStructure("", 0);
-            if(userController.registerUser(usernamePD.content, passwordPD.content, emailPD.content)) {
+            if(userService.registerUser(usernamePD.content, passwordPD.content, emailPD.content)) {
                 this.username = usernamePD.content;
                 System.out.println("User" + this.username + " has been registered");
                 resultPD.content = "success";
@@ -323,6 +333,7 @@ public class ServerModule {
             if (socket != null)
                 socket.close();
             isRunning = false;
+            db.closeConnection();
         } catch (IOException e) {
             System.out.println("Error closing server socket");
             throw new RuntimeException(e);
