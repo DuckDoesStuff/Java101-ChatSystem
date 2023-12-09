@@ -131,8 +131,8 @@ class ClientHandler implements Runnable {
                     System.out.println("Friend request accepted");
                     resultPD.content = "success";
                     ChatModel newChat = chatService.addChat(false, username + " and " + friendUsername);
-                    chatMemberService.addChatMember(newChat.getChatID(), userController.getUserIDFromUsername(username));
-                    chatMemberService.addChatMember(newChat.getChatID(), userController.getUserIDFromUsername(friendUsername));
+                    chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(username));
+                    chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(friendUsername));
                 }
                 else {
                     System.out.println("Error accepting friend request");
