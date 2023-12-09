@@ -26,4 +26,8 @@ public class UserModel {
         this.lastName = lastName;
         this.gender = gender;
     }
+
+    public int getUserID() {
+        return userID;
+    }
 }

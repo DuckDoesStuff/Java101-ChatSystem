@@ -75,6 +75,23 @@ public class UserService {
         }
     }
 
+    public int getUserIDFromUsername(String username){
+        try {
+            String sql = "SELECT userID FROM users WHERE username = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+            if(!rs.next()) {
+                System.out.println("User does not exist");
+                return -1;
+            }
+            return rs.getInt("userID");
+        } catch (Exception e) {
+            System.out.println("Error getting userID");
+            throw new RuntimeException(e);
+        }
+    }
+
     public ArrayList<UserModel> findUserWithUsername(String userNameToFind) {
         ArrayList<UserModel> userList = new ArrayList<>();
         try {
