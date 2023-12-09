@@ -65,7 +65,7 @@ public class SignInUI extends JFrame {
         signIn_jbtn.setBorder(null);
 
         //forgot password button
-        pass_jbtn = new RoundedButton("Forgot password", 155, 45, 40, true, new Color(227, 235, 240));
+        pass_jbtn = new RoundedButton("Forgot password ? ", 155, 45, 40, false, null);
         pass_jbtn.setBounds(280, 190, 150, 45);
         pass_jbtn.setBackground(new Color(227, 235, 240));
         pass_jbtn.setForeground(Color.BLACK);
