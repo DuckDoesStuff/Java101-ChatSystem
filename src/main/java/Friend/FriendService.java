@@ -163,6 +163,73 @@ public class FriendService {
         }
     }
 
+    public boolean removeFriend(String username, String friendName) {
+        try {
+            //Get the senderID and receiverID
+            int userID = userIdFromName(username);
+            int friendID = userIdFromName(friendName);
+
+            //See if there is a request with the sender-receiver ID pair
+            String sql = "SELECT * FROM friendlist WHERE userID = ? AND friendID = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            stmt.setInt(2, friendID);
+            ResultSet rs = stmt.executeQuery();
+            if(!rs.next()) {
+                System.out.println("Friend does not exist");
+                return false;
+            }
+
+            sql = "DELETE FROM friendlist WHERE userID = ? AND friendID = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            stmt.setInt(2, friendID);
+            stmt.executeUpdate();
+            conn.commit();
+
+            sql = "DELETE FROM friendlist WHERE userID = ? AND friendID = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, friendID);
+            stmt.setInt(2, userID);
+            stmt.executeUpdate();
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error removing friend");
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean removeRequest(String username, String friendName) {
+        try {
+            //Get the senderID and receiverID
+            int userID = userIdFromName(username);
+            int friendID = userIdFromName(friendName);
+
+            //See if there is a request with the sender-receiver ID pair
+            String sql = "SELECT * FROM friendrequest WHERE senderID = ? AND receiverID = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            stmt.setInt(2, friendID);
+            ResultSet rs = stmt.executeQuery();
+            if(!rs.next()) {
+                System.out.println("Friend request does not exist");
+                return false;
+            }
+
+            sql = "DELETE FROM friendrequest WHERE senderID = ? AND receiverID = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            stmt.setInt(2, friendID);
+            stmt.executeUpdate();
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error removing friend request");
+            throw new RuntimeException(e);
+        }
+    }
+
     public ArrayList<String> getRequestList(String username) {
         try {
             String sql =

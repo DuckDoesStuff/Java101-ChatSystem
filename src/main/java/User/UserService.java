@@ -23,11 +23,22 @@ public class UserService {
             }
             //Add the user to the database
             UserModel user = new UserModel(username, password, email);
-            sql = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
+            sql = "INSERT INTO users (username, password, email, online_status, opened_time, first_joined) VALUES (?, ?, ?, ?, ?, ?)";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, user.username);
             stmt.setString(2, user.password);
             stmt.setString(3, user.email);
+            stmt.setBoolean(4, true);
+            stmt.setInt(5, 1);
+            stmt.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
+            stmt.executeUpdate();
+            conn.commit();
+
+            //Log the user activity
+            sql = "INSERT INTO LoginHistory (userID, timeLog) VALUES (?, ?)";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, getUserIDFromUsername(username));
+            stmt.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
             stmt.executeUpdate();
             conn.commit();
             return true;
@@ -55,9 +66,39 @@ public class UserService {
                 System.out.println("Incorrect password");
                 return false;
             }
+
+            sql = "UPDATE users SET online_status = ? WHERE username = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setBoolean(1, true);
+            stmt.setString(2, username);
+            stmt.executeUpdate();
+            conn.commit();
+
+            //Log the user activity
+            sql = "INSERT INTO LoginHistory (userID, timeLog) VALUES (?, ?)";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, getUserIDFromUsername(username));
+            stmt.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+            stmt.executeUpdate();
+            conn.commit();
             return true;
         } catch (Exception e) {
             System.out.println("Error logging in user");
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void logoutUser(String username) {
+        try {
+            String sql = "UPDATE users SET online_status = ?, last_joined = ? WHERE username = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setBoolean(1, false);
+            stmt.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+            stmt.setString(3, username);
+            stmt.executeUpdate();
+            conn.commit();
+        } catch (Exception e) {
+            System.out.println("Error logging out user");
             throw new RuntimeException(e);
         }
     }

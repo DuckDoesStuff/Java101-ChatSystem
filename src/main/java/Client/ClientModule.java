@@ -62,6 +62,19 @@ public class ClientModule implements Runnable {
                 sendPackageData(addFriendPD);
                 sendPackageData(friendUsernamePD);
             }
+            else if(content.startsWith("/removerequest")) {
+                String friendUsername = content.substring(15);
+                PackageDataStructure removeRequestPD = new PackageDataStructure(
+                        "/removerequest",
+                        0
+                );
+                PackageDataStructure friendUsernamePD = new PackageDataStructure(
+                        friendUsername,
+                        0
+                );
+                sendPackageData(removeRequestPD);
+                sendPackageData(friendUsernamePD);
+            }
             else if (content.startsWith("/acceptfriend")){
                 String friendUsername = content.substring(14);
                 PackageDataStructure acceptFriendPD = new PackageDataStructure(
@@ -73,6 +86,32 @@ public class ClientModule implements Runnable {
                         0
                 );
                 sendPackageData(acceptFriendPD);
+                sendPackageData(friendUsernamePD);
+            }
+            else if (content.startsWith("/declinefriend")) {
+                String friendUsername = content.substring(15);
+                PackageDataStructure declineFriendPD = new PackageDataStructure(
+                        "/declinefriend",
+                        0
+                );
+                PackageDataStructure friendUsernamePD = new PackageDataStructure(
+                        friendUsername,
+                        0
+                );
+                sendPackageData(declineFriendPD);
+                sendPackageData(friendUsernamePD);
+            }
+            else if (content.startsWith("/unfriend")) {
+                String friendUsername = content.substring(10);
+                PackageDataStructure unfriendPD = new PackageDataStructure(
+                        "/unfriend",
+                        0
+                );
+                PackageDataStructure friendUsernamePD = new PackageDataStructure(
+                        friendUsername,
+                        0
+                );
+                sendPackageData(unfriendPD);
                 sendPackageData(friendUsernamePD);
             }
             else if (content.equals("/exit")) {

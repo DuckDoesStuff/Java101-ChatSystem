@@ -28,7 +28,12 @@ public class DB {
                     " email VARCHAR(255) NOT NULL UNIQUE, " +
                     " address VARCHAR(255), " +
                     " dateOfBirth DATE," +
-                    " gender BOOLEAN)";
+                    " gender BOOLEAN," +
+                    " online_status BOOLEAN," +
+                    " last_joined TIMESTAMP," +
+                    " first_joined TIMESTAMP," +
+                    " opened_time INT," +
+                    " banned BOOLEAN)";
             stmt.execute(sql1);
             conn.commit();
 
@@ -86,6 +91,13 @@ public class DB {
                     " FOREIGN KEY (chatID) REFERENCES Chat(chatID), " +
                     " FOREIGN KEY (senderID) REFERENCES users(userID))";
             stmt.execute(sql7);
+            conn.commit();
+
+            String sql8 = "CREATE TABLE IF NOT EXISTS LoginHistory (" +
+                    " userID INT, " +
+                    " timeLog TIMESTAMP, " +
+                    " FOREIGN KEY (userID) REFERENCES users(userID))";
+            stmt.execute(sql8);
             conn.commit();
 
         } catch (Exception e) {

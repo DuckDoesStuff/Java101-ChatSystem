@@ -80,6 +80,7 @@ class ClientHandler implements Runnable {
                 PackageDataStructure pd = new PackageDataStructure(
                         " has left the chat",
                         0);
+                userService.logoutUser(username);
                 System.out.println(username + " has left the chat");
                 broadcast(packageData);
                 closeConnection();
@@ -130,12 +131,26 @@ class ClientHandler implements Runnable {
                 if(friendService.acceptRequest(friendUsername, username)) {
                     System.out.println("Friend request accepted");
                     resultPD.content = "success";
-                    ChatModel newChat = chatService.addChat(false, username + " and " + friendUsername);
-                    chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(username));
-                    chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(friendUsername));
+//                    ChatModel newChat = chatService.addChat(false, username + " and " + friendUsername);
+//                    chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(username));
+//                    chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(friendUsername));
                 }
                 else {
                     System.out.println("Error accepting friend request");
+                    resultPD.content = "failed";
+                }
+                sendPackageData(resultPD);
+            }
+            else if (packageData.content.equals("/declinefriend")) {
+                PackageDataStructure friendUsernamePD = receivePackageData();
+                String friendUsername = friendUsernamePD.content;
+                PackageDataStructure resultPD = new PackageDataStructure("", 0);
+                if(friendService.declineRequest(friendUsername, username)) {
+                    System.out.println("Friend request declined");
+                    resultPD.content = "success";
+                }
+                else {
+                    System.out.println("Error declining friend request");
                     resultPD.content = "failed";
                 }
                 sendPackageData(resultPD);
@@ -153,6 +168,20 @@ class ClientHandler implements Runnable {
                 }
                 sendPackageData(requestsPD);
             }
+            else if (packageData.content.equals("/removerequest")) {
+                PackageDataStructure friendUsernamePD = receivePackageData();
+                String friendUsername = friendUsernamePD.content;
+                PackageDataStructure resultPD = new PackageDataStructure("", 0);
+                if(friendService.removeRequest(username, friendUsername)) {
+                    System.out.println("Friend request removed");
+                    resultPD.content = "success";
+                }
+                else {
+                    System.out.println("Error removing friend request");
+                    resultPD.content = "failed";
+                }
+                sendPackageData(resultPD);
+            }
             else if (packageData.content.equals("/friends")) {
                 ArrayList<String> friends = friendService.getFriendList(username);
                 PackageDataStructure friendsPD = new PackageDataStructure("", 0);
@@ -165,6 +194,20 @@ class ClientHandler implements Runnable {
                     }
                 }
                 sendPackageData(friendsPD);
+            }
+            else if (packageData.content.equals("/unfriend")) {
+                PackageDataStructure friendUsernamePD = receivePackageData();
+                String friendUsername = friendUsernamePD.content;
+                PackageDataStructure resultPD = new PackageDataStructure("", 0);
+                if(friendService.removeFriend(username, friendUsername)) {
+                    System.out.println("Friend removed");
+                    resultPD.content = "success";
+                }
+                else {
+                    System.out.println("Error removing friend");
+                    resultPD.content = "failed";
+                }
+                sendPackageData(resultPD);
             }
             else {
                 PackageDataStructure pd = new PackageDataStructure(
