@@ -5,18 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 
-class FriendRequestModel {
-    String senderID;
-    String receiverID;
-    boolean accepted;
-
-    public FriendRequestModel(String senderID, String receiverID, boolean accepted) {
-        this.senderID = senderID;
-        this.receiverID = receiverID;
-        this.accepted = accepted;
-    }
-}
-
 public class FriendService {
     Connection conn;
     public FriendService(Connection conn) {

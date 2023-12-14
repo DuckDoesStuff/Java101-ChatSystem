@@ -136,15 +136,12 @@ public class ClientModule implements Runnable {
     public PackageDataStructure receivePackageData() {
         PackageDataStructure packageData;
         try {
-            System.out.println("Waiting for message from server...");
-            while(!in.ready()) {}
-            System.out.println("Message received from server");
-
-            serverMessage = in.readLine();
-            System.out.println("Server " + host + ":" + port + " says: " + serverMessage);
+            packageData = (PackageDataStructure) in.readObject();
         } catch (Exception e) {
+            System.out.println("Error receiving package data");
             throw new RuntimeException(e);
         }
+        return packageData;
     }
 
     public void sendPackageData(PackageDataStructure packageData) {
