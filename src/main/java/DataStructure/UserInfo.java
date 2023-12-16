@@ -11,7 +11,6 @@ public class UserInfo {
         this.username = username;
 //        this.password = password;
 
-        //TODO: read friendlist
     }
 
     public void addFriend(String friend) {

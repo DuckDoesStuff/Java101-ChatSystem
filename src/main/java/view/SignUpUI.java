@@ -1,11 +1,14 @@
 package view;
 
+import Client.ClientModule;
 import Database.DB;
 import User.UserController;
 import com.toedter.calendar.JDateChooser;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Objects;
 
 public class SignUpUI extends JFrame {
@@ -20,15 +23,23 @@ public class SignUpUI extends JFrame {
     private final JTextField pw_jtf;
     private final JTextField firstN_jtf;
     private final JTextField lastN_jtf;
+    ClientModule clientModule;
 
     public SignUpUI(){
+        clientModule = ClientModule.getInstance("localhost", 4000);
         setSize(1000,700);
         setTitle("Sign Up");
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
         setLayout(null);
         getContentPane().setBackground(new Color(227, 235, 240));
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent windowEvent) {
+                clientModule.closeConnection();
+            }
+        });
         
         JLabel label = new JLabel("CREATE AN ACCOUNT");
         label.setFont(new Font("Arial", Font.BOLD, 27));
@@ -174,6 +185,7 @@ public class SignUpUI extends JFrame {
     }
 
     void registerUser(){
+        //TODO: implement register user with UI
         String userN = userN_jtf.getText();
         String pw = pw_jtf.getText();
         String email = email_jtf.getText();
@@ -185,6 +197,7 @@ public class SignUpUI extends JFrame {
     }
 
     void login(){
+        dispose();
         new SignInUI();
     }
     

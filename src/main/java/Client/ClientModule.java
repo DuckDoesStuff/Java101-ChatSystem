@@ -15,7 +15,18 @@ public class ClientModule implements Runnable {
     ObjectInputStream in;
     String username;
     Scanner scanner;
-    boolean loggedIn = false;
+    volatile boolean loggedIn = false;
+
+    private static ClientModule instance;
+
+    public static synchronized ClientModule getInstance(String host, int port) {
+        if (instance == null) {
+            System.out.println("Initializing new client module instance");
+            instance = new ClientModule(host, port);
+        }
+        System.out.println("Returning existing client module instance");
+        return instance;
+    }
 
     ClientModule(String host, int port) {
         try {
@@ -23,26 +34,25 @@ public class ClientModule implements Runnable {
             out = new ObjectOutputStream(clientSocket.getOutputStream());
             in = new ObjectInputStream(clientSocket.getInputStream());
             scanner = new Scanner(System.in);
+            System.out.println("Connected to server: " +
+                    clientSocket.getInetAddress().getHostAddress() + ":" +
+                    clientSocket.getPort());
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            System.out.println("Error connecting to server");
         }
-        System.out.println("Connected to server: " +
-                clientSocket.getInetAddress().getHostAddress() + ":" +
-                clientSocket.getPort());
     }
 
     @Override
     public void run() {
-//        PackageDataStructure firstPackage = new PackageDataStructure(
-//                username,
-//                0
-//        );
-//        sendPackageData(firstPackage);
-        loggedIn = authUser();
+        if(!isConnected()) {
+            System.out.println("Client not connected");
+            return;
+        }
+        while (!loggedIn) Thread.onSpinWait();
 
         packageListener();
 
-        while(clientSocket.isConnected() && loggedIn) {
+        while(isConnected() && loggedIn) {
             String content = scanner.nextLine();
             if(clientSocket.isClosed()) {
                 System.out.println("Connection closed");
@@ -115,11 +125,6 @@ public class ClientModule implements Runnable {
                 sendPackageData(friendUsernamePD);
             }
             else if (content.equals("/exit")) {
-                PackageDataStructure exitPD = new PackageDataStructure(
-                        "/exit",
-                        0
-                );
-                sendPackageData(exitPD);
                 closeConnection();
                 break;
             }
@@ -139,7 +144,7 @@ public class ClientModule implements Runnable {
             packageData = (PackageDataStructure) in.readObject();
         } catch (Exception e) {
             System.out.println("Error receiving package data");
-            throw new RuntimeException(e);
+            return null;
         }
         return packageData;
     }
@@ -149,78 +154,75 @@ public class ClientModule implements Runnable {
             out.writeObject(packageData);
         } catch (Exception e) {
             System.out.println("Error sending package data");
-            throw new RuntimeException(e);
         }
     }
 
     //Define other client methods here
+    public String loginUser(String username, String password) {
+        PackageDataStructure loginPD = new PackageDataStructure(
+                "/login",
+                0
+        );
+        PackageDataStructure usernamePD = new PackageDataStructure(
+                username,
+                0
+        );
+        PackageDataStructure passwordPD = new PackageDataStructure(
+                password,
+                0
+        );
 
-    public boolean authUser() {
-        System.out.println("Login or Register? (l/r)");
-        String loginOrRegister = scanner.nextLine();
-        if (loginOrRegister.equals("l")) {
-            System.out.println("Enter your username: ");
-            username = scanner.nextLine();
-            System.out.println("Enter your password: ");
-            String password = scanner.nextLine();
+        sendPackageData(loginPD);
+        sendPackageData(usernamePD);
+        sendPackageData(passwordPD);
+        String result = receivePackageData().content;
+        loggedIn = result.equals("success");
+        return result;
+    }
 
-            PackageDataStructure loginPD = new PackageDataStructure(
-                    "/login",
-                    0
-            );
-            PackageDataStructure usernamePD = new PackageDataStructure(
-                    username,
-                    0
-            );
-            PackageDataStructure passwordPD = new PackageDataStructure(
-                    password,
-                    0
-            );
+    public String registerUser() {
+        System.out.println("Enter your username: ");
+        String username = scanner.nextLine();
+        System.out.println("Enter your email: ");
+        String email = scanner.nextLine();
+        System.out.println("Enter your password: ");
+        String password = scanner.nextLine();
 
-            sendPackageData(loginPD);
-            sendPackageData(usernamePD);
-            sendPackageData(passwordPD);
-            return receivePackageData().content.equals("success");
+        PackageDataStructure registerPD = new PackageDataStructure(
+                "/register",
+                0
+        );
+        PackageDataStructure usernamePD = new PackageDataStructure(
+                username,
+                0
+        );
+        PackageDataStructure emailPD = new PackageDataStructure(
+                email,
+                0
+        );
+        PackageDataStructure passwordPD = new PackageDataStructure(
+                password,
+                0
+        );
 
-        } else if (loginOrRegister.equals("r")) {
-            System.out.println("Enter your username: ");
-            String username = scanner.nextLine();
-            System.out.println("Enter your email: ");
-            String email = scanner.nextLine();
-            System.out.println("Enter your password: ");
-            String password = scanner.nextLine();
-
-            PackageDataStructure registerPD = new PackageDataStructure(
-                    "/register",
-                    0
-            );
-            PackageDataStructure usernamePD = new PackageDataStructure(
-                    username,
-                    0
-            );
-            PackageDataStructure emailPD = new PackageDataStructure(
-                    email,
-                    0
-            );
-            PackageDataStructure passwordPD = new PackageDataStructure(
-                    password,
-                    0
-            );
-
-            sendPackageData(registerPD);
-            sendPackageData(usernamePD);
-            sendPackageData(emailPD);
-            sendPackageData(passwordPD);
-            return receivePackageData().content.equals("success");
-        } else {
-            System.out.println("Invalid input");
-            return false;
-        }
+        sendPackageData(registerPD);
+        sendPackageData(usernamePD);
+        sendPackageData(emailPD);
+        sendPackageData(passwordPD);
+        String result = receivePackageData().content;
+        loggedIn = result.equals("success");
+        return result;
     }
 
     public void closeConnection() {
+        PackageDataStructure exitPD = new PackageDataStructure(
+                "/exit",
+                0
+        );
+        sendPackageData(exitPD);
         try {
             clientSocket.close();
+            clientSocket = null;
             in.close();
             out.close();
             System.out.println("Client connection closed");
@@ -248,4 +250,7 @@ public class ClientModule implements Runnable {
         System.out.println("Package listener started");
     }
 
+    public boolean isConnected() {
+        return clientSocket != null && clientSocket.isConnected();
+    }
 }

@@ -223,7 +223,7 @@ class ClientHandler implements Runnable {
             return (PackageDataStructure) in.readObject();
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Error receiving package data");
-            throw new RuntimeException(e);
+            return null;
         }
     }
 
@@ -232,7 +232,6 @@ class ClientHandler implements Runnable {
             out.writeObject(packageData);
         } catch (IOException e) {
             System.out.println("Error sending package data");
-            throw new RuntimeException(e);
         }
     }
 
@@ -288,50 +287,44 @@ class ClientHandler implements Runnable {
     }
 
     public boolean authUser() {
-        PackageDataStructure pd = receivePackageData();
-        if(pd.content.equals("/login")) {
-            PackageDataStructure usernamePD = receivePackageData();
-            PackageDataStructure passwordPD = receivePackageData();
-            PackageDataStructure resultPD = new PackageDataStructure("", 0);
-            if(userService.loginUser(usernamePD.content, passwordPD.content)) {
-                this.username = usernamePD.content;
-                System.out.println("User" + this.username + " has logged in");
-                resultPD.content = "success";
+        while(true) {
+            PackageDataStructure pd = receivePackageData();
+            if (pd.content.equals("/login")) {
+                PackageDataStructure usernamePD = receivePackageData();
+                PackageDataStructure passwordPD = receivePackageData();
+                PackageDataStructure resultPD = new PackageDataStructure("", 0);
+                String result = userService.loginUser(usernamePD.content, passwordPD.content);
+                resultPD.content = result;
                 sendPackageData(resultPD);
-                return true;
+                if (result.equals("success")) {
+                    this.username = usernamePD.content;
+                    System.out.println("User " + this.username + " has logged in");
+                    return true;
+                }
+            }
+            else if (pd.content.equals("/register")) {
+                PackageDataStructure usernamePD = receivePackageData();
+                PackageDataStructure emailPD = receivePackageData();
+                PackageDataStructure passwordPD = receivePackageData();
+                System.out.println("Username: " + usernamePD.content);
+                System.out.println("Email: " + emailPD.content);
+                System.out.println("Password: " + passwordPD.content);
+                PackageDataStructure resultPD = new PackageDataStructure("", 0);
+                String result = userService.registerUser(usernamePD.content, passwordPD.content, emailPD.content);
+                resultPD.content = result;
+                sendPackageData(resultPD);
+                if (result.equals("success")) {
+                    this.username = usernamePD.content;
+                    System.out.println("User " + this.username + " has registered");
+                    return true;
+                }
             }
             else {
-                resultPD.content = "failed";
-                sendPackageData(resultPD);
-                return false;
+                System.out.println("Invalid command " + pd.content  );
+                break;
             }
         }
-        else if(pd.content.equals("/register")) {
-            PackageDataStructure usernamePD = receivePackageData();
-            PackageDataStructure emailPD = receivePackageData();
-            PackageDataStructure passwordPD = receivePackageData();
-            System.out.println("Username: " + usernamePD.content);
-            System.out.println("Email: " + emailPD.content);
-            System.out.println("Password: " + passwordPD.content);
-            PackageDataStructure resultPD = new PackageDataStructure("", 0);
-            if(userService.registerUser(usernamePD.content, passwordPD.content, emailPD.content)) {
-                this.username = usernamePD.content;
-                System.out.println("User" + this.username + " has been registered");
-                resultPD.content = "success";
-                sendPackageData(resultPD);
-                return true;
-            }
-            else {
-                System.out.println("Error registering user");
-                resultPD.content = "failed";
-                sendPackageData(resultPD);
-                return false;
-            }
-        }
-        else {
-            System.out.println("Invalid command");
-            return false;
-        }
+        return false;
     }
 }
 
@@ -393,5 +386,5 @@ public class ServerModule {
             throw new RuntimeException(e);
         }
     }
-    //Define other client methods here
+    //Define other server methods here
 }

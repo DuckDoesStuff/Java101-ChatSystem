@@ -1,7 +1,5 @@
 package Client;
 
-import DataStructure.UserInfo;
-
 import java.util.Scanner;
 
 public class Main {

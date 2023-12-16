@@ -1,10 +1,11 @@
 package view;
 
-import Database.DB;
-import User.UserController;
+import Client.ClientModule;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Objects;
 
 public class SignInUI extends JFrame {
@@ -13,15 +14,24 @@ public class SignInUI extends JFrame {
     private JButton signUp_jbtn;
     private  JButton pass_jbtn;
     private JTextField pw_jtf;
+    ClientModule clientModule;
 
     public SignInUI(){
+        clientModule = ClientModule.getInstance("localhost", 4000);
         setSize(1000,700);
         setTitle("Sign In");
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
         setLayout(null);
         getContentPane().setBackground(new Color(227, 235, 240));
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent windowEvent) {
+                clientModule.closeConnection();
+            }
+        });
 
         JLabel label = new JLabel("Welcome to my chat system!");
         label.setFont(new Font("Arial", Font.BOLD, 27));
@@ -98,7 +108,7 @@ public class SignInUI extends JFrame {
         add(formContainer);
 
         signIn_jbtn.addActionListener(e -> {
-            registerUser();
+            loginUser();
         });
         signUp_jbtn.addActionListener(e -> {
             signUp();
@@ -109,25 +119,31 @@ public class SignInUI extends JFrame {
         setVisible(true);
     }
 
-    void registerUser(){
+    void loginUser(){
         String userN = userN_jtf.getText();
         String pw = pw_jtf.getText();
-        if (!Objects.equals(userN, "") && !Objects.equals(pw, "")){
-            DB db = new DB();
-            UserController userC = new UserController(db.getConnection());
-//            userC.registerUser(userN, pw);
+
+        if (userN.isEmpty() || pw.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Please enter your username and password");
+        } else {
+            String result = clientModule.loginUser(userN, pw);
+            System.out.println(result);
+            if (result.equals("success")) {
+                JOptionPane.showMessageDialog(null, "Login successfully");
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(null, result);
+            }
         }
     }
 
     void signUp(){
+        dispose();
         new SignUpUI();
     }
 
     void forgot() {
+        dispose();
         new ChangPWUI();
-    }
-
-    public static void main(String[] args) {
-        new SignInUI();
     }
 }

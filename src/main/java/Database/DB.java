@@ -18,7 +18,6 @@ public class DB {
 
             Statement stmt = conn.createStatement();
             conn.setAutoCommit(false);
-            // TODO: QUERY TO INIT DATABASE IN HERE
             String sql1 = "CREATE TABLE IF NOT EXISTS users (" +
                     " userID SERIAL PRIMARY KEY, " +
                     " first_name VARCHAR(255), " +

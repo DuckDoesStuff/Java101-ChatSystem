@@ -9,7 +9,7 @@ public class UserService {
         this.conn = conn;
     }
 
-    public boolean registerUser(String username, String password, String email) {
+    public String registerUser(String username, String password, String email) {
         try {
             //See if a user with the same username already exists
             String sql = "SELECT * FROM users WHERE username = ? OR email = ?";
@@ -19,7 +19,7 @@ public class UserService {
             ResultSet rs = stmt.executeQuery();
             if(rs.next()) {
                 System.out.println("User already exists");
-                return false;
+                return "User already exists";
             }
             //Add the user to the database
             UserModel user = new UserModel(username, password, email);
@@ -41,14 +41,14 @@ public class UserService {
             stmt.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
             stmt.executeUpdate();
             conn.commit();
-            return true;
+            return "success";
         } catch (Exception e) {
             System.out.println("Error adding user");
             throw new RuntimeException(e);
         }
     }
 
-    public boolean loginUser(String username, String password) {
+    public String loginUser(String username, String password) {
         try {
             //See if a user with the same username already exists
             String sql = "SELECT * FROM users WHERE username = ?";
@@ -57,14 +57,14 @@ public class UserService {
             ResultSet rs = stmt.executeQuery();
             if(!rs.next()) {
                 System.out.println("User does not exist");
-                return false;
+                return "User does not exist";
             }
 
             //Check if the password is correct
             String UserPassword = rs.getString("password");
             if(!password.equals(UserPassword)) {
                 System.out.println("Incorrect password");
-                return false;
+                return "Incorrect password";
             }
 
             sql = "UPDATE users SET online_status = ? WHERE username = ?";
@@ -81,7 +81,7 @@ public class UserService {
             stmt.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
             stmt.executeUpdate();
             conn.commit();
-            return true;
+            return "success";
         } catch (Exception e) {
             System.out.println("Error logging in user");
             throw new RuntimeException(e);
