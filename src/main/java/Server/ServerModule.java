@@ -89,6 +89,7 @@ class ClientHandler implements Runnable {
                 PackageDataStructure pd = new PackageDataStructure(
                         "MSG from " + username + ": " + packageData.content,
                         0);
+                chatController.sendMessage(user, packageData.content);
                 sendToClient(pd, user);
             }
             else if (packageData.content.startsWith("/newgroup")){
