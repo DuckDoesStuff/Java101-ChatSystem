@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Scanner;
 
+import Chat.ChatController;
 import Chat.ChatModel;
 import Chat.ChatService;
 import ChatMember.ChatMemberService;
@@ -28,11 +29,9 @@ class ClientHandler implements Runnable {
     ObjectInputStream in;
     String username;
 
-    UserService userService;
+    ChatController chatController;
     FriendService friendService;
-    ChatService chatService;
-
-    ChatMemberService chatMemberService;
+    UserService userService;
     Connection conn;
 
     ClientHandler(Socket clientSocket, Connection conn) {
@@ -45,10 +44,9 @@ class ClientHandler implements Runnable {
             System.out.println("Error creating object streams");
             throw new RuntimeException(e);
         }
+        chatController = new ChatController(conn);
         userService = new UserService(conn);
         friendService = new FriendService(conn);
-        chatService = new ChatService(conn);
-        chatMemberService = new ChatMemberService(conn);
     }
 
     @Override
@@ -130,9 +128,7 @@ class ClientHandler implements Runnable {
                 if(friendService.acceptRequest(friendUsername, username)) {
                     System.out.println("Friend request accepted");
                     resultPD.content = "success";
-                    ChatModel newChat = chatService.addChat(false, username + " and " + friendUsername);
-                    chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(username));
-                    chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(friendUsername));
+                    chatController.createChat(friendUsername, false);
                 }
                 else {
                     System.out.println("Error accepting friend request");
@@ -252,6 +248,7 @@ class ClientHandler implements Runnable {
             PackageDataStructure resultPD = new PackageDataStructure("", 0);
             if(userService.loginUser(usernamePD.content, passwordPD.content)) {
                 this.username = usernamePD.content;
+                chatController.setUserID(userService.getUserIDFromUsername(usernamePD.content));
                 System.out.println("User" + this.username + " has logged in");
                 resultPD.content = "success";
                 sendPackageData(resultPD);
@@ -273,6 +270,7 @@ class ClientHandler implements Runnable {
             PackageDataStructure resultPD = new PackageDataStructure("", 0);
             if(userService.registerUser(usernamePD.content, passwordPD.content, emailPD.content)) {
                 this.username = usernamePD.content;
+                chatController.setUserID(userService.getUserIDFromUsername(usernamePD.content));
                 System.out.println("User" + this.username + " has been registered");
                 resultPD.content = "success";
                 sendPackageData(resultPD);

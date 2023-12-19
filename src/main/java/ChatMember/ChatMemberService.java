@@ -20,10 +20,15 @@ public class ChatMemberService {
             stmt.setInt(2, userID);
             ResultSet rs = stmt.executeQuery();
             conn.commit();
+            rs.next();
             return rs.getInt(1);
         } catch (Exception e) {
             System.out.println("Error adding chat member");
             throw new RuntimeException(e);
         }
     }
+
+
+
+
 }

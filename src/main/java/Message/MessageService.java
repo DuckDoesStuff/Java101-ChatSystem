@@ -2,18 +2,23 @@ package Message;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+//import java.time.LocalDateTime;
 
 public class MessageService {
     Connection conn;
     //    TODO Put a sent msg to the msg db
-    public boolean addMessage(String chatID, int userID, String content) {
+    public boolean addMessage(int chatID, int userID, String content) {
         try {
-            String sql = "INSERT INTO message (chatID, userID, content) VALUES (?, ?, ?)";
+            String sql = "INSERT INTO message (chatID, senderid, content, time) VALUES (?, ?, ?, ?)";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, chatID);
+            stmt.setInt(1, chatID);
             stmt.setInt(2, userID);
             stmt.setString(3, content);
+            Timestamp timestamp = Timestamp.valueOf(LocalDateTime.now());
+            stmt.setTimestamp(4, timestamp);
             stmt.executeUpdate();
             conn.commit();
             return true;
