@@ -1,14 +1,13 @@
 package view;
 
 import Client.ClientModule;
-import Database.DB;
-import User.UserController;
 import com.toedter.calendar.JDateChooser;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Date;
 import java.util.Objects;
 
 public class SignUpUI extends JFrame {
@@ -185,14 +184,17 @@ public class SignUpUI extends JFrame {
     }
 
     void registerUser(){
-        //TODO: implement register user with UI
         String userN = userN_jtf.getText();
-        String pw = pw_jtf.getText();
+        String firstN = firstN_jtf.getText();
+        String lastN = lastN_jtf.getText();
+        String address = address_jtf.getText();
+        Date dob = dateChooser.getDate();
+        boolean gender = maleRadioButton.isSelected();
         String email = email_jtf.getText();
+        String pw = pw_jtf.getText();
+
         if (!Objects.equals(userN, "") && !Objects.equals(pw, "") && !Objects.equals(email, "")){
-            DB db = new DB();
-            UserController userC = new UserController(db.getConnection());
-            userC.registerUser(userN, pw, email);
+            clientModule.registerUser(userN, email, pw, firstN, lastN, address, dob, gender);
         }
     }
 

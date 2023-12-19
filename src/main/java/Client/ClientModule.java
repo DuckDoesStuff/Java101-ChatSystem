@@ -3,6 +3,8 @@ import java.io.*;
 import java.net.*;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Scanner;
 
 import DataStructure.PackageDataStructure;
@@ -180,14 +182,7 @@ public class ClientModule implements Runnable {
         return result;
     }
 
-    public String registerUser() {
-        System.out.println("Enter your username: ");
-        String username = scanner.nextLine();
-        System.out.println("Enter your email: ");
-        String email = scanner.nextLine();
-        System.out.println("Enter your password: ");
-        String password = scanner.nextLine();
-
+    public String registerUser(String username, String email, String password, String firstname, String lastname, String address, Date dob, boolean gender) {
         PackageDataStructure registerPD = new PackageDataStructure(
                 "/register",
                 0
@@ -204,11 +199,36 @@ public class ClientModule implements Runnable {
                 password,
                 0
         );
+        PackageDataStructure firstnamePD = new PackageDataStructure(
+                firstname,
+                0
+        );
+        PackageDataStructure lastnamePD = new PackageDataStructure(
+                lastname,
+                0
+        );
+        PackageDataStructure addressPD = new PackageDataStructure(
+                address,
+                0
+        );
+        PackageDataStructure dobPD = new PackageDataStructure(
+                new SimpleDateFormat("yyyy/MM/dd").format(dob),
+                0
+        );
+        PackageDataStructure genderPD = new PackageDataStructure(
+                gender ? "true" : "false",
+                0
+        );
 
         sendPackageData(registerPD);
         sendPackageData(usernamePD);
         sendPackageData(emailPD);
         sendPackageData(passwordPD);
+        sendPackageData(firstnamePD);
+        sendPackageData(lastnamePD);
+        sendPackageData(addressPD);
+        sendPackageData(dobPD);
+        sendPackageData(genderPD);
         String result = receivePackageData().content;
         loggedIn = result.equals("success");
         return result;

@@ -5,7 +5,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.sql.Connection;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -306,11 +308,16 @@ class ClientHandler implements Runnable {
                 PackageDataStructure usernamePD = receivePackageData();
                 PackageDataStructure emailPD = receivePackageData();
                 PackageDataStructure passwordPD = receivePackageData();
+                PackageDataStructure firstnamePD = receivePackageData();
+                PackageDataStructure lastnamePD = receivePackageData();
+                PackageDataStructure addressPD = receivePackageData();
+                PackageDataStructure dobPD = receivePackageData();
+                PackageDataStructure genderPD = receivePackageData();
                 System.out.println("Username: " + usernamePD.content);
                 System.out.println("Email: " + emailPD.content);
                 System.out.println("Password: " + passwordPD.content);
                 PackageDataStructure resultPD = new PackageDataStructure("", 0);
-                String result = userService.registerUser(usernamePD.content, passwordPD.content, emailPD.content);
+                String result = userService.registerUser(usernamePD.content, passwordPD.content, emailPD.content, firstnamePD.content, lastnamePD.content, addressPD.content, dobPD.content, genderPD.content);
                 resultPD.content = result;
                 sendPackageData(resultPD);
                 if (result.equals("success")) {

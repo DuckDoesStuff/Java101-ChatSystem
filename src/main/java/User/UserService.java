@@ -1,7 +1,9 @@
 package User;
 
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class UserService {
     Connection conn;
@@ -9,7 +11,7 @@ public class UserService {
         this.conn = conn;
     }
 
-    public String registerUser(String username, String password, String email) {
+    public String registerUser(String username, String password, String email, String firstname, String lastname, String address, String dob, String gender) {
         try {
             //See if a user with the same username already exists
             String sql = "SELECT * FROM users WHERE username = ? OR email = ?";
@@ -23,7 +25,7 @@ public class UserService {
             }
             //Add the user to the database
             UserModel user = new UserModel(username, password, email);
-            sql = "INSERT INTO users (username, password, email, online_status, opened_time, first_joined) VALUES (?, ?, ?, ?, ?, ?)";
+            sql = "INSERT INTO users (username, password, email, online_status, opened_time, first_joined, first_name, last_name, address, dateofbirth, gender) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, user.username);
             stmt.setString(2, user.password);
@@ -31,6 +33,12 @@ public class UserService {
             stmt.setBoolean(4, true);
             stmt.setInt(5, 1);
             stmt.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
+            stmt.setString(7, firstname);
+            stmt.setString(8, lastname);
+            stmt.setString(9, address);
+            Date utilDate = new SimpleDateFormat("yyyy/MM/dd").parse(dob);
+            stmt.setDate(10, new java.sql.Date(utilDate.getTime()));
+            stmt.setBoolean(11, gender.equals("true"));
             stmt.executeUpdate();
             conn.commit();
 
