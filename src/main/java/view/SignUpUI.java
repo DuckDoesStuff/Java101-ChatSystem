@@ -22,7 +22,7 @@ public class SignUpUI extends JFrame {
     private final JTextField lastN_jtf;
 
     public SignUpUI(){
-        setSize(1000,700);
+        setSize(1000,740);
         setTitle("Sign Up");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -94,9 +94,11 @@ public class SignUpUI extends JFrame {
         maleRadioButton = new JRadioButton("Male");
         maleRadioButton.setFont(new Font("Arial", Font.PLAIN, 17));
         maleRadioButton.setBounds(220, 225, 90, 40);
+        maleRadioButton.setBackground(new Color(227, 235, 240));
         femaleRadioButton = new JRadioButton("Female");
         femaleRadioButton.setFont(new Font("Arial", Font.PLAIN, 17));
         femaleRadioButton.setBounds(310, 225, 90, 40);
+        femaleRadioButton.setBackground(new Color(227, 235, 240));
 
         // Group button
         ButtonGroup genderGroup = new ButtonGroup();

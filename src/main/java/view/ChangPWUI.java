@@ -14,7 +14,7 @@ public class ChangPWUI extends JFrame {
     private JTextField pw_jtf;
 
     public ChangPWUI(){
-        setSize(1000,700);
+        setSize(1000,740);
         setTitle("Forgot password");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

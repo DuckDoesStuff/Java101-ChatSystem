@@ -15,7 +15,7 @@ public class SignInUI extends JFrame {
     private JTextField pw_jtf;
 
     public SignInUI(){
-        setSize(1000,700);
+        setSize(1000,740);
         setTitle("Sign In");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -51,11 +51,11 @@ public class SignInUI extends JFrame {
         //password
         JLabel pw_jlb = new JLabel("Password");
         pw_jlb.setFont(new Font("Arial", Font.PLAIN, 18));
-        pw_jlb.setBounds(40, 75, 100, pw_jlb.getPreferredSize().height);
+        pw_jlb.setBounds(40, 60, 100, pw_jlb.getPreferredSize().height);
 
         pw_jtf = new JTextField(15);
         pw_jtf.setFont(new Font("Arial", Font.PLAIN, 17));
-        pw_jtf.setBounds(220, 65, 270, 35);
+        pw_jtf.setBounds(220, 55, 270, 35);
 
         //signIn button
         signIn_jbtn = new RoundedButton("SIGN IN", 270, 45, 40, false, null);
@@ -65,7 +65,7 @@ public class SignInUI extends JFrame {
         signIn_jbtn.setBorder(null);
 
         //forgot password button
-        pass_jbtn = new RoundedButton("Forgot password ? ", 155, 45, 40, false, null);
+        pass_jbtn = new RoundedButton("Forgot password", 155, 45, 40, false, null);
         pass_jbtn.setBounds(280, 190, 150, 45);
         pass_jbtn.setBackground(new Color(227, 235, 240));
         pass_jbtn.setForeground(Color.BLACK);
