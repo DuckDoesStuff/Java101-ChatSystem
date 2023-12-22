@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.Scanner;
 
+import Chat.ChatController;
 import Chat.ChatModel;
 import Chat.ChatService;
 import ChatMember.ChatMemberService;
@@ -18,6 +19,7 @@ import DataStructure.PackageDataStructure;
 import DataStructure.UserInfo;
 import Database.DB;
 import Friend.FriendService;
+import Message.MessageModel;
 import User.UserService;
 
 class ClientHandler implements Runnable {
@@ -30,11 +32,9 @@ class ClientHandler implements Runnable {
     ObjectInputStream in;
     String username;
 
-    UserService userService;
+    ChatController chatController;
     FriendService friendService;
-    ChatService chatService;
-
-    ChatMemberService chatMemberService;
+    UserService userService;
     Connection conn;
 
     ClientHandler(Socket clientSocket, Connection conn) {
@@ -47,10 +47,9 @@ class ClientHandler implements Runnable {
             System.out.println("Error creating object streams");
             throw new RuntimeException(e);
         }
+        chatController = new ChatController(conn);
         userService = new UserService(conn);
         friendService = new FriendService(conn);
-        chatService = new ChatService(conn);
-        chatMemberService = new ChatMemberService(conn);
     }
 
     @Override
@@ -94,6 +93,7 @@ class ClientHandler implements Runnable {
                 PackageDataStructure pd = new PackageDataStructure(
                         "MSG from " + username + ": " + packageData.content,
                         0);
+                chatController.sendMessage(user, packageData.content);
                 sendToClient(pd, user);
             }
             else if (packageData.content.startsWith("/newgroup")){
@@ -133,9 +133,7 @@ class ClientHandler implements Runnable {
                 if(friendService.acceptRequest(friendUsername, username)) {
                     System.out.println("Friend request accepted");
                     resultPD.content = "success";
-//                    ChatModel newChat = chatService.addChat(false, username + " and " + friendUsername);
-//                    chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(username));
-//                    chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(friendUsername));
+                    chatController.createChat(friendUsername, false);
                 }
                 else {
                     System.out.println("Error accepting friend request");
@@ -196,6 +194,16 @@ class ClientHandler implements Runnable {
                     }
                 }
                 sendPackageData(friendsPD);
+            }
+            else if (packageData.content.startsWith("/history")){
+                String[] split = packageData.content.split(" ");
+                String friendname = split[1];
+                ArrayList<MessageModel> history = chatController.getMessageHistory(friendname);
+                for (MessageModel message : history){
+                    String msg = userService.findUsernameWithUserID(message.getSendUserID()) + ": " + message.getContent();
+                    PackageDataStructure pd = new PackageDataStructure(msg, 0);
+                    sendPackageData(pd);
+                }
             }
             else if (packageData.content.equals("/unfriend")) {
                 PackageDataStructure friendUsernamePD = receivePackageData();
