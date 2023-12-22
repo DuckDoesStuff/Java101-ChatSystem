@@ -17,6 +17,7 @@ import DataStructure.PackageDataStructure;
 import DataStructure.UserInfo;
 import Database.DB;
 import Friend.FriendService;
+import Message.MessageModel;
 import User.UserService;
 
 class ClientHandler implements Runnable {
@@ -162,6 +163,16 @@ class ClientHandler implements Runnable {
                     }
                 }
                 sendPackageData(friendsPD);
+            }
+            else if (packageData.content.startsWith("/history")){
+                String[] split = packageData.content.split(" ");
+                String friendname = split[1];
+                ArrayList<MessageModel> history = chatController.getMessageHistory(friendname);
+                for (MessageModel message : history){
+                    String msg = userService.findUsernameWithUserID(message.getSendUserID()) + ": " + message.getContent();
+                    PackageDataStructure pd = new PackageDataStructure(msg, 0);
+                    sendPackageData(pd);
+                }
             }
             else {
                 PackageDataStructure pd = new PackageDataStructure(

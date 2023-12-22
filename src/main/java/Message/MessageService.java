@@ -29,18 +29,18 @@ public class MessageService {
     }
 
     //    TODO Get all msg history from the db base on ChatID
-    public ArrayList<MessageModel> getMessages(String chatID) {
+    public ArrayList<MessageModel> getMessages(int chatID) {
         try {
             String sql = "SELECT * FROM message WHERE chatID = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, chatID);
+            stmt.setInt(1, chatID);
             ResultSet rs = stmt.executeQuery();
             ArrayList<MessageModel> messages = new ArrayList<>();
             while(rs.next()) {
                 MessageModel message = new MessageModel(
                         rs.getInt("messageID"),
-                        rs.getString("chatID"),
-                        rs.getInt("userID"),
+                        rs.getInt("chatID"),
+                        rs.getInt("senderID"),
                         rs.getString("content"),
                         rs.getTimestamp("time").toLocalDateTime()
                 );

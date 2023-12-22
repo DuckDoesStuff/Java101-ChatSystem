@@ -4,12 +4,12 @@ import java.time.LocalDateTime;
 
 public class MessageModel {
     int messageID; // Primary Key
-    String chatID;
+    int chatID;
     int sendUserID;
     String content;
     LocalDateTime time;
 
-    public MessageModel(int messageID, String chatID, int sendUserID, String content, LocalDateTime time){
+    public MessageModel(int messageID, int chatID, int sendUserID, String content, LocalDateTime time){
         this.messageID = messageID;
         this.chatID = chatID;
         this.sendUserID = sendUserID;
@@ -21,7 +21,7 @@ public class MessageModel {
         return messageID;
     }
 
-    public String getChatID(){
+    public int getChatID(){
         return chatID;
     }
 

@@ -1,8 +1,10 @@
 package Chat;
 import ChatMember.ChatMemberService;
+import Message.MessageModel;
 import Message.MessageService;
 import User.UserService;
 import java.sql.Connection;
+import java.util.ArrayList;
 
 public class ChatController {
     private int userid;
@@ -41,6 +43,13 @@ public class ChatController {
         int receiverID = userService.getUserIDFromUsername(receiver);
         ChatModel chat = chatService.findChat(userid, receiverID);
         messageService.addMessage(chat.getChatID(), receiverID, message);
-        // TODO: Update the chat in UI
+
+    }
+
+    // TODO: Get chat history
+    public ArrayList<MessageModel> getMessageHistory(String receiver) {
+        int receiverID = userService.getUserIDFromUsername(receiver);
+        ChatModel chat = chatService.findChat(userid, receiverID);
+        return messageService.getMessages(chat.getChatID());
     }
 }

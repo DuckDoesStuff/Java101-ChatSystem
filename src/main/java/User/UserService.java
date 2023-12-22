@@ -118,6 +118,23 @@ public class UserService {
         }
     }
 
+    public String findUsernameWithUserID(int userID) {
+        try {
+            String sql = "SELECT username FROM users WHERE userID = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            ResultSet rs = stmt.executeQuery();
+            if(!rs.next()) {
+                System.out.println("No such user");
+                return null;
+            }
+            return rs.getString("username");
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void main(String[] args) {
     }
 }
