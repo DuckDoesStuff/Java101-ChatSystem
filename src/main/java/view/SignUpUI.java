@@ -187,6 +187,7 @@ public class SignUpUI extends JFrame {
     }
 
     void login(){
+        dispose();
         new SignInUI();
     }
     

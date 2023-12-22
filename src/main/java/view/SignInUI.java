@@ -120,10 +120,12 @@ public class SignInUI extends JFrame {
     }
 
     void signUp(){
+        dispose();
         new SignUpUI();
     }
 
     void forgot() {
+        dispose();
         new ChangPWUI();
     }
 

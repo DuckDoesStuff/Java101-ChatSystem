@@ -1,7 +1,25 @@
 package view;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLEditorKit;
 import java.awt.*;
+import java.awt.Dimension;
+import java.io.IOException;
+import java.util.Objects;
+
+class User {
+    int id;
+    String name;
+    String status;
+
+    public User(int id, String name, String status) {
+        this.id = id;
+        this.name = name;
+        this.status = status;
+    }
+}
 
 public class Chat extends JFrame {
 
@@ -25,6 +43,25 @@ public class Chat extends JFrame {
     private JButton search_btn;
     private JButton searchAll_btn;
     private JButton leaveG_btn;
+    private JTextField inputChat_jtf;
+    private JEditorPane mainChat;
+    private JPanel buttonPanel;
+
+    public User[] getUsers() {
+        User[] userlist = new User[10];
+        userlist[0] = new User(0, "User 1", "ON");
+        userlist[1] = new User(1, "Group 1", "ON");
+        userlist[2] = new User(0, "User 2", "OFF");
+        userlist[3] = new User(1, "Group 2", "OFF");
+        userlist[4] = new User(0, "User 3", "ON");
+        userlist[5] = new User(1, "Group 3", "OFF");
+        userlist[6] = new User(0, "User 4", "OFF");
+        userlist[7] = new User(1, "Group 4", "ON");
+        userlist[8] = new User(0, "User 5", "OFF");
+        userlist[9] = new User(0, "User 6", "ON");
+
+        return userlist;
+    }
 
 
     public Chat() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException {
@@ -45,10 +82,8 @@ public class Chat extends JFrame {
         //topPart(in left area - title and searching)
         //frame
         JPanel topPart = new JPanel(null);
-        topPart.setBounds(0, 0, 249, 125);
-        topPart.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK),
-                BorderFactory.createEmptyBorder(0, 0, 1, 0)));
+        topPart.setBounds(0, 0, 249, 126);
+        topPart.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
         topPart.setBackground(new Color(227, 235, 240));
         leftArea.add(topPart);
         //title
@@ -63,7 +98,7 @@ public class Chat extends JFrame {
         topPart.add(inputUser_jtf);
 
         JButton findUser_btn = new JButton("Find");
-//        JButton findUser_btn = new RoundedButton("Find", 70, 30, 20, true, Color.BLACK);
+        //JButton findUser_btn = new RoundedButton("Find", 70, 30, 20, true, Color.BLACK);
         findUser_btn.setBackground(Color.WHITE);
         findUser_btn.setBounds(170, 65, 70, 30);
         topPart.add(findUser_btn);
@@ -79,7 +114,7 @@ public class Chat extends JFrame {
         midPart.setBackground(new Color(227, 235, 240));
         leftArea.add(midPart);
         //Choose filter
-        String[] statusL = {"All", "Online list", "Offline"};
+        String[] statusL = {"All", "Online list", "Offline list"};
         JComboBox status = new JComboBox(statusL);
         status.setBounds(10, 10, 170, 20);
         status.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -92,13 +127,42 @@ public class Chat extends JFrame {
         midPart.add(filter_btn);
 
         //user list
-        JPanel usersField = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        usersField.setBounds(0, 50, 249, 380);
-        usersField.setBackground(new Color(217, 217, 217));
-//        JScrollPane = new JScrollPane(talkArea,
-//                JScrollPane.VERTICAL_SCROLLBAR_NEVER,
-//                JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);)
-        midPart.add(usersField);
+//        JPanel usersField = new JPanel(new FlowLayout(FlowLayout.CENTER));
+//        usersField.setBounds(0, 50, 249, 380);
+//        usersField.setBackground(new Color(217, 217, 217));
+
+        User[] users = getUsers();
+        buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+
+        for (int i = 0; i < users.length; i++) {
+            JButton avatar = new JButton(users[i].name);
+            Dimension buttonSize = new Dimension(228, 60);
+            avatar.setPreferredSize(buttonSize);
+            avatar.setMinimumSize(buttonSize);
+            avatar.setMaximumSize(buttonSize);
+            avatar.setBackground(new Color(156, 156, 156));
+            buttonPanel.add(avatar);
+
+            // Change right side
+            avatar.addActionListener(e -> {
+                System.out.println(avatar.getText());
+                for (int j = 0; j < users.length; j++) {
+                    if (Objects.equals(users[j].name, avatar.getText())) {
+                        System.out.println(users[j].id);
+                        displayRightSide(users[j].id);
+                        displayChatName(users[j].name);
+                    }
+                }
+            });
+        }
+
+        JScrollPane listuser = new JScrollPane(buttonPanel);
+        listuser.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        listuser.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        listuser.setBounds(0, 50, 249, 450);
+
+        midPart.add(listuser);
 
         //bottomPart(in left area - logout)
         //frame
@@ -135,11 +199,19 @@ public class Chat extends JFrame {
 
         //chatField (in center area - field of messages)
         //frame
-        JPanel chat_field = new JPanel(null);
-        chat_field.setBounds(0, 76, 500, 550);
-        chat_field.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
-        chat_field.setBackground(new Color(227, 235, 240));
-        centerArea.add(chat_field);
+        mainChat = new JEditorPane();
+        mainChat.setEditable(false);
+        mainChat.setBackground(new Color(227, 235, 240));
+        mainChat.setContentType("text/html");
+
+        JScrollPane talkPane = new JScrollPane(mainChat,
+                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+        talkPane.setBounds(0, 76, 500, 550);
+        talkPane.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
+
+        centerArea.add(talkPane);
 
         //inputMsg (in center area - input and send message)
         //frame
@@ -148,7 +220,7 @@ public class Chat extends JFrame {
         input_field.setBackground(new Color(227, 235, 240));
         centerArea.add(input_field);
         //input
-        JTextField inputChat_jtf = new JTextField(3);
+        inputChat_jtf = new JTextField(3);
         inputChat_jtf.setFont(new Font("Arial", Font.PLAIN, 14));
         inputChat_jtf.setBounds(10, 10, 400, 30);
         input_field.add(inputChat_jtf);
@@ -157,6 +229,17 @@ public class Chat extends JFrame {
 //        JButton send_btn = new RoundedButton("Send", 70, 30, 20, true, Color.BLACK);
         send_btn.setBackground(Color.WHITE);
         send_btn.setBounds(420, 10, 70, 30);
+        send_btn.addActionListener(e -> {
+            try {
+                listenForMessage();
+                sendMessage();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (BadLocationException ex) {
+                throw new RuntimeException(ex);
+            }
+            inputChat_jtf.setText("");
+        });
         input_field.add(send_btn);
 
         //RIGHT AREA
@@ -194,6 +277,59 @@ public class Chat extends JFrame {
         filter_btn.addActionListener(e -> {
             displayChatName("TVA - 123");
             //call function display user
+            String selectedStatus = (String) status.getSelectedItem();
+
+            if (Objects.equals(selectedStatus, "All")) {
+                System.out.println("Selected status: " + selectedStatus);
+                buttonPanel.removeAll();
+                buttonPanel.revalidate();
+                buttonPanel.repaint();
+
+                for (int i = 0; i < users.length; i++) {
+                    JButton avatar = new JButton(users[i].name);
+                    Dimension buttonSize = new Dimension(228, 60);
+                    avatar.setPreferredSize(buttonSize);
+                    avatar.setMinimumSize(buttonSize);
+                    avatar.setMaximumSize(buttonSize);
+                    avatar.setBackground(new Color(156, 156, 156));
+                    buttonPanel.add(avatar);
+                }
+
+            } else if (Objects.equals(selectedStatus, "Online list")) {
+                System.out.println("Selected status: " + selectedStatus);
+                buttonPanel.removeAll();
+                buttonPanel.revalidate();
+                buttonPanel.repaint();
+
+                for (int i = 0; i < users.length; i++) {
+                    if (Objects.equals(users[i].status, "ON")) {
+                        JButton avatar = new JButton(users[i].name);
+                        Dimension buttonSize = new Dimension(228, 60);
+                        avatar.setPreferredSize(buttonSize);
+                        avatar.setMinimumSize(buttonSize);
+                        avatar.setMaximumSize(buttonSize);
+                        avatar.setBackground(new Color(156, 156, 156));
+                        buttonPanel.add(avatar);
+                    }
+                }
+            } else {
+                System.out.println("Selected status: " + selectedStatus);
+                buttonPanel.removeAll();
+                buttonPanel.revalidate();
+                buttonPanel.repaint();
+
+                for (int i = 0; i < users.length; i++) {
+                    if (Objects.equals(users[i].status, "OFF")) {
+                        JButton avatar = new JButton(users[i].name);
+                        Dimension buttonSize = new Dimension(228, 60);
+                        avatar.setPreferredSize(buttonSize);
+                        avatar.setMinimumSize(buttonSize);
+                        avatar.setMaximumSize(buttonSize);
+                        avatar.setBackground(new Color(156, 156, 156));
+                        buttonPanel.add(avatar);
+                    }
+                }
+            }
         });
 
         //handling logout
@@ -205,9 +341,29 @@ public class Chat extends JFrame {
 
         });
 
-        displayRightSide(0);
-        displayChatName("TVA");
+    }
 
+    void sendMessage() throws IOException, BadLocationException {
+        HTMLDocument htmlDocument = (HTMLDocument) mainChat.getDocument();
+        HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
+
+        String messageToSend = inputChat_jtf.getText();
+        String message = "<div style='text-align: right;'>" + messageToSend + "\n" + "</div>";
+        if (!messageToSend.isEmpty()) {
+            editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
+        }
+    }
+
+    // Receive message for another user.
+    void listenForMessage() throws IOException, BadLocationException {
+        HTMLDocument htmlDocument = (HTMLDocument) mainChat.getDocument();
+        HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
+
+        String messageToReceive = "Hello everyone";
+        String message = "<div style='text-align: left;'>" + messageToReceive+ "\n" + "</div>";
+        if (!messageToReceive.isEmpty()) {
+            editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
+        }
     }
 
     void displayChatName(String chatN){
@@ -216,6 +372,14 @@ public class Chat extends JFrame {
     }
     void displayRightSide(int c){ //c: 0 - person, 1 - group, 2 - group + admin
         if (c == 0){ //if this is a personal chat
+            buttons_field.removeAll();
+            buttons_field.revalidate();
+            buttons_field.repaint();
+
+            bottom_field.removeAll();
+            bottom_field.revalidate();
+            bottom_field.repaint();
+
             addFriend_btn = new JButton("Add Friend");
             addFriend_btn.setPreferredSize(new Dimension(195, 50));
             addFriend_btn.setBackground(new Color(150, 199, 202));
@@ -265,6 +429,14 @@ public class Chat extends JFrame {
             bottom_field.add(searchAll_btn);
         }
         else{ //group chat
+            buttons_field.removeAll();
+            buttons_field.revalidate();
+            buttons_field.repaint();
+
+            bottom_field.removeAll();
+            bottom_field.revalidate();
+            bottom_field.repaint();
+
             newName_jtf = new JTextField(17);
             newName_jtf.setFont(new Font("Arial", Font.PLAIN, 14));
             buttons_field.add(newName_jtf);
