@@ -99,6 +99,15 @@ public class DB {
             stmt.execute(sql8);
             conn.commit();
 
+            String sql9 = "CREATE TABLE IF NOT EXISTS reports (" +
+                    " userID INT, " +
+                    " spammerID INT, " +
+                    " date_reported DATE," +
+                    " FOREIGN KEY (userID) REFERENCES users(userID)," +
+                    " FOREIGN KEY (spammerID) REFERENCES users(userID))";
+            stmt.execute(sql9);
+            conn.commit();
+
         } catch (Exception e) {
             System.out.println("Error connecting to the database");
             throw new RuntimeException(e);

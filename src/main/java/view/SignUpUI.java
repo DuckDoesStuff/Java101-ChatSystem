@@ -194,7 +194,13 @@ public class SignUpUI extends JFrame {
         String pw = pw_jtf.getText();
 
         if (!Objects.equals(userN, "") && !Objects.equals(pw, "") && !Objects.equals(email, "")){
-            clientModule.registerUser(userN, email, pw, firstN, lastN, address, dob, gender);
+            String result = clientModule.registerUser(userN, email, pw, firstN, lastN, address, dob, gender);
+            if (result.equals("success")) {
+                JOptionPane.showMessageDialog(null, "Register successfully");
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(null, result);
+            }
         }
     }
 
