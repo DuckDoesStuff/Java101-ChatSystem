@@ -21,6 +21,7 @@ public class SignInUI extends JFrame {
         setSize(1000,700);
         setTitle("Sign In");
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
         setLayout(null);
         getContentPane().setBackground(new Color(227, 235, 240));
@@ -145,5 +146,9 @@ public class SignInUI extends JFrame {
     void forgot() {
         dispose();
         new ChangPWUI();
+    }
+
+    public static void main(String[] args) {
+        new SignInUI();
     }
 }

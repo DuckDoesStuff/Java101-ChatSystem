@@ -12,9 +12,10 @@ public class ChangPWUI extends JFrame {
     private JButton signUp_jbtn;
     private JButton back_jbtn;
     private JTextField pw_jtf;
+    private JTextField userN_jtf;
 
     public ChangPWUI(){
-        setSize(1000,700);
+        setSize(1000,740);
         setTitle("Forgot password");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -43,14 +44,23 @@ public class ChangPWUI extends JFrame {
         formContainer.setBounds(250, 280, 700, 400);
         formContainer.setBackground(new Color(227, 235, 240));
 
+        //username
+        JLabel userN_jlb = new JLabel("User name");
+        userN_jlb.setFont(new Font("Arial", Font.PLAIN, 18));
+        userN_jlb.setBounds(40, 10, 100, userN_jlb.getPreferredSize().height);
+
+        userN_jtf = new JTextField(18);
+        userN_jtf.setFont(new Font("Arial", Font.PLAIN, 17));
+        userN_jtf.setBounds(220, 0, 270, 35);
+
         //new password
         JLabel pw_jlb = new JLabel("New password");
         pw_jlb.setFont(new Font("Arial", Font.PLAIN, 18));
-        pw_jlb.setBounds(40, 45, 150, pw_jlb.getPreferredSize().height);
+        pw_jlb.setBounds(40, 75, 150, pw_jlb.getPreferredSize().height);
 
         pw_jtf = new JTextField(15);
         pw_jtf.setFont(new Font("Arial", Font.PLAIN, 17));
-        pw_jtf.setBounds(220, 35, 270, 35);
+        pw_jtf.setBounds(220, 65, 270, 35);
 
         //signIn button
         signIn_jbtn = new RoundedButton("SIGN IN", 120, 45, 40, false, null);
@@ -78,6 +88,8 @@ public class ChangPWUI extends JFrame {
         signUp_jbtn.setForeground(new Color(239, 95, 86));
         signUp_jbtn.setBorder(null);
 
+        formContainer.add(userN_jlb );
+        formContainer.add(userN_jtf );
         formContainer.add(pw_jlb);
         formContainer.add(pw_jtf);
         formContainer.add(signIn_jbtn);
@@ -112,10 +124,12 @@ public class ChangPWUI extends JFrame {
     }
 
     void signUp(){
+        dispose();
         new SignUpUI();
     }
 
     void signIn() {
+        dispose();
         new SignInUI();
     }
 
