@@ -61,7 +61,8 @@ public class ChatService {
     // Find chat base on senderID and receiverID
     public ChatModel findChat(int senderID, int receiverID) {
         try {
-            String sql = "SELECT * FROM chat WHERE chatID IN (SELECT chatID FROM chatmember WHERE (userID = ? OR userID = ?))";
+            // Error here
+            String sql = "SELECT * FROM chat WHERE chatID IN ((SELECT chatID FROM chatmember WHERE userID = ?) INTERSECT  (SELECT chatID FROM chatmember WHERE userID = ?))";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, senderID);
             stmt.setInt(2, receiverID);

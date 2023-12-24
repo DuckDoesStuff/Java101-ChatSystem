@@ -66,7 +66,7 @@ class ClientHandler implements Runnable {
         }
 
         System.out.println("Client username: " + username);
-
+        chatController.setUserID(userService.getUserIDFromUsername(username));
         while(clientSocket.isConnected()) {
             PackageDataStructure packageData;
             try {
