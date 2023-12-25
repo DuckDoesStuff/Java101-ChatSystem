@@ -13,35 +13,56 @@ import org.postgresql.shaded.com.ongres.scram.common.bouncycastle.pbkdf2.Pack;
 
 public class ClientModule implements Runnable {
     Socket clientSocket;
-
+    Socket clientChatSocket;
     ObjectOutputStream out;
+    public ObjectOutputStream outChat;
     ObjectInputStream in;
+    public ObjectInputStream inChat;
     String username;
     Scanner scanner;
     volatile boolean loggedIn = false;
 
     private static ClientModule instance;
 
-    public static synchronized ClientModule getInstance(String host, int port) {
+    public static synchronized ClientModule getInstance(String host, int portForData, int portForChat) {
         if (instance == null) {
             System.out.println("Initializing new client module instance");
-            instance = new ClientModule(host, port);
+            instance = new ClientModule(host, portForData, portForChat);
         }
         System.out.println("Returning existing client module instance");
         return instance;
     }
 
-    ClientModule(String host, int port) {
+
+
+    ClientModule(String host, int portForData, int portForChat) {
         try {
-            clientSocket = new Socket(host, port);
+            clientSocket = new Socket(host, portForData);
+            System.out.println("accepted socket for data");
+            clientChatSocket = new Socket(host, portForChat);
+            System.out.println("accepted socket for chat");
+
             out = new ObjectOutputStream(clientSocket.getOutputStream());
+            out.flush();
+
+            outChat = new ObjectOutputStream(clientChatSocket.getOutputStream());
+            outChat.flush();
+
+            inChat = new ObjectInputStream(clientChatSocket.getInputStream());
             in = new ObjectInputStream(clientSocket.getInputStream());
+
+            System.out.println("accepted streams");
             scanner = new Scanner(System.in);
-            System.out.println("Connected to server: " +
+            System.out.println("accepted scanner");
+            System.out.println("Connected to server port for Data " +
                     clientSocket.getInetAddress().getHostAddress() + ":" +
                     clientSocket.getPort());
+            System.out.println("Connected to server port for Chat " +
+                    clientChatSocket.getInetAddress().getHostAddress() + ":" +
+                    clientChatSocket.getPort());
         } catch (Exception e) {
             System.out.println("Error connecting to server");
+            System.out.println(e.getMessage());
         }
     }
 
@@ -56,10 +77,10 @@ public class ClientModule implements Runnable {
         //packageListener();
 
         while(isConnected() && loggedIn) {
-                    String content = scanner.nextLine();
-                    if(clientSocket.isClosed()) {
-                        System.out.println("Connection closed");
-                        break;
+            String content = scanner.nextLine();
+            if(clientSocket.isClosed()) {
+            System.out.println("Connection closed");
+            break;
             }
 
             if(content.startsWith("/addfriend")) {
@@ -134,14 +155,27 @@ public class ClientModule implements Runnable {
         }
     }
 
+
+
     public PackageDataStructure receivePackageData() {
         PackageDataStructure packageData;
         try {
+            System.out.println("Waiting for package data");
             packageData = (PackageDataStructure) in.readObject();
         } catch (Exception e) {
             System.out.println("Error receiving package data");
-            //System.out.println(e.getClass().getName());
-            //System.out.println(e.getMessage());
+            System.out.println(e.getMessage());
+            return null;
+        }
+        return packageData;
+    }
+
+    public PackageDataStructure receivePackageDataForChat() {
+        PackageDataStructure packageData;
+        try {
+            packageData = (PackageDataStructure) inChat.readObject();
+        } catch (Exception e) {
+            System.out.println("Error receiving package data");
 
             return null;
         }
@@ -151,6 +185,14 @@ public class ClientModule implements Runnable {
     public void sendPackageData(PackageDataStructure packageData) {
         try {
             out.writeObject(packageData);
+        } catch (Exception e) {
+            System.out.println("Error sending package data");
+        }
+    }
+
+    public void sendPackageDataForChat(PackageDataStructure packageData) {
+        try {
+            outChat.writeObject(packageData);
         } catch (Exception e) {
             System.out.println("Error sending package data");
         }
@@ -169,6 +211,9 @@ public class ClientModule implements Runnable {
 
         String result = receivePackageData().content.getFirst();
         loggedIn = result.equals("success");
+        if (loggedIn) {
+            this.username = username;
+        }
         return result;
     }
 
@@ -193,6 +238,17 @@ public class ClientModule implements Runnable {
         return result;
     }
 
+    public ArrayList<String> getChatHistory(String friendUsername) {
+        PackageDataStructure getChatHistoryPD = new PackageDataStructure(
+                "/chathistory"
+        );
+        getChatHistoryPD.content.add(friendUsername);
+        sendPackageData(getChatHistoryPD);
+        System.out.println("Sent get chat history pd request");
+        PackageDataStructure chatHistory = receivePackageData();
+        System.out.println("Received chat history pd response");
+        return chatHistory.content;
+    }
     public ArrayList<String> getFriendList() {
         PackageDataStructure getFriendListPD = new PackageDataStructure(
                 "/friends"
@@ -216,16 +272,40 @@ public class ClientModule implements Runnable {
         return friendStatus.content;
     }
 
+    public boolean sendMessage(String msg, String sender, String receiver) {
+        PackageDataStructure sendMessagePD = new PackageDataStructure(
+                "/sendmessage"
+        );
+        sendMessagePD.content.add(msg);
+        sendMessagePD.content.add(sender);
+        sendMessagePD.content.add(receiver);
+        sendPackageDataForChat(sendMessagePD);
+        System.out.println("Sent send message pd request");
+        PackageDataStructure messageStatus = receivePackageDataForChat();
+        System.out.println("Received send message pd response");
+        return messageStatus.content.getFirst().equals("success");
+
+    }
+
+
     public void closeConnection() {
         PackageDataStructure exitPD = new PackageDataStructure(
                 "/exit"
         );
+        sendPackageDataForChat(exitPD);
         sendPackageData(exitPD);
         try {
-            clientSocket.close();
-            clientSocket = null;
+            if (clientSocket == null) {
+                clientSocket.close();
+                clientSocket = null;
+            }
+
+            //clientChatSocket.close();
+            clientChatSocket = null;
             in.close();
             out.close();
+            //inChat.close();
+            //outChat.close();
             System.out.println("Client connection closed");
         } catch (IOException e) {
             System.out.println("Error closing connection");
@@ -253,6 +333,11 @@ public class ClientModule implements Runnable {
 //        }).start();
 //        System.out.println("Package listener started");
 //    }
+
+
+    public String getUsername() {
+        return username;
+    }
 
     public boolean isConnected() {
         return clientSocket != null && clientSocket.isConnected();

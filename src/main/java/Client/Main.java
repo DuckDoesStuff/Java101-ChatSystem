@@ -12,7 +12,7 @@ public class Main {
 
         //UserInfo user = new UserInfo(username);
 
-        ClientModule client = new ClientModule("localhost", 4000);
+        ClientModule client = new ClientModule("localhost", 1234, 5678);
         Thread clientThread = new Thread(client);
         clientThread.start();
     }

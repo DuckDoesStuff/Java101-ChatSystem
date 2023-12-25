@@ -17,7 +17,7 @@ class ClientUI {
 
 public class ClientApp {
     public static void main(String[] args) {
-        ClientModule clientModule = ClientModule.getInstance("localhost", 4000);
+        ClientModule clientModule = ClientModule.getInstance("localhost", 1234, 5678);
         Thread clientThread = new Thread(clientModule);
         clientThread.start();
 

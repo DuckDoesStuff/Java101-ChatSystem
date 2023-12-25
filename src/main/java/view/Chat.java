@@ -1,6 +1,7 @@
 package view;
 
 import Client.ClientModule;
+import DataStructure.PackageDataStructure;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
@@ -53,6 +54,8 @@ public class Chat extends JFrame {
     private JEditorPane mainChat;
     private JPanel buttonPanel;
 
+    private String mainChatName;
+
     public ArrayList<User> getUsers() {
         System.out.println("Getting friends list get from server");
         ArrayList<String> friends = clientModule.getFriendList();
@@ -73,8 +76,8 @@ public class Chat extends JFrame {
 
 
     public Chat() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        clientModule = ClientModule.getInstance("localhost", 4000);
-
+        clientModule = ClientModule.getInstance("localhost", 4000, 3000);
+        new Thread(new listenForMessage()).start();
         UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         setSize(1000,740);
         setTitle("Chat");
@@ -163,11 +166,42 @@ public class Chat extends JFrame {
             // Change right side
             avatar.addActionListener(e -> {
                 System.out.println(avatar.getText());
+                mainChatName = avatar.getText();
                 for (User selectedOne: users) {
                     if (Objects.equals(selectedOne.name, avatar.getText())) {
                         System.out.println(selectedOne.id);
                         displayRightSide(selectedOne.id);
                         displayChatName(selectedOne.name);
+                    }
+                }
+                mainChat.setText("");
+                ArrayList<String> history = clientModule.getChatHistory(avatar.getText());
+                HTMLDocument htmlDocument = (HTMLDocument) mainChat.getDocument();
+                HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
+                for (String msg: history){
+                    String[] split = msg.split(",");
+                    if (Objects.equals(split[0], clientModule.getUsername())){
+                        String message = "<div style='text-align: right;'>" + split[1] + "\n" + "</div>";
+                        if (!msg.isEmpty()) {
+                            try {
+                                editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
+                            } catch (BadLocationException ex) {
+                                throw new RuntimeException(ex);
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        }
+                    } else {
+                        String message = "<div style='text-align: left;'>" + split[1] + "\n" + "</div>";
+                        if (!msg.isEmpty()) {
+                            try {
+                                editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
+                            } catch (BadLocationException ex) {
+                                throw new RuntimeException(ex);
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        }
                     }
                 }
             });
@@ -247,7 +281,7 @@ public class Chat extends JFrame {
         send_btn.setBounds(420, 10, 70, 30);
         send_btn.addActionListener(e -> {
             try {
-                listenForMessage();
+                //listenForMessage();
                 sendMessage();
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
@@ -291,6 +325,7 @@ public class Chat extends JFrame {
 
         //Handling the filtering of user lists
         filter_btn.addActionListener(e -> {
+            final ArrayList<User> usersUpdated = getUsers();
             displayChatName("TVA - 123");
             //call function display user
             String selectedStatus = (String) status.getSelectedItem();
@@ -301,8 +336,8 @@ public class Chat extends JFrame {
                 buttonPanel.revalidate();
                 buttonPanel.repaint();
 
-                for (int i = 0; i < users.size(); i++) {
-                    JButton avatar = new JButton(users.get(i).name);
+                for (int i = 0; i < usersUpdated.size(); i++) {
+                    JButton avatar = new JButton(usersUpdated.get(i).name);
                     Dimension buttonSize = new Dimension(228, 60);
                     avatar.setPreferredSize(buttonSize);
                     avatar.setMinimumSize(buttonSize);
@@ -317,9 +352,9 @@ public class Chat extends JFrame {
                 buttonPanel.revalidate();
                 buttonPanel.repaint();
 
-                for (int i = 0; i < users.size(); i++) {
-                    if (Objects.equals(users.get(i).status, "ON")) {
-                        JButton avatar = new JButton(users.get(i).name);
+                for (int i = 0; i < usersUpdated.size(); i++) {
+                    if (Objects.equals(usersUpdated.get(i).status, "ON")) {
+                        JButton avatar = new JButton(usersUpdated.get(i).name);
                         Dimension buttonSize = new Dimension(228, 60);
                         avatar.setPreferredSize(buttonSize);
                         avatar.setMinimumSize(buttonSize);
@@ -334,9 +369,9 @@ public class Chat extends JFrame {
                 buttonPanel.revalidate();
                 buttonPanel.repaint();
 
-                for (int i = 0; i < users.size(); i++) {
-                    if (Objects.equals(users.get(i).status, "OFF")) {
-                        JButton avatar = new JButton(users.get(i).name);
+                for (int i = 0; i < usersUpdated.size(); i++) {
+                    if (Objects.equals(usersUpdated.get(i).status, "OFF")) {
+                        JButton avatar = new JButton(usersUpdated.get(i).name);
                         Dimension buttonSize = new Dimension(228, 60);
                         avatar.setPreferredSize(buttonSize);
                         avatar.setMinimumSize(buttonSize);
@@ -354,9 +389,16 @@ public class Chat extends JFrame {
         });
         //handling sending messages
         send_btn.addActionListener(e -> {
-
+            try {
+                sendMessage();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (BadLocationException ex) {
+                throw new RuntimeException(ex);
+            }
+            inputChat_jtf.setText("");
         });
-
+        System.out.println("Chat started");
     }
 
     void sendMessage() throws IOException, BadLocationException {
@@ -364,6 +406,8 @@ public class Chat extends JFrame {
         HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
 
         String messageToSend = inputChat_jtf.getText();
+        clientModule.sendMessage(messageToSend, clientModule.getUsername(), mainChatName);
+        //clientModule.sendMessage(messageToSend);
         String message = "<div style='text-align: right;'>" + messageToSend + "\n" + "</div>";
         if (!messageToSend.isEmpty()) {
             editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
@@ -371,15 +415,44 @@ public class Chat extends JFrame {
     }
 
     // Receive message for another user.
-    void listenForMessage() throws IOException, BadLocationException {
-        HTMLDocument htmlDocument = (HTMLDocument) mainChat.getDocument();
-        HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
-
-        String messageToReceive = "Hello everyone";
-        String message = "<div style='text-align: left;'>" + messageToReceive+ "\n" + "</div>";
-        if (!messageToReceive.isEmpty()) {
-            editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
+    private class listenForMessage implements Runnable{
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    PackageDataStructure data = (PackageDataStructure) clientModule.inChat.readObject();
+                    System.out.println("Received message from server: ");
+                    System.out.println(data);
+                    appendMessage(data.content.get(1), data.content.get(0));
+                    if (mainChatName.equals(data.content.get(0))) {
+                        appendMessage(data.content.get(1), data.content.get(0));
+                    }
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                clientModule.closeConnection();
+                e.printStackTrace();
+            }
         }
+    }
+
+    public void appendMessage(String msgFromServer, String sender){
+        SwingUtilities.invokeLater(() -> {
+            try {
+                String msg;
+                HTMLDocument htmlDocument = (HTMLDocument) mainChat.getDocument();
+                HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
+                if (Objects.equals(sender, clientModule.getUsername())){
+                    msg = "<div style='text-align: right;'>" + msgFromServer + "\n" + "</div>";
+                } else {
+                    msg = "<div style='text-align: left;'>" + msgFromServer + "\n" + "</div>";
+                }
+                editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), msg, 0, 0, null);
+            } catch (BadLocationException ex) {
+                throw new RuntimeException(ex);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
     }
 
     void displayChatName(String chatN){

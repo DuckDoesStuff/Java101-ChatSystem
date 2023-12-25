@@ -17,7 +17,7 @@ public class SignInUI extends JFrame {
     ClientModule clientModule;
 
     public SignInUI(){
-        clientModule = ClientModule.getInstance("localhost", 4000);
+        clientModule = ClientModule.getInstance("localhost", 4000, 3000);
         setSize(1000,700);
         setTitle("Sign In");
         setLocationRelativeTo(null);

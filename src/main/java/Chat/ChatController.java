@@ -42,7 +42,7 @@ public class ChatController {
     public void sendMessage(String receiver, String message) {
         int receiverID = userService.getUserIDFromUsername(receiver);
         ChatModel chat = chatService.findChat(userid, receiverID);
-        messageService.addMessage(chat.getChatID(), receiverID, message);
+        messageService.addMessage(chat.getChatID(), userid, message);
 
     }
 
