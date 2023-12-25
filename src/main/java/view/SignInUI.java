@@ -109,7 +109,17 @@ public class SignInUI extends JFrame {
         add(formContainer);
 
         signIn_jbtn.addActionListener(e -> {
-            loginUser();
+            try {
+                loginUser();
+            } catch (UnsupportedLookAndFeelException ex) {
+                throw new RuntimeException(ex);
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            } catch (InstantiationException ex) {
+                throw new RuntimeException(ex);
+            } catch (IllegalAccessException ex) {
+                throw new RuntimeException(ex);
+            }
         });
         signUp_jbtn.addActionListener(e -> {
             signUp();
@@ -120,7 +130,7 @@ public class SignInUI extends JFrame {
         setVisible(true);
     }
 
-    void loginUser(){
+    void loginUser() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         String userN = userN_jtf.getText();
         String pw = pw_jtf.getText();
 
@@ -132,6 +142,7 @@ public class SignInUI extends JFrame {
             if (result.equals("success")) {
                 JOptionPane.showMessageDialog(null, "Login successfully");
                 dispose();
+                new Chat();
             } else {
                 JOptionPane.showMessageDialog(null, result);
             }

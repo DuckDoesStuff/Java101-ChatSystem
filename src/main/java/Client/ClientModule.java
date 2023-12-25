@@ -4,6 +4,7 @@ import java.net.*;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
 
@@ -52,79 +53,73 @@ public class ClientModule implements Runnable {
         }
         while (!loggedIn) Thread.onSpinWait();
 
-        packageListener();
+        //packageListener();
 
         while(isConnected() && loggedIn) {
-            String content = scanner.nextLine();
-            if(clientSocket.isClosed()) {
-                System.out.println("Connection closed");
-                break;
+                    String content = scanner.nextLine();
+                    if(clientSocket.isClosed()) {
+                        System.out.println("Connection closed");
+                        break;
             }
 
             if(content.startsWith("/addfriend")) {
                 String friendUsername = content.substring(11);
+                String[] pdContent = new String[2];
+                pdContent[0] = "/addfriend";
+                pdContent[1] = friendUsername;
                 PackageDataStructure addFriendPD = new PackageDataStructure(
-                        "/addfriend",
-                        0
+                        pdContent
                 );
-                PackageDataStructure friendUsernamePD = new PackageDataStructure(
-                        friendUsername,
-                        0
-                );
+
                 sendPackageData(addFriendPD);
-                sendPackageData(friendUsernamePD);
+                //sendPackageData(friendUsernamePD);
             }
             else if(content.startsWith("/removerequest")) {
                 String friendUsername = content.substring(15);
+                String[] pdContent = new String[2];
+                pdContent[0] = "/removerequest";
+                pdContent[1] = friendUsername;
                 PackageDataStructure removeRequestPD = new PackageDataStructure(
-                        "/removerequest",
-                        0
-                );
-                PackageDataStructure friendUsernamePD = new PackageDataStructure(
-                        friendUsername,
-                        0
+                        pdContent
                 );
                 sendPackageData(removeRequestPD);
-                sendPackageData(friendUsernamePD);
+                //sendPackageData(friendUsernamePD);
             }
             else if (content.startsWith("/acceptfriend")){
                 String friendUsername = content.substring(14);
+                String[] pdContent = new String[2];
+                pdContent[0] = "/acceptfriend";
+                pdContent[1] = friendUsername;
                 PackageDataStructure acceptFriendPD = new PackageDataStructure(
-                        "/acceptfriend",
-                        0
+                        pdContent
                 );
-                PackageDataStructure friendUsernamePD = new PackageDataStructure(
-                        friendUsername,
-                        0
-                );
+
                 sendPackageData(acceptFriendPD);
-                sendPackageData(friendUsernamePD);
+                //sendPackageData(friendUsernamePD);
             }
             else if (content.startsWith("/declinefriend")) {
                 String friendUsername = content.substring(15);
+                String[] pdContent = new String[2];
+                pdContent[0] = "/declinefriend";
+                pdContent[1] = friendUsername;
                 PackageDataStructure declineFriendPD = new PackageDataStructure(
-                        "/declinefriend",
-                        0
+                        pdContent
                 );
-                PackageDataStructure friendUsernamePD = new PackageDataStructure(
-                        friendUsername,
-                        0
-                );
+
                 sendPackageData(declineFriendPD);
-                sendPackageData(friendUsernamePD);
+                //sendPackageData(friendUsernamePD);
             }
             else if (content.startsWith("/unfriend")) {
                 String friendUsername = content.substring(10);
+                String[] pdContent = new String[2];
+                pdContent[0] = "/unfriend";
+                pdContent[1] = friendUsername;
                 PackageDataStructure unfriendPD = new PackageDataStructure(
-                        "/unfriend",
-                        0
+                        pdContent
                 );
-                PackageDataStructure friendUsernamePD = new PackageDataStructure(
-                        friendUsername,
-                        0
-                );
+
                 sendPackageData(unfriendPD);
-                sendPackageData(friendUsernamePD);
+                //sendPackageData(friendUsernamePD);
             }
             else if (content.equals("/exit")) {
                 closeConnection();
@@ -132,8 +127,7 @@ public class ClientModule implements Runnable {
             }
             else {
                 PackageDataStructure messagePD = new PackageDataStructure(
-                        content,
-                        0
+                        content
                 );
                 sendPackageData(messagePD);
             }
@@ -146,6 +140,9 @@ public class ClientModule implements Runnable {
             packageData = (PackageDataStructure) in.readObject();
         } catch (Exception e) {
             System.out.println("Error receiving package data");
+            //System.out.println(e.getClass().getName());
+            //System.out.println(e.getMessage());
+
             return null;
         }
         return packageData;
@@ -161,83 +158,67 @@ public class ClientModule implements Runnable {
 
     //Define other client methods here
     public String loginUser(String username, String password) {
+        String[] loginPDcontent = new String[3];
+        loginPDcontent[0] = "/login";
+        loginPDcontent[1] = username;
+        loginPDcontent[2] = password;
         PackageDataStructure loginPD = new PackageDataStructure(
-                "/login",
-                0
+                loginPDcontent
         );
-        PackageDataStructure usernamePD = new PackageDataStructure(
-                username,
-                0
-        );
-        PackageDataStructure passwordPD = new PackageDataStructure(
-                password,
-                0
-        );
-
         sendPackageData(loginPD);
-        sendPackageData(usernamePD);
-        sendPackageData(passwordPD);
-        String result = receivePackageData().content;
+
+        String result = receivePackageData().content.getFirst();
         loggedIn = result.equals("success");
         return result;
     }
 
     public String registerUser(String username, String email, String password, String firstname, String lastname, String address, Date dob, boolean gender) {
         PackageDataStructure registerPD = new PackageDataStructure(
-                "/register",
-                0
-        );
-        PackageDataStructure usernamePD = new PackageDataStructure(
-                username,
-                0
-        );
-        PackageDataStructure emailPD = new PackageDataStructure(
-                email,
-                0
-        );
-        PackageDataStructure passwordPD = new PackageDataStructure(
-                password,
-                0
-        );
-        PackageDataStructure firstnamePD = new PackageDataStructure(
-                firstname,
-                0
-        );
-        PackageDataStructure lastnamePD = new PackageDataStructure(
-                lastname,
-                0
-        );
-        PackageDataStructure addressPD = new PackageDataStructure(
-                address,
-                0
-        );
-        PackageDataStructure dobPD = new PackageDataStructure(
-                new SimpleDateFormat("yyyy/MM/dd").format(dob),
-                0
-        );
-        PackageDataStructure genderPD = new PackageDataStructure(
-                gender ? "true" : "false",
-                0
-        );
+                "");
+        registerPD.content.add("/register");
+        registerPD.content.add(username);
+        registerPD.content.add(email);
+        registerPD.content.add(password);
+        registerPD.content.add(firstname);
+        registerPD.content.add(lastname);
+        registerPD.content.add(address);
+        registerPD.content.add(new SimpleDateFormat("yyyy/MM/dd").format(dob));
+        registerPD.content.add(gender ? "true" : "false");
+
 
         sendPackageData(registerPD);
-        sendPackageData(usernamePD);
-        sendPackageData(emailPD);
-        sendPackageData(passwordPD);
-        sendPackageData(firstnamePD);
-        sendPackageData(lastnamePD);
-        sendPackageData(addressPD);
-        sendPackageData(dobPD);
-        sendPackageData(genderPD);
-        String result = receivePackageData().content;
+
+        String result = receivePackageData().content.getFirst();
         loggedIn = result.equals("success");
         return result;
     }
 
+    public ArrayList<String> getFriendList() {
+        PackageDataStructure getFriendListPD = new PackageDataStructure(
+                "/friends"
+        );
+        sendPackageData(getFriendListPD);
+        System.out.println("Sent get friend list pd request");
+        PackageDataStructure friendlist = receivePackageData();
+        System.out.println("Received friend list pd response");
+        return friendlist.content;
+    }
+
+    public ArrayList<String> getFriendStatus(ArrayList<String> friends){
+        PackageDataStructure getFriendStatusPD = new PackageDataStructure(
+                "/friendstatus"
+        );
+        getFriendStatusPD.content.addAll(friends);
+        sendPackageData(getFriendStatusPD);
+        System.out.println("Sent get friend status pd request");
+        PackageDataStructure friendStatus = receivePackageData();
+        System.out.println("Received friend status pd response");
+        return friendStatus.content;
+    }
+
     public void closeConnection() {
         PackageDataStructure exitPD = new PackageDataStructure(
-                "/exit",
-                0
+                "/exit"
         );
         sendPackageData(exitPD);
         try {
@@ -252,23 +233,26 @@ public class ClientModule implements Runnable {
         }
     }
 
-    public void packageListener() {
-        new Thread(() -> {
-            while (clientSocket.isConnected()) {
-                PackageDataStructure packageData;
-                try {
-                    packageData = receivePackageData();
-                } catch (Exception e) {
-                    System.out.println("Socket probably closed");
-                    closeConnection();
-                    break;
-                }
-                System.out.println(packageData.content);
-                //TODO: maybe? handle each command here with threads
-            }
-        }).start();
-        System.out.println("Package listener started");
-    }
+//    public void packageListener() {
+//        new Thread(() -> {
+//            while (clientSocket.isConnected()) {
+//                PackageDataStructure packageData;
+//                try {
+//                    packageData = receivePackageData();
+//                } catch (Exception e) {
+//                    System.out.println("Socket probably closed");
+//                    closeConnection();
+//                    break;
+//                }
+////                for (String s : packageData.content) {
+////                    System.out.println(s);
+////                }
+//                //System.out.println(packageData.content);
+//                //TODO: maybe? handle each command here with threads
+//            }
+//        }).start();
+//        System.out.println("Package listener started");
+//    }
 
     public boolean isConnected() {
         return clientSocket != null && clientSocket.isConnected();

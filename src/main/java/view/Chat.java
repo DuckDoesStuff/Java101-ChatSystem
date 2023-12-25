@@ -1,12 +1,17 @@
 package view;
 
+import Client.ClientModule;
+
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 import java.awt.*;
 import java.awt.Dimension;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Objects;
 
 class User {
@@ -22,6 +27,7 @@ class User {
 }
 
 public class Chat extends JFrame {
+    ClientModule clientModule;
 
     private final JPanel chatN_field;
     private final JLabel chatN_jlb;
@@ -47,24 +53,28 @@ public class Chat extends JFrame {
     private JEditorPane mainChat;
     private JPanel buttonPanel;
 
-    public User[] getUsers() {
-        User[] userlist = new User[10];
-        userlist[0] = new User(0, "User 1", "ON");
-        userlist[1] = new User(1, "Group 1", "ON");
-        userlist[2] = new User(0, "User 2", "OFF");
-        userlist[3] = new User(1, "Group 2", "OFF");
-        userlist[4] = new User(0, "User 3", "ON");
-        userlist[5] = new User(1, "Group 3", "OFF");
-        userlist[6] = new User(0, "User 4", "OFF");
-        userlist[7] = new User(1, "Group 4", "ON");
-        userlist[8] = new User(0, "User 5", "OFF");
-        userlist[9] = new User(0, "User 6", "ON");
+    public ArrayList<User> getUsers() {
+        System.out.println("Getting friends list get from server");
+        ArrayList<String> friends = clientModule.getFriendList();
+        System.out.println("Friends list get from server");
+        ArrayList<String> friendsStatus = clientModule.getFriendStatus(friends);
+        System.out.println("Friends status get from server");
+        System.out.println("All friends in4 get from server");
+        ArrayList<User> userlist = new ArrayList<>();
+        //int id = 0;
+        for (int i = 0; i < friends.size(); i++)
+        {
+            System.out.println(friends.get(i) + " " + friendsStatus.get(i));
+            userlist.add(new User(i, friends.get(i), friendsStatus.get(i).equals("true") ? "ON" : "OFF" ));
+        }
 
         return userlist;
     }
 
 
     public Chat() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+        clientModule = ClientModule.getInstance("localhost", 4000);
+
         UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         setSize(1000,740);
         setTitle("Chat");
@@ -73,6 +83,12 @@ public class Chat extends JFrame {
         setResizable(false);
         setLayout(null);
 
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent windowEvent) {
+                clientModule.closeConnection();
+            }
+        });
 
         //LEFT AREA
         JPanel leftArea = new JPanel(null);
@@ -131,12 +147,12 @@ public class Chat extends JFrame {
 //        usersField.setBounds(0, 50, 249, 380);
 //        usersField.setBackground(new Color(217, 217, 217));
 
-        User[] users = getUsers();
+        ArrayList<User> users = getUsers();
         buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
 
-        for (int i = 0; i < users.length; i++) {
-            JButton avatar = new JButton(users[i].name);
+        for (User user: users) {
+            JButton avatar = new JButton(user.name);
             Dimension buttonSize = new Dimension(228, 60);
             avatar.setPreferredSize(buttonSize);
             avatar.setMinimumSize(buttonSize);
@@ -147,11 +163,11 @@ public class Chat extends JFrame {
             // Change right side
             avatar.addActionListener(e -> {
                 System.out.println(avatar.getText());
-                for (int j = 0; j < users.length; j++) {
-                    if (Objects.equals(users[j].name, avatar.getText())) {
-                        System.out.println(users[j].id);
-                        displayRightSide(users[j].id);
-                        displayChatName(users[j].name);
+                for (User selectedOne: users) {
+                    if (Objects.equals(selectedOne.name, avatar.getText())) {
+                        System.out.println(selectedOne.id);
+                        displayRightSide(selectedOne.id);
+                        displayChatName(selectedOne.name);
                     }
                 }
             });
@@ -285,8 +301,8 @@ public class Chat extends JFrame {
                 buttonPanel.revalidate();
                 buttonPanel.repaint();
 
-                for (int i = 0; i < users.length; i++) {
-                    JButton avatar = new JButton(users[i].name);
+                for (int i = 0; i < users.size(); i++) {
+                    JButton avatar = new JButton(users.get(i).name);
                     Dimension buttonSize = new Dimension(228, 60);
                     avatar.setPreferredSize(buttonSize);
                     avatar.setMinimumSize(buttonSize);
@@ -301,9 +317,9 @@ public class Chat extends JFrame {
                 buttonPanel.revalidate();
                 buttonPanel.repaint();
 
-                for (int i = 0; i < users.length; i++) {
-                    if (Objects.equals(users[i].status, "ON")) {
-                        JButton avatar = new JButton(users[i].name);
+                for (int i = 0; i < users.size(); i++) {
+                    if (Objects.equals(users.get(i).status, "ON")) {
+                        JButton avatar = new JButton(users.get(i).name);
                         Dimension buttonSize = new Dimension(228, 60);
                         avatar.setPreferredSize(buttonSize);
                         avatar.setMinimumSize(buttonSize);
@@ -318,9 +334,9 @@ public class Chat extends JFrame {
                 buttonPanel.revalidate();
                 buttonPanel.repaint();
 
-                for (int i = 0; i < users.length; i++) {
-                    if (Objects.equals(users[i].status, "OFF")) {
-                        JButton avatar = new JButton(users[i].name);
+                for (int i = 0; i < users.size(); i++) {
+                    if (Objects.equals(users.get(i).status, "OFF")) {
+                        JButton avatar = new JButton(users.get(i).name);
                         Dimension buttonSize = new Dimension(228, 60);
                         avatar.setPreferredSize(buttonSize);
                         avatar.setMinimumSize(buttonSize);

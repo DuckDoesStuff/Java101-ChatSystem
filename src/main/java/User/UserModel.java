@@ -10,6 +10,7 @@ public class UserModel {
     String password;
     String email;
     String address;
+
     Date dateOfBirth;
     // Male is 0 Female is 1
     boolean gender;

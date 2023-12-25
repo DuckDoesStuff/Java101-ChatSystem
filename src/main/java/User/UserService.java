@@ -184,6 +184,22 @@ public class UserService {
         }
     }
 
+    public Boolean getUserStatus(String username){
+        try {
+            String sql = "SELECT online_status FROM users WHERE username = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+            if(!rs.next()) {
+                System.out.println("No such user");
+                return null;
+            }
+            return rs.getBoolean("online_status");
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+    }
     public static void main(String[] args) {
     }
 }
