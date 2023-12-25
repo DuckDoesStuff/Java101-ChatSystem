@@ -68,7 +68,7 @@ public class Chat extends JFrame {
         for (int i = 0; i < friends.size(); i++)
         {
             System.out.println(friends.get(i) + " " + friendsStatus.get(i));
-            userlist.add(new User(i, friends.get(i), friendsStatus.get(i).equals("true") ? "ON" : "OFF" ));
+            userlist.add(new User(0, friends.get(i), friendsStatus.get(i).equals("true") ? "ON" : "OFF" ));
         }
 
         return userlist;
@@ -388,50 +388,51 @@ public class Chat extends JFrame {
             //call function to logout
         });
         //handling sending messages
-        send_btn.addActionListener(e -> {
-            try {
-                sendMessage();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            } catch (BadLocationException ex) {
-                throw new RuntimeException(ex);
-            }
-            inputChat_jtf.setText("");
-        });
+//        send_btn.addActionListener(e -> {
+//            try {
+//                sendMessage();
+//            } catch (IOException ex) {
+//                throw new RuntimeException(ex);
+//            } catch (BadLocationException ex) {
+//                throw new RuntimeException(ex);
+//            }
+//            inputChat_jtf.setText("");
+//        });
         System.out.println("Chat started");
     }
 
-    void sendMessage() throws IOException, BadLocationException {
+    boolean sendMessage() throws IOException, BadLocationException {
         HTMLDocument htmlDocument = (HTMLDocument) mainChat.getDocument();
         HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
 
         String messageToSend = inputChat_jtf.getText();
-        clientModule.sendMessage(messageToSend, clientModule.getUsername(), mainChatName);
+        boolean status = clientModule.sendMessage(messageToSend, clientModule.getUsername(), mainChatName);
         //clientModule.sendMessage(messageToSend);
         String message = "<div style='text-align: right;'>" + messageToSend + "\n" + "</div>";
         if (!messageToSend.isEmpty()) {
             editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
         }
+        return status;
     }
 
     // Receive message for another user.
     private class listenForMessage implements Runnable{
         @Override
         public void run() {
-            try {
+            //HTMLDocument htmlDocument = (HTMLDocument) mainChat.getDocument();
+            //HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
                 while (true) {
-                    PackageDataStructure data = (PackageDataStructure) clientModule.inChat.readObject();
+                    PackageDataStructure data = clientModule.receivePackageDataForChat();
                     System.out.println("Received message from server: ");
                     System.out.println(data);
-                    appendMessage(data.content.get(1), data.content.get(0));
+                    //appendMessage(data.content.get(1), data.content.get(0));
                     if (mainChatName.equals(data.content.get(0))) {
                         appendMessage(data.content.get(1), data.content.get(0));
+                        //clientModule.sendPackageDataForChat(new PackageDataStructure("success"));
                     }
+
                 }
-            } catch (IOException | ClassNotFoundException e) {
-                clientModule.closeConnection();
-                e.printStackTrace();
-            }
+
         }
     }
 

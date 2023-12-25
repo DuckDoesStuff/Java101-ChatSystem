@@ -281,9 +281,8 @@ public class ClientModule implements Runnable {
         sendMessagePD.content.add(receiver);
         sendPackageDataForChat(sendMessagePD);
         System.out.println("Sent send message pd request");
-        PackageDataStructure messageStatus = receivePackageDataForChat();
-        System.out.println("Received send message pd response");
-        return messageStatus.content.getFirst().equals("success");
+
+        return true;
 
     }
 

@@ -61,6 +61,7 @@ class ChatHandler implements Runnable {
     }
 
     public void run() {
+        chatController.setUserID(userService.getUserIDFromUsername(username));
         while(clientChatSocket.isConnected()){
             //PackageDataStructure packageData;
             PackageDataStructure packageDataForChat;
@@ -85,8 +86,8 @@ class ChatHandler implements Runnable {
                             sender);
                     pd.content.add(msg);
                     chatController.sendMessage(receiver, msg);
+                    //sendToClient(pd, receiver);
                     sendToClient(pd, receiver);
-                    sendPackageDataForChat(new PackageDataStructure("success"));
                 }
             }
         }
@@ -106,6 +107,7 @@ class ChatHandler implements Runnable {
             throw new RuntimeException(e);
         }
     }
+
 
     public void sendPackageDataForChat(PackageDataStructure packageData) {
         try {
@@ -167,7 +169,7 @@ class ClientHandler implements Runnable {
         userService = new UserService(conn);
         userController = new UserController(conn);
         friendService = new FriendService(conn);
-
+        this.conn = conn;
     }
 
     @Override
@@ -185,7 +187,7 @@ class ClientHandler implements Runnable {
         }
         new Thread (new ChatHandler(clientChatSocket, conn, username, outChat, inChat)).start();
         System.out.println("Client username: " + username);
-        //chatController.setUserID(userService.getUserIDFromUsername(username));
+        chatController.setUserID(userService.getUserIDFromUsername(username));
         //System.out.println("Connected to Socket of Chat");
         while(clientSocket.isConnected()) {
             PackageDataStructure packageData;
