@@ -9,7 +9,6 @@ import java.util.ArrayList;
 
 public class MessageService {
     Connection conn;
-    //    TODO Put a sent msg to the msg db
     public boolean addMessage(int chatID, int userID, String content) {
         try {
             String sql = "INSERT INTO message (chatID, senderid, content, time) VALUES (?, ?, ?, ?)";
@@ -28,7 +27,6 @@ public class MessageService {
         }
     }
 
-    //    TODO Get all msg history from the db base on ChatID
     public ArrayList<MessageModel> getMessages(int chatID) {
         try {
             String sql = "SELECT * FROM message WHERE chatID = ?";

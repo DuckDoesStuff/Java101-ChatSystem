@@ -108,6 +108,16 @@ public class DB {
             stmt.execute(sql9);
             conn.commit();
 
+            String sql10 = "CREATE TABLE IF NOT EXISTS groupAdmin (" +
+                    " chatID INT, " +
+                    " userID INT, " +
+                    " FOREIGN KEY (chatID) REFERENCES Chat(chatID), " +
+                    " FOREIGN KEY (userID) REFERENCES users(userID), " +
+                    " PRIMARY KEY (chatID, userID))";
+            stmt.execute(sql10);
+            conn.commit();
+
+
         } catch (Exception e) {
             System.out.println("Error connecting to the database");
             throw new RuntimeException(e);

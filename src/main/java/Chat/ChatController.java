@@ -33,9 +33,16 @@ public class ChatController {
         return true;
     }
     public void createChat(String username, boolean isGroup) {
-        ChatModel newChat = chatService.addChat(isGroup, username);
-        chatMemberService.addChatMember(newChat.getChatID(), userid);
-        chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(username));
+        if (isGroup) {
+            ChatModel newChat = chatService.addChat(isGroup, "Group of " + userService.findUsernameWithUserID(userid));
+            chatMemberService.addChatMember(newChat.getChatID(), userid);
+            chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(username));
+        }
+        else {
+            ChatModel newChat = chatService.addChat(isGroup, userService.findUsernameWithUserID(userid) + ',' + username);
+            chatMemberService.addChatMember(newChat.getChatID(), userid);
+            chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(username));
+        }
     }
 
     // Send a chat to a new username
@@ -46,10 +53,27 @@ public class ChatController {
 
     }
 
+    public void sendGroupMessage(String groupName, String message) {
+        int chatID = chatService.getChatIdFromName(groupName);
+        messageService.addMessage(chatID, userid, message);
+    }
+
+    public ArrayList<String> getGroupMembers(String groupName){
+        return chatMemberService.getGroupMembers(chatService.getChatIdFromName(groupName));
+    }
+
     // TODO: Get chat history
     public ArrayList<MessageModel> getMessageHistory(String receiver) {
         int receiverID = userService.getUserIDFromUsername(receiver);
         ChatModel chat = chatService.findChat(userid, receiverID);
         return messageService.getMessages(chat.getChatID());
+    }
+
+    public ArrayList<MessageModel> getGroupMessageHistory(String groupName) {
+        return messageService.getMessages(chatService.getChatIdFromName(groupName));
+    }
+
+    public ArrayList<ChatModel> getAllGroupChat(){
+        return chatService.getAllGroupChat(userid);
     }
 }

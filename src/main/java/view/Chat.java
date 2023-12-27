@@ -55,22 +55,41 @@ public class Chat extends JFrame {
     private JPanel buttonPanel;
 
     private String mainChatName;
+    private int mainChatType;
 
+    // TODO: fix the get Users function
     public ArrayList<User> getUsers() {
         System.out.println("Getting friends list get from server");
         ArrayList<String> friends = clientModule.getFriendList();
-        System.out.println("Friends list get from server");
-        ArrayList<String> friendsStatus = clientModule.getFriendStatus(friends);
-        System.out.println("Friends status get from server");
-        System.out.println("All friends in4 get from server");
         ArrayList<User> userlist = new ArrayList<>();
-        //int id = 0;
-        for (int i = 0; i < friends.size(); i++)
-        {
-            System.out.println(friends.get(i) + " " + friendsStatus.get(i));
-            userlist.add(new User(0, friends.get(i), friendsStatus.get(i).equals("true") ? "ON" : "OFF" ));
+        if (friends.getFirst().equals("No friends")) {
+            System.out.println("Friends status get from server failed, this user may have no friend");
+            //return userlist;
         }
+        else {
+            System.out.println("Friends list get from server");
+            ArrayList<String> friendsStatus = clientModule.getFriendStatus(friends);
 
+            System.out.println("Friends status get from server");
+            System.out.println("All friends in4 get from server");
+            //int id = 0;
+            for (int i = 0; i < friends.size(); i++)
+            {
+                System.out.println(friends.get(i) + " " + friendsStatus.get(i));
+                userlist.add(new User(0, friends.get(i), friendsStatus.get(i).equals("true") ? "ON" : "OFF" ));
+            }
+
+            //return userlist;
+        }
+        ArrayList<String> groupChats = clientModule.getGroupChat();
+        if (!groupChats.isEmpty()){
+            for (String groupChat: groupChats){
+                userlist.add(new User(1, groupChat, "ON"));
+            }
+        }
+        else {
+            System.out.println("This user has no group chat");
+        }
         return userlist;
     }
 
@@ -153,7 +172,12 @@ public class Chat extends JFrame {
         ArrayList<User> users = getUsers();
         buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+        if (users == null) {
+            System.out.println("No friends");
+        }
+        else {
 
+        }
         for (User user: users) {
             JButton avatar = new JButton(user.name);
             Dimension buttonSize = new Dimension(228, 60);
@@ -169,13 +193,21 @@ public class Chat extends JFrame {
                 mainChatName = avatar.getText();
                 for (User selectedOne: users) {
                     if (Objects.equals(selectedOne.name, avatar.getText())) {
+                        mainChatType = selectedOne.id;
                         System.out.println(selectedOne.id);
                         displayRightSide(selectedOne.id);
                         displayChatName(selectedOne.name);
                     }
                 }
+                ArrayList<String> history;
                 mainChat.setText("");
-                ArrayList<String> history = clientModule.getChatHistory(avatar.getText());
+                if (mainChatType == 0) {
+                    history = clientModule.getChatHistory(avatar.getText());
+                } else if (mainChatType == 1){
+                    history = clientModule.getGroupHistory(avatar.getText());
+                } else {
+                    history = new ArrayList<>();
+                }
                 HTMLDocument htmlDocument = (HTMLDocument) mainChat.getDocument();
                 HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
                 for (String msg: history){
@@ -282,7 +314,7 @@ public class Chat extends JFrame {
         send_btn.addActionListener(e -> {
             try {
                 //listenForMessage();
-                sendMessage();
+                sendMessage(mainChatType);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             } catch (BadLocationException ex) {
@@ -401,12 +433,12 @@ public class Chat extends JFrame {
         System.out.println("Chat started");
     }
 
-    boolean sendMessage() throws IOException, BadLocationException {
+    boolean sendMessage(int chatType) throws IOException, BadLocationException {
         HTMLDocument htmlDocument = (HTMLDocument) mainChat.getDocument();
         HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
 
         String messageToSend = inputChat_jtf.getText();
-        boolean status = clientModule.sendMessage(messageToSend, clientModule.getUsername(), mainChatName);
+        boolean status = clientModule.sendMessage(messageToSend, clientModule.getUsername(), mainChatName, chatType);
         //clientModule.sendMessage(messageToSend);
         String message = "<div style='text-align: right;'>" + messageToSend + "\n" + "</div>";
         if (!messageToSend.isEmpty()) {
@@ -426,10 +458,18 @@ public class Chat extends JFrame {
                     System.out.println("Received message from server: ");
                     System.out.println(data);
                     //appendMessage(data.content.get(1), data.content.get(0));
-                    if (mainChatName.equals(data.content.get(0))) {
-                        appendMessage(data.content.get(1), data.content.get(0));
-                        //clientModule.sendPackageDataForChat(new PackageDataStructure("success"));
+                    if (mainChatType == 0){
+                        //If some message is sent to a person
+                        if (mainChatName.equals(data.content.get(0))) {
+                            appendMessage(data.content.get(1), data.content.get(0));
+                        }
                     }
+                    else if (mainChatType == 1){
+                        if (mainChatName.equals(data.content.get(2)) && !Objects.equals(clientModule.getUsername(), data.content.get(0))){
+                            appendMessage(data.content.get(1), data.content.get(0));
+                        }
+                    }
+
 
                 }
 
@@ -499,6 +539,9 @@ public class Chat extends JFrame {
             newGroup_btn.setPreferredSize(new Dimension(195, 50));
             newGroup_btn.setBackground(new Color(150, 199, 202));
             buttons_field.add(newGroup_btn);
+            newGroup_btn.addActionListener(e -> {
+                    clientModule.createGroupChat(mainChatName);
+            });
 
             JLabel label_jlb = new JLabel("Search message in chat history: ");
             label_jlb.setFont(new Font("Arial", Font.PLAIN, 15));

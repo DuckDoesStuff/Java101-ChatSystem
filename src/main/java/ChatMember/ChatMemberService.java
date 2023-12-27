@@ -29,6 +29,20 @@ public class ChatMemberService {
     }
 
 
-
-
+    public ArrayList<String> getGroupMembers(int chatID) {
+        try {
+            String sql = "SELECT username FROM users WHERE userID IN (SELECT userID FROM chatmember WHERE chatID = ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, chatID);
+            ResultSet rs = stmt.executeQuery();
+            ArrayList<String> members = new ArrayList<>();
+            while(rs.next()) {
+                members.add(rs.getString("username"));
+            }
+            return members;
+        } catch (Exception e) {
+            System.out.println("Error getting group members");
+            throw new RuntimeException(e);
+        }
+    }
 }

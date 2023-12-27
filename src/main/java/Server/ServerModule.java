@@ -60,6 +60,18 @@ class ChatHandler implements Runnable {
         System.out.println("User not found");
     }
 
+    public void sendToClient(PackageDataStructure packageData, ArrayList<String> usernames) {
+        for (ChatHandler client : clients) {
+            for (String username: usernames){
+                if(client.username.equals(username)) {
+                    System.out.println("Sending to " + client.username);
+                    client.sendPackageDataForChat(packageData);
+                }
+            }
+        }
+        //System.out.println("User not found");
+    }
+
     public void run() {
         chatController.setUserID(userService.getUserIDFromUsername(username));
         while(clientChatSocket.isConnected()){
@@ -81,13 +93,27 @@ class ChatHandler implements Runnable {
                 else if (packageDataForChat.content.get(0).equals("/sendmessage")){
                     String msg = packageDataForChat.content.get(1);
                     String sender = packageDataForChat.content.get(2);
-                    String receiver = packageDataForChat.content.get(3);
+                    String type = packageDataForChat.content.get(4);
                     PackageDataStructure pd = new PackageDataStructure(
-                            sender);
-                    pd.content.add(msg);
-                    chatController.sendMessage(receiver, msg);
-                    //sendToClient(pd, receiver);
-                    sendToClient(pd, receiver);
+                            "");
+
+                    if (Objects.equals(type, "0")){
+                        pd.content.add(sender);
+                        pd.content.add(msg);
+                        String receiver = packageDataForChat.content.get(3);
+                        chatController.sendMessage(receiver, msg);
+                        sendToClient(pd, receiver);
+                    }
+
+                    if (Objects.equals(type, "1")){
+                        String groupName = packageDataForChat.content.get(3);
+                        pd.content.add(sender);
+                        pd.content.add(msg);
+                        pd.content.add(groupName);
+                        ArrayList<String> groupMembers = chatController.getGroupMembers(groupName);
+                        chatController.sendGroupMessage(groupName, msg);
+                        sendToClient(pd, groupMembers);
+                    }
                 }
             }
         }
@@ -208,6 +234,24 @@ class ClientHandler implements Runnable {
                     broadcast(packageData);
                     closeConnection();
                     break;
+                } else if (packageData.content.getFirst().equals("/getgroups")){
+                    PackageDataStructure pd = new PackageDataStructure("");
+                    ArrayList<ChatModel> allGroups = chatController.getAllGroupChat();
+                    for (ChatModel group : allGroups){
+                        pd.content.add(group.getName());
+                    }
+                    sendPackageData(pd);
+                } else if (packageData.content.getFirst().equals("/creategroup")){
+                    chatController.createChat(packageData.content.get(1), true);
+                } else if (packageData.content.getFirst().equals("/grouphistory")){
+                    String groupName = packageData.content.get(1);
+                    ArrayList<MessageModel> history = chatController.getGroupMessageHistory(groupName);
+                    PackageDataStructure result = new PackageDataStructure("");
+                    for (MessageModel messageModel: history){
+                        String msg = userService.findUsernameWithUserID(messageModel.getSendUserID()) + "," + messageModel.getContent();
+                        result.content.add(msg);
+                    }
+                    sendPackageData(result);
                 }
 //            else if (packageData.content.getFirst().equals("/msg")){
 //
@@ -307,8 +351,7 @@ class ClientHandler implements Runnable {
                     if (friends == null || friends.isEmpty()) {
                         friendsPD.content.add("No friends");
                     } else {
-                        //friendsPD.content = "Friends:\n";
-                        //friendsStatus.content.add(Boolean.toString(userController.getUserStatus(friend)));
+
                         friendsPD.content.addAll(friends);
                     }
                     System.out.println("Done prepare the friend list");
@@ -320,9 +363,11 @@ class ClientHandler implements Runnable {
                 } else if (packageData.content.getFirst().equals("/friendstatus")) {
                     ArrayList<String> friends = packageData.content;
                     PackageDataStructure friendsStatus = new PackageDataStructure("");
+
                     for (int i = 1; i < friends.size(); i++) {
                         friendsStatus.content.add(Boolean.toString(userController.getUserStatus(friends.get(i))));
                     }
+
                     sendPackageData(friendsStatus);
                 } else if (packageData.content.get(0).equals("/chathistory")) {
                     String friendname = packageData.content.get(1);

@@ -249,6 +249,19 @@ public class ClientModule implements Runnable {
         System.out.println("Received chat history pd response");
         return chatHistory.content;
     }
+
+    public ArrayList<String> getGroupHistory(String groupName){
+        PackageDataStructure getGroupHistoryPD = new PackageDataStructure(
+                "/grouphistory"
+        );
+        getGroupHistoryPD.content.add(groupName);
+        sendPackageData(getGroupHistoryPD);
+        System.out.println("Sent get group history pd request");
+        PackageDataStructure groupHistory = receivePackageData();
+        System.out.println("Received group history pd response");
+        return groupHistory.content;
+    }
+
     public ArrayList<String> getFriendList() {
         PackageDataStructure getFriendListPD = new PackageDataStructure(
                 "/friends"
@@ -272,13 +285,23 @@ public class ClientModule implements Runnable {
         return friendStatus.content;
     }
 
-    public boolean sendMessage(String msg, String sender, String receiver) {
+    public ArrayList<String> getGroupChat(){
+        PackageDataStructure getGroupPD = new PackageDataStructure(
+                "/getgroups"
+        );
+        sendPackageData(getGroupPD);
+        ArrayList<String> groupList = receivePackageData().content;
+        return groupList;
+    }
+
+    public boolean sendMessage(String msg, String sender, String receiver, int type) {
         PackageDataStructure sendMessagePD = new PackageDataStructure(
                 "/sendmessage"
         );
         sendMessagePD.content.add(msg);
         sendMessagePD.content.add(sender);
         sendMessagePD.content.add(receiver);
+        sendMessagePD.content.add(Integer.toString(type));
         sendPackageDataForChat(sendMessagePD);
         System.out.println("Sent send message pd request");
 
@@ -340,5 +363,14 @@ public class ClientModule implements Runnable {
 
     public boolean isConnected() {
         return clientSocket != null && clientSocket.isConnected();
+    }
+
+    public void createGroupChat(String chatMember) {
+        PackageDataStructure createGroupPD = new PackageDataStructure(
+                "/creategroup"
+        );
+        createGroupPD.content.add(chatMember);
+        sendPackageData(createGroupPD);
+        System.out.println("Sent create group pd request");
     }
 }

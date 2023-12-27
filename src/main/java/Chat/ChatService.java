@@ -57,6 +57,28 @@ public class ChatService {
         }
     }
 
+    public ArrayList<ChatModel> getAllGroupChat(int userid){
+        try {
+            String sql = "SELECT * FROM chat WHERE chatID IN (SELECT chatID FROM chatmember WHERE userID = ?) AND isGroup = true";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            ResultSet rs = stmt.executeQuery();
+            ArrayList<ChatModel> chats = new ArrayList<>();
+            while(rs.next()) {
+                ChatModel chat = new ChatModel(
+                        rs.getInt("chatID"),
+                        rs.getBoolean("isGroup"),
+                        rs.getString("name")
+                );
+                chats.add(chat);
+            }
+            return chats;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     // Find chat base on senderID and receiverID
     public ChatModel findChat(int senderID, int receiverID) {
@@ -76,6 +98,21 @@ public class ChatService {
                 return chat;
             }
             return null;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public int getChatIdFromName(String name){
+        try {
+            String sql = "SELECT chatID FROM chat WHERE name = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, name);
+            ResultSet rs = stmt.executeQuery();
+            if(rs.next()) {
+                return rs.getInt("chatID");
+            }
+            return -1;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
