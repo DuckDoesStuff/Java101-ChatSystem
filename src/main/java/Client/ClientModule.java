@@ -1,6 +1,7 @@
 package Client;
 import java.io.*;
 import java.net.*;
+import java.sql.Array;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
@@ -309,6 +310,17 @@ public class ClientModule implements Runnable {
 
     }
 
+    public ArrayList<String> findUserByName(String username){
+        PackageDataStructure findUserByNamePD = new PackageDataStructure(
+                "/finduserbyname"
+        );
+        findUserByNamePD.content.add(username);
+        sendPackageData(findUserByNamePD);
+        System.out.println("Sent find user by name pd request");
+        PackageDataStructure userList = receivePackageData();
+        System.out.println("Received find user by name pd response");
+        return userList.content;
+    }
 
     public void closeConnection() {
         PackageDataStructure exitPD = new PackageDataStructure(

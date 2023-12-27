@@ -141,12 +141,13 @@ public class UserService {
         }
     }
 
-    public ArrayList<UserModel> findUserWithUsername(String userNameToFind) {
-        ArrayList<UserModel> userList = new ArrayList<>();
+    public ArrayList<String> findUserWithUsername(String userNameToFind) {
+        ArrayList<String> userList = new ArrayList<>();
         try {
-            String sql = "SELECT * FROM users WHERE username = ?";
+            String sql = "SELECT username FROM users WHERE username LIKE ?";
+            String keyword = "%" + userNameToFind + "%";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, userNameToFind);
+            stmt.setString(1, keyword);
             ResultSet rs = stmt.executeQuery();
             if(!rs.next()) {
                 System.out.println("No such user");
@@ -154,11 +155,11 @@ public class UserService {
             }
             do {
                 String username = rs.getString("username");
-                String firstName = rs.getString("firstName");
-                String lastName = rs.getString("lastName");
-                boolean gender = rs.getBoolean("gender");
-                UserModel user = new UserModel(username, firstName, lastName, gender);
-                userList.add(user);
+                //String firstName = rs.getString("firstName");
+                //String lastName = rs.getString("lastName");
+                //boolean gender = rs.getBoolean("gender");
+                //UserModel user = new UserModel(username, firstName, lastName, gender);
+                userList.add(username);
             } while(rs.next());
             return userList;
         } catch (Exception e) {

@@ -21,6 +21,7 @@ import Database.DB;
 import Friend.FriendService;
 import Message.MessageModel;
 import User.UserController;
+import User.UserModel;
 import User.UserService;
 
 class ChatHandler implements Runnable {
@@ -52,7 +53,7 @@ class ChatHandler implements Runnable {
 
     public void sendToClient(PackageDataStructure packageData, String username) {
         for (ChatHandler client : clients) {
-            if(client.username.equals(username)) {
+            if (client.username.equals(username)) {
                 client.sendPackageDataForChat(packageData);
                 return;
             }
@@ -62,8 +63,8 @@ class ChatHandler implements Runnable {
 
     public void sendToClient(PackageDataStructure packageData, ArrayList<String> usernames) {
         for (ChatHandler client : clients) {
-            for (String username: usernames){
-                if(client.username.equals(username)) {
+            for (String username : usernames) {
+                if (client.username.equals(username)) {
                     System.out.println("Sending to " + client.username);
                     client.sendPackageDataForChat(packageData);
                 }
@@ -74,30 +75,29 @@ class ChatHandler implements Runnable {
 
     public void run() {
         chatController.setUserID(userService.getUserIDFromUsername(username));
-        while(clientChatSocket.isConnected()){
+        while (clientChatSocket.isConnected()) {
             //PackageDataStructure packageData;
             PackageDataStructure packageDataForChat;
             try {
                 //packageData = receivePackageDataForChat();
                 packageDataForChat = receivePackageDataForChat();
-            }catch (Exception e) {
+            } catch (Exception e) {
                 System.out.println("Error receiving package data in main loop");
                 closeConnection();
                 break;
             }
 
-            if (packageDataForChat != null){
-                if (packageDataForChat.content.getFirst().equals("/exit")){
+            if (packageDataForChat != null) {
+                if (packageDataForChat.content.getFirst().equals("/exit")) {
                     closeConnection();
-                }
-                else if (packageDataForChat.content.get(0).equals("/sendmessage")){
+                } else if (packageDataForChat.content.get(0).equals("/sendmessage")) {
                     String msg = packageDataForChat.content.get(1);
                     String sender = packageDataForChat.content.get(2);
                     String type = packageDataForChat.content.get(4);
                     PackageDataStructure pd = new PackageDataStructure(
                             "");
 
-                    if (Objects.equals(type, "0")){
+                    if (Objects.equals(type, "0")) {
                         pd.content.add(sender);
                         pd.content.add(msg);
                         String receiver = packageDataForChat.content.get(3);
@@ -105,7 +105,7 @@ class ChatHandler implements Runnable {
                         sendToClient(pd, receiver);
                     }
 
-                    if (Objects.equals(type, "1")){
+                    if (Objects.equals(type, "1")) {
                         String groupName = packageDataForChat.content.get(3);
                         pd.content.add(sender);
                         pd.content.add(msg);
@@ -121,7 +121,7 @@ class ChatHandler implements Runnable {
 
     private void closeConnection() {
         try {
-            if (clientChatSocket != null){
+            if (clientChatSocket != null) {
                 clientChatSocket.close();
                 clientChatSocket = null;
             }
@@ -206,16 +206,16 @@ class ClientHandler implements Runnable {
 //        username = firstPackage.content;
 
         //Testing the new features
-        if(!authUser()) {
+        if (!authUser()) {
             System.out.println("Authentication failed");
             closeConnection();
             return;
         }
-        new Thread (new ChatHandler(clientChatSocket, conn, username, outChat, inChat)).start();
+        new Thread(new ChatHandler(clientChatSocket, conn, username, outChat, inChat)).start();
         System.out.println("Client username: " + username);
         chatController.setUserID(userService.getUserIDFromUsername(username));
         //System.out.println("Connected to Socket of Chat");
-        while(clientSocket.isConnected()) {
+        while (clientSocket.isConnected()) {
             PackageDataStructure packageData;
             try {
                 packageData = receivePackageData();
@@ -225,34 +225,34 @@ class ClientHandler implements Runnable {
                 break;
             }
 
-                if (packageData.content.getFirst().equals("/exit")) {
-                    PackageDataStructure pd = new PackageDataStructure(
-                            username + " has left the chat"
-                    );
-                    userService.logoutUser(username);
-                    System.out.println(username + " has left the chat");
-                    broadcast(packageData);
-                    closeConnection();
-                    break;
-                } else if (packageData.content.getFirst().equals("/getgroups")){
-                    PackageDataStructure pd = new PackageDataStructure("");
-                    ArrayList<ChatModel> allGroups = chatController.getAllGroupChat();
-                    for (ChatModel group : allGroups){
-                        pd.content.add(group.getName());
-                    }
-                    sendPackageData(pd);
-                } else if (packageData.content.getFirst().equals("/creategroup")){
-                    chatController.createChat(packageData.content.get(1), true);
-                } else if (packageData.content.getFirst().equals("/grouphistory")){
-                    String groupName = packageData.content.get(1);
-                    ArrayList<MessageModel> history = chatController.getGroupMessageHistory(groupName);
-                    PackageDataStructure result = new PackageDataStructure("");
-                    for (MessageModel messageModel: history){
-                        String msg = userService.findUsernameWithUserID(messageModel.getSendUserID()) + "," + messageModel.getContent();
-                        result.content.add(msg);
-                    }
-                    sendPackageData(result);
+            if (packageData.content.getFirst().equals("/exit")) {
+                PackageDataStructure pd = new PackageDataStructure(
+                        username + " has left the chat"
+                );
+                userService.logoutUser(username);
+                System.out.println(username + " has left the chat");
+                broadcast(packageData);
+                closeConnection();
+                break;
+            } else if (packageData.content.getFirst().equals("/getgroups")) {
+                PackageDataStructure pd = new PackageDataStructure("");
+                ArrayList<ChatModel> allGroups = chatController.getAllGroupChat();
+                for (ChatModel group : allGroups) {
+                    pd.content.add(group.getName());
                 }
+                sendPackageData(pd);
+            } else if (packageData.content.getFirst().equals("/creategroup")) {
+                chatController.createChat(packageData.content.get(1), true);
+            } else if (packageData.content.getFirst().equals("/grouphistory")) {
+                String groupName = packageData.content.get(1);
+                ArrayList<MessageModel> history = chatController.getGroupMessageHistory(groupName);
+                PackageDataStructure result = new PackageDataStructure("");
+                for (MessageModel messageModel : history) {
+                    String msg = userService.findUsernameWithUserID(messageModel.getSendUserID()) + "," + messageModel.getContent();
+                    result.content.add(msg);
+                }
+                sendPackageData(result);
+            }
 //            else if (packageData.content.getFirst().equals("/msg")){
 //
 //                String user = packageData.content.get(1);
@@ -277,128 +277,139 @@ class ClientHandler implements Runnable {
 //                    String groupName = split[1];
 //                    String content = split[2];
 //                    sendToGroupMembers(new PackageDataStructure(content), groupName);
-                else if (packageData.content.equals("/addfriend")) {
-                    PackageDataStructure friendUsernamePD = receivePackageData();
-                    String friendUsername = friendUsernamePD.content.get(0);
-                    PackageDataStructure resultPD = new PackageDataStructure("");
-                    if (friendService.sendRequest(username, friendUsername)) {
-                        System.out.println("Friend request sent");
-                        resultPD.content.add("success");
-                    } else {
-                        System.out.println("Error sending friend request");
-                        resultPD.content.add("failed");
+            else if (packageData.content.equals("/addfriend")) {
+                PackageDataStructure friendUsernamePD = receivePackageData();
+                String friendUsername = friendUsernamePD.content.get(0);
+                PackageDataStructure resultPD = new PackageDataStructure("");
+                if (friendService.sendRequest(username, friendUsername)) {
+                    System.out.println("Friend request sent");
+                    resultPD.content.add("success");
+                } else {
+                    System.out.println("Error sending friend request");
+                    resultPD.content.add("failed");
+                }
+                sendPackageData(resultPD);
+            } else if (packageData.content.equals("/acceptfriend")) {
+                PackageDataStructure friendUsernamePD = receivePackageData();
+                String friendUsername = friendUsernamePD.content.get(0);
+                PackageDataStructure resultPD = new PackageDataStructure("");
+                if (friendService.acceptRequest(friendUsername, username)) {
+                    System.out.println("Friend request accepted");
+                    resultPD.content.add("success");
+                    chatController.createChat(friendUsername, false);
+                } else {
+                    System.out.println("Error accepting friend request");
+                    resultPD.content.add("failed");
+                }
+                sendPackageData(resultPD);
+            } else if (packageData.content.equals("/declinefriend")) {
+                PackageDataStructure friendUsernamePD = receivePackageData();
+                String friendUsername = friendUsernamePD.content.get(0);
+                PackageDataStructure resultPD = new PackageDataStructure("");
+                if (friendService.declineRequest(friendUsername, username)) {
+                    System.out.println("Friend request declined");
+                    resultPD.content.add("success");
+                } else {
+                    System.out.println("Error declining friend request");
+                    resultPD.content.add("failed");
+                }
+                sendPackageData(resultPD);
+            } else if (packageData.content.equals("/requests")) {
+                ArrayList<String> requests = friendService.getRequestList(username);
+                PackageDataStructure requestsPD = new PackageDataStructure("");
+                if (requests == null || requests.isEmpty()) {
+                    requestsPD.content.add("No friend requests");
+                } else {
+                    //requestsPD.content = "Friend requests:\n";
+                    for (String request : requests) {
+                        requestsPD.content.add(request);
                     }
-                    sendPackageData(resultPD);
-                } else if (packageData.content.equals("/acceptfriend")) {
-                    PackageDataStructure friendUsernamePD = receivePackageData();
-                    String friendUsername = friendUsernamePD.content.get(0);
-                    PackageDataStructure resultPD = new PackageDataStructure("");
-                    if (friendService.acceptRequest(friendUsername, username)) {
-                        System.out.println("Friend request accepted");
-                        resultPD.content.add("success");
-                        chatController.createChat(friendUsername, false);
-                    } else {
-                        System.out.println("Error accepting friend request");
-                        resultPD.content.add("failed");
-                    }
-                    sendPackageData(resultPD);
-                } else if (packageData.content.equals("/declinefriend")) {
-                    PackageDataStructure friendUsernamePD = receivePackageData();
-                    String friendUsername = friendUsernamePD.content.get(0);
-                    PackageDataStructure resultPD = new PackageDataStructure("");
-                    if (friendService.declineRequest(friendUsername, username)) {
-                        System.out.println("Friend request declined");
-                        resultPD.content.add("success");
-                    } else {
-                        System.out.println("Error declining friend request");
-                        resultPD.content.add("failed");
-                    }
-                    sendPackageData(resultPD);
-                } else if (packageData.content.equals("/requests")) {
-                    ArrayList<String> requests = friendService.getRequestList(username);
-                    PackageDataStructure requestsPD = new PackageDataStructure("");
-                    if (requests == null || requests.isEmpty()) {
-                        requestsPD.content.add("No friend requests");
-                    } else {
-                        //requestsPD.content = "Friend requests:\n";
-                        for (String request : requests) {
-                            requestsPD.content.add(request);
-                        }
-                    }
-                    sendPackageData(requestsPD);
-                } else if (packageData.content.equals("/removerequest")) {
-                    PackageDataStructure friendUsernamePD = receivePackageData();
-                    String friendUsername = friendUsernamePD.content.get(0);
-                    PackageDataStructure resultPD = new PackageDataStructure("");
-                    if (friendService.removeRequest(username, friendUsername)) {
-                        System.out.println("Friend request removed");
-                        resultPD.content.add("success");
-                    } else {
-                        System.out.println("Error removing friend request");
-                        resultPD.content.add("success");
-                    }
-                    sendPackageData(resultPD);
-                } else if (packageData.content.getFirst().equals("/friends")) {
-                    System.out.println("Received get friend list pd request");
-                    ArrayList<String> friends = friendService.getFriendList(username);
+                }
+                sendPackageData(requestsPD);
+            } else if (packageData.content.equals("/removerequest")) {
+                PackageDataStructure friendUsernamePD = receivePackageData();
+                String friendUsername = friendUsernamePD.content.get(0);
+                PackageDataStructure resultPD = new PackageDataStructure("");
+                if (friendService.removeRequest(username, friendUsername)) {
+                    System.out.println("Friend request removed");
+                    resultPD.content.add("success");
+                } else {
+                    System.out.println("Error removing friend request");
+                    resultPD.content.add("success");
+                }
+                sendPackageData(resultPD);
+            } else if (packageData.content.getFirst().equals("/friends")) {
+                System.out.println("Received get friend list pd request");
+                ArrayList<String> friends = friendService.getFriendList(username);
 //                for (String friend : friends){
 //                   System.out.println(friend);
 //                }
-                    System.out.println("Done read the friend list");
+                System.out.println("Done read the friend list");
 
-                    PackageDataStructure friendsPD = new PackageDataStructure("");
-                    //PackageDataStructure friendsStatus = new PackageDataStructure("");
-                    if (friends == null || friends.isEmpty()) {
-                        friendsPD.content.add("No friends");
-                    } else {
-
-                        friendsPD.content.addAll(friends);
-                    }
-                    System.out.println("Done prepare the friend list");
-
-                    sendPackageData(friendsPD);
-                    System.out.println("Sent the friend list");
-
-                    //sendPackageData(friendsStatus);
-                } else if (packageData.content.getFirst().equals("/friendstatus")) {
-                    ArrayList<String> friends = packageData.content;
-                    PackageDataStructure friendsStatus = new PackageDataStructure("");
-
-                    for (int i = 1; i < friends.size(); i++) {
-                        friendsStatus.content.add(Boolean.toString(userController.getUserStatus(friends.get(i))));
-                    }
-
-                    sendPackageData(friendsStatus);
-                } else if (packageData.content.get(0).equals("/chathistory")) {
-                    String friendname = packageData.content.get(1);
-                    ArrayList<MessageModel> history = chatController.getMessageHistory(friendname);
-                    PackageDataStructure result = new PackageDataStructure("");
-                    for (MessageModel message : history) {
-                        String msg = userService.findUsernameWithUserID(message.getSendUserID()) + "," + message.getContent();
-                        //PackageDataStructure pd = new PackageDataStructure(msg);
-                        result.content.add(msg);
-                    }
-                    sendPackageData(result);
-                } else if (packageData.content.equals("/unfriend")) {
-                    PackageDataStructure friendUsernamePD = receivePackageData();
-                    String friendUsername = friendUsernamePD.content.get(0);
-                    PackageDataStructure resultPD = new PackageDataStructure("");
-                    if (friendService.removeFriend(username, friendUsername)) {
-                        System.out.println("Friend removed");
-                        resultPD.content.add("success");
-                    } else {
-                        System.out.println("Error removing friend");
-                        resultPD.content.add("failed");
-                    }
-                    sendPackageData(resultPD);
+                PackageDataStructure friendsPD = new PackageDataStructure("");
+                //PackageDataStructure friendsStatus = new PackageDataStructure("");
+                if (friends == null || friends.isEmpty()) {
+                    friendsPD.content.add("No friends");
                 } else {
-                    PackageDataStructure pd = new PackageDataStructure(
-                            username + ": " + packageData.content.get(0));
-                    broadcast(pd);
+
+                    friendsPD.content.addAll(friends);
                 }
+                System.out.println("Done prepare the friend list");
+
+                sendPackageData(friendsPD);
+                System.out.println("Sent the friend list");
+
+                //sendPackageData(friendsStatus);
+            } else if (packageData.content.getFirst().equals("/friendstatus")) {
+                ArrayList<String> friends = packageData.content;
+                PackageDataStructure friendsStatus = new PackageDataStructure("");
+
+                for (int i = 1; i < friends.size(); i++) {
+                    friendsStatus.content.add(Boolean.toString(userController.getUserStatus(friends.get(i))));
+                }
+
+                sendPackageData(friendsStatus);
+            } else if (packageData.content.get(0).equals("/chathistory")) {
+                String friendname = packageData.content.get(1);
+                ArrayList<MessageModel> history = chatController.getMessageHistory(friendname);
+                PackageDataStructure result = new PackageDataStructure("");
+                for (MessageModel message : history) {
+                    String msg = userService.findUsernameWithUserID(message.getSendUserID()) + "," + message.getContent();
+                    //PackageDataStructure pd = new PackageDataStructure(msg);
+                    result.content.add(msg);
+                }
+                sendPackageData(result);
+            } else if (packageData.content.equals("/unfriend")) {
+                PackageDataStructure friendUsernamePD = receivePackageData();
+                String friendUsername = friendUsernamePD.content.get(0);
+                PackageDataStructure resultPD = new PackageDataStructure("");
+                if (friendService.removeFriend(username, friendUsername)) {
+                    System.out.println("Friend removed");
+                    resultPD.content.add("success");
+                } else {
+                    System.out.println("Error removing friend");
+                    resultPD.content.add("failed");
+                }
+                sendPackageData(resultPD);
+            } else if (packageData.content.getFirst().equals("/finduserbyname")){
+                ArrayList<String> usersMatch;
+                String name = packageData.content.get(1);
+                usersMatch = userService.findUserWithUsername(name);
+                PackageDataStructure result = new PackageDataStructure("");
+                if (usersMatch == null || usersMatch.isEmpty()) {
+                    result.content.add("No users found");
+                } else {
+                    result.content.addAll(usersMatch);
+                }
+                sendPackageData(result);
+            }
+            else {
+                PackageDataStructure pd = new PackageDataStructure(
+                        username + ": " + packageData.content.get(0));
+                broadcast(pd);
             }
         }
-
+    }
 
 
     public PackageDataStructure receivePackageData() {
@@ -411,7 +422,6 @@ class ClientHandler implements Runnable {
     }
 
 
-
     public void sendPackageData(PackageDataStructure packageData) {
         try {
             out.writeObject(packageData);
@@ -419,7 +429,6 @@ class ClientHandler implements Runnable {
             System.out.println("Error sending package data");
         }
     }
-
 
 
     //Define other client methods here
@@ -440,21 +449,20 @@ class ClientHandler implements Runnable {
 
     public void broadcast(PackageDataStructure packageData) {
         System.out.println(packageData.content.getFirst());
-        if(clients.isEmpty()) {
+        if (clients.isEmpty()) {
             System.out.println("No other clients connected");
             return;
         }
         for (ClientHandler client : clients) {
-            if(client.username.equals(username))
+            if (client.username.equals(username))
                 continue;
             client.sendPackageData(packageData);
         }
     }
 
 
-
     public boolean authUser() {
-        while(true) {
+        while (true) {
             PackageDataStructure pd = receivePackageData();
             if (pd.content.getFirst().equals("/login")) {
                 String username = pd.content.get(1);
@@ -468,8 +476,7 @@ class ClientHandler implements Runnable {
                     System.out.println("User " + this.username + " has logged in");
                     return true;
                 }
-            }
-            else if (pd.content.getFirst().equals("/register")) {
+            } else if (pd.content.getFirst().equals("/register")) {
                 PackageDataStructure registerPD = pd;
 
                 System.out.println("Username: " + registerPD.content.get(1));
@@ -490,7 +497,7 @@ class ClientHandler implements Runnable {
                 String gender = registerPD.content.get(8);
                 PackageDataStructure resultPD = new PackageDataStructure("");
                 String result = userService.registerUser(username,
-                       password, email, firstname, lastname, address, dob, gender);
+                        password, email, firstname, lastname, address, dob, gender);
                 resultPD.content.add(result);
                 sendPackageData(resultPD);
                 if (result.equals("success")) {
@@ -498,9 +505,8 @@ class ClientHandler implements Runnable {
                     System.out.println("User " + this.username + " has registered");
                     return true;
                 }
-            }
-            else {
-                System.out.println("Invalid command " + pd.content  );
+            } else {
+                System.out.println("Invalid command " + pd.content);
                 break;
             }
         }
@@ -515,6 +521,7 @@ public class ServerModule {
     boolean isRunning;
     DB db;
     Connection conn;
+
     ServerModule(int portForData, int portForChat) {
         try {
             socket = new ServerSocket(portForData);
@@ -534,16 +541,15 @@ public class ServerModule {
         Scanner scanner = new Scanner(System.in);
         new Thread(() -> {
             while (true) {
-                if(Objects.equals(scanner.nextLine(), "/exit")) {
+                if (Objects.equals(scanner.nextLine(), "/exit")) {
                     stopServer();
                     break;
-                }
-                else
+                } else
                     System.out.println("Invalid command");
             }
         }).start();
         isRunning = true;
-        while(isRunning) {
+        while (isRunning) {
             try {
                 Socket clientSocket = socket.accept();
                 Socket clientChatSocket = chatSocket.accept();
@@ -552,7 +558,7 @@ public class ServerModule {
                 Thread clientThread = new Thread(clientHandler);
                 clientThread.start();
             } catch (SocketException e) {
-               System.out.println("Server socket closed");
+                System.out.println("Server socket closed");
                 break;
             } catch (IOException e) {
                 System.out.println("Error accepting client connection");
@@ -563,10 +569,10 @@ public class ServerModule {
 
     public void stopServer() {
         try {
-            if (socket != null){
+            if (socket != null) {
                 socket.close();
             }
-            if (chatSocket != null){
+            if (chatSocket != null) {
                 chatSocket.close();
             }
             isRunning = false;
