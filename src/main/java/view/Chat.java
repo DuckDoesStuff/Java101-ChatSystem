@@ -36,6 +36,9 @@ public class Chat extends JFrame {
     private final JPanel buttons_field;
     private final JPanel bottom_field;
     private JButton addFriend_btn;
+    private JButton acceptFriend_btn;
+    private JButton declineFriend_btn;
+    private JButton removeRequest_btn;
     private JButton unfriend_btn;
     private JButton block_btn;
     private JButton spam_btn;
@@ -589,15 +592,87 @@ public class Chat extends JFrame {
             bottom_field.revalidate();
             bottom_field.repaint();
 
-            addFriend_btn = new JButton("Add Friend");
-            addFriend_btn.setPreferredSize(new Dimension(195, 50));
-            addFriend_btn.setBackground(new Color(150, 199, 202));
-            buttons_field.add(addFriend_btn);
+            String friendShipStatus = clientModule.getFriendShipStatus(mainChatName);
 
-            unfriend_btn = new JButton("Unfriend");
-            unfriend_btn.setPreferredSize(new Dimension(195, 50));
-            unfriend_btn.setBackground(new Color(150, 199, 202));
-            buttons_field.add(unfriend_btn);
+            //Not a friend nor a request was sent
+            if(friendShipStatus.equals("3")) {
+                addFriend_btn = new JButton("Add Friend");
+                addFriend_btn.setPreferredSize(new Dimension(195, 50));
+                addFriend_btn.setBackground(new Color(150, 199, 202));
+                buttons_field.add(addFriend_btn);
+                addFriend_btn.addActionListener(e -> {
+                    String result = clientModule.sendFriendRequest(mainChatName);
+                    String message = switch (result) {
+                        case "success" -> "Successfully send a friend request";
+                        case "0" -> "User does not exist";
+                        case "1" -> "Friend request already exists, do you wish to remove the request?";
+                        case "2" -> "This person has already sent you a friend request, do you wish to accept?";
+                        default -> "Something unexpected happened";
+                    };
+                    if (result.equals("success")) {
+                        JOptionPane.showMessageDialog(null, message);
+                    } else if (result.equals("1")) {
+                        int option = JOptionPane.showConfirmDialog(null, message, "Remove request", JOptionPane.YES_NO_OPTION);
+                        if (option == JOptionPane.YES_OPTION) {
+                            clientModule.removeFriendRequest(mainChatName);
+                        }
+                    } else if (result.equals("2")) {
+                        int option = JOptionPane.showConfirmDialog(null, message, "Accept friend request", JOptionPane.YES_NO_OPTION);
+                        if (option == JOptionPane.YES_OPTION) {
+                            clientModule.acceptFriendRequest(mainChatName);
+                        } else if (option == JOptionPane.NO_OPTION) {
+                            clientModule.declineFriendRequest(mainChatName);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, message);
+                    }
+                });
+            }
+            //User already sent a request
+            else if (friendShipStatus.equals("1")) {
+                removeRequest_btn = new JButton("Remove request");
+                removeRequest_btn.setPreferredSize(new Dimension(195, 50));
+                removeRequest_btn.setBackground(new Color(150, 199, 202));
+                buttons_field.add(removeRequest_btn);
+                removeRequest_btn.addActionListener(e -> {
+                    String result = clientModule.removeFriendRequest(mainChatName);
+                    if(result.equals("succes"))
+                        JOptionPane.showMessageDialog(null, "Removed friend request");
+                });
+            }
+            //The other already send a request
+            else if (friendShipStatus.equals("2")) {
+                acceptFriend_btn = new JButton("Accept request");
+                acceptFriend_btn.setPreferredSize(new Dimension(195, 50));
+                acceptFriend_btn.setBackground(new Color(150, 199, 202));
+                buttons_field.add(acceptFriend_btn);
+                acceptFriend_btn.addActionListener(e -> {
+                    String result = clientModule.acceptFriendRequest(mainChatName);
+                    if (result.equals("success"))
+                        JOptionPane.showMessageDialog(null, "You are now friend with this person");
+                });
+                declineFriend_btn = new JButton("Decline request");
+                declineFriend_btn.setPreferredSize(new Dimension(195, 50));
+                declineFriend_btn.setBackground(new Color(150, 199, 202));
+                buttons_field.add(declineFriend_btn);
+                declineFriend_btn.addActionListener(e -> {
+                    String result = clientModule.declineFriendRequest(mainChatName);
+                    if (result.equals("success"))
+                        JOptionPane.showMessageDialog(null, "Decline this person request");
+                });
+            }
+            //Already friends
+            else if (friendShipStatus.equals("0")) {
+                unfriend_btn = new JButton("Unfriend");
+                unfriend_btn.setPreferredSize(new Dimension(195, 50));
+                unfriend_btn.setBackground(new Color(150, 199, 202));
+                buttons_field.add(unfriend_btn);
+                unfriend_btn.addActionListener(e -> {
+                    String result = clientModule.removeFriend(mainChatName);
+                    if(result.equals("success"))
+                        JOptionPane.showMessageDialog(null, "You have removed this friend");
+                });
+            }
 
             spam_btn = new JButton("Spam");
             spam_btn.setPreferredSize(new Dimension(195, 50));
@@ -639,7 +714,8 @@ public class Chat extends JFrame {
             searchAll_btn.setPreferredSize(new Dimension(185, 30));
             searchAll_btn.setBackground(Color.WHITE);
             bottom_field.add(searchAll_btn);
-        } else { //group chat
+        }
+        else { //group chat
             buttons_field.removeAll();
             buttons_field.revalidate();
             buttons_field.repaint();
@@ -680,7 +756,6 @@ public class Chat extends JFrame {
             }
         }
     }
-
 
     public static void main(String[] args) throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         new Chat();

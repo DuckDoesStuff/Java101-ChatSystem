@@ -11,12 +11,10 @@ public class PackageDataStructure implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public ArrayList<String> content;
-    //public int password;
     public PackageDataStructure(String content) {
         this.content = new ArrayList<>();
         if (!content.equals(""))
             this.content.add(content);
-        //this.password = password;
     }
 
     public PackageDataStructure(String[] content){
@@ -29,7 +27,6 @@ public class PackageDataStructure implements Serializable {
     public PackageDataStructure(ArrayList<String> content) {
         this.content = new ArrayList<>();
         this.content.addAll(content);
-        //this.password = password;
     }
     //For easy debugging, override toString() method to use in
     //System.out.println()

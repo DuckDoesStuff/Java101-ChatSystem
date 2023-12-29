@@ -43,15 +43,18 @@ public class FriendService {
         }
     }
 
-    public boolean sendRequest(String senderName, String receiverName) {
+    public String sendRequest(String senderName, String receiverName) {
         try {
             //Get the senderID and receiverID
             int senderID = userIdFromName(senderName);
             int receiverID = userIdFromName(receiverName);
 
+            System.out.println(senderName);
+            System.out.println(receiverName);
+
             if(senderID == -1 || receiverID == -1) {
                 System.out.println("User does not exist");
-                return false;
+                return "0";
             }
 
 
@@ -63,7 +66,7 @@ public class FriendService {
             ResultSet rs = stmt.executeQuery();
             if(rs.next()) {
                 System.out.println("Friend request already exists");
-                return false;
+                return "1";
             }
 
             stmt.setInt(1, receiverID);
@@ -71,7 +74,7 @@ public class FriendService {
             rs = stmt.executeQuery();
             if(rs.next()) {
                 System.out.println("This person has already sent you a friend request");
-                return false;
+                return "2";
             }
 
             //Add the request to the database
@@ -82,14 +85,14 @@ public class FriendService {
             stmt.setBoolean(3, false);
             stmt.executeUpdate();
             conn.commit();
-            return true;
+            return "success";
         } catch (Exception e) {
             System.out.println("Error adding friend request");
             throw new RuntimeException(e);
         }
     }
 
-    public boolean acceptRequest(String senderName, String receiverName) {
+    public String acceptRequest(String senderName, String receiverName) {
         try {
             //Get the senderID and receiverID
             int senderID = userIdFromName(senderName);
@@ -103,7 +106,7 @@ public class FriendService {
             ResultSet rs = stmt.executeQuery();
             if(!rs.next()) {
                 System.out.println("Friend request does not exist");
-                return false;
+                return "0";
             }
 
             //Update the request to accepted
@@ -114,14 +117,14 @@ public class FriendService {
             stmt.setInt(3, receiverID);
             stmt.executeUpdate();
             conn.commit();
-            return true;
+            return "success";
         } catch (Exception e) {
             System.out.println("Error accepting friend request");
             throw new RuntimeException(e);
         }
     }
 
-    public boolean declineRequest(String senderName, String receiverName) {
+    public String declineRequest(String senderName, String receiverName) {
         try {
             //Get the senderID and receiverID
             int senderID = userIdFromName(senderName);
@@ -135,7 +138,7 @@ public class FriendService {
             ResultSet rs = stmt.executeQuery();
             if(!rs.next()) {
                 System.out.println("Friend request does not exist");
-                return false;
+                return "0";
             }
 
             sql = "DELETE FROM friendrequest WHERE senderID = ? AND receiverID = ?";
@@ -144,14 +147,14 @@ public class FriendService {
             stmt.setInt(2, receiverID);
             stmt.executeUpdate();
             conn.commit();
-            return true;
+            return "success";
         } catch (Exception e) {
             System.out.println("Error removing friend request");
             throw new RuntimeException(e);
         }
     }
 
-    public boolean removeFriend(String username, String friendName) {
+    public String removeFriend(String username, String friendName) {
         try {
             //Get the senderID and receiverID
             int userID = userIdFromName(username);
@@ -165,7 +168,7 @@ public class FriendService {
             ResultSet rs = stmt.executeQuery();
             if(!rs.next()) {
                 System.out.println("Friend does not exist");
-                return false;
+                return "0";
             }
 
             sql = "DELETE FROM friendlist WHERE userID = ? AND friendID = ?";
@@ -181,14 +184,14 @@ public class FriendService {
             stmt.setInt(2, userID);
             stmt.executeUpdate();
             conn.commit();
-            return true;
+            return "success";
         } catch (Exception e) {
             System.out.println("Error removing friend");
             throw new RuntimeException(e);
         }
     }
 
-    public boolean removeRequest(String username, String friendName) {
+    public String removeRequest(String username, String friendName) {
         try {
             //Get the senderID and receiverID
             int userID = userIdFromName(username);
@@ -202,7 +205,7 @@ public class FriendService {
             ResultSet rs = stmt.executeQuery();
             if(!rs.next()) {
                 System.out.println("Friend request does not exist");
-                return false;
+                return "0";
             }
 
             sql = "DELETE FROM friendrequest WHERE senderID = ? AND receiverID = ?";
@@ -211,9 +214,50 @@ public class FriendService {
             stmt.setInt(2, friendID);
             stmt.executeUpdate();
             conn.commit();
-            return true;
+            return "success";
         } catch (Exception e) {
             System.out.println("Error removing friend request");
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String friendShipStatus(String username, String friendName) {
+        try {
+            //Get the senderID and receiverID
+            int userID = userIdFromName(username);
+            int friendID = userIdFromName(friendName);
+
+            //Check if they are friend
+            String sql = "SELECT * FROM friendlist WHERE userid = ? AND friendid = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            stmt.setInt(2, friendID);
+            ResultSet rs = stmt.executeQuery();
+            //They are friend
+            if(rs.next()) {
+                return "0";
+            }
+
+            sql = "SELECT * FROM friendrequest WHERE senderID = ? AND receiverID = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            stmt.setInt(2, friendID);
+            rs = stmt.executeQuery();
+            //User already sent a request
+            if(rs.next()) {
+                return "1";
+            }
+            stmt.setInt(2, userID);
+            stmt.setInt(1, friendID);
+            rs = stmt.executeQuery();
+            //Friend already sent a request
+            if(rs.next()) {
+                return "2";
+            }
+
+            return "3";
+        } catch (Exception e) {
+            System.out.println("Error getting friend ship status");
             throw new RuntimeException(e);
         }
     }

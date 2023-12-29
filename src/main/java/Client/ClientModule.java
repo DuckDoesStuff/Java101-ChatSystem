@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.concurrent.atomic.LongAccumulator;
 
 import DataStructure.PackageDataStructure;
 import org.postgresql.shaded.com.ongres.scram.common.bouncycastle.pbkdf2.Pack;
@@ -84,6 +85,7 @@ public class ClientModule implements Runnable {
             break;
             }
 
+            // These are for console interactions
             if(content.startsWith("/addfriend")) {
                 String friendUsername = content.substring(11);
                 String[] pdContent = new String[2];
@@ -347,28 +349,6 @@ public class ClientModule implements Runnable {
         }
     }
 
-//    public void packageListener() {
-//        new Thread(() -> {
-//            while (clientSocket.isConnected()) {
-//                PackageDataStructure packageData;
-//                try {
-//                    packageData = receivePackageData();
-//                } catch (Exception e) {
-//                    System.out.println("Socket probably closed");
-//                    closeConnection();
-//                    break;
-//                }
-////                for (String s : packageData.content) {
-////                    System.out.println(s);
-////                }
-//                //System.out.println(packageData.content);
-//                //TODO: maybe? handle each command here with threads
-//            }
-//        }).start();
-//        System.out.println("Package listener started");
-//    }
-
-
     public String getUsername() {
         return username;
     }
@@ -384,5 +364,83 @@ public class ClientModule implements Runnable {
         createGroupPD.content.add(chatMember);
         sendPackageData(createGroupPD);
         System.out.println("Sent create group pd request");
+    }
+
+    public String sendFriendRequest(String friendUsername) {
+        String[] pdContent = new String[2];
+        pdContent[0] = "/addfriend";
+        pdContent[1] = friendUsername;
+        PackageDataStructure friendUsernamePD = new PackageDataStructure(
+                pdContent
+        );
+        sendPackageData(friendUsernamePD);
+
+        PackageDataStructure resultPD = receivePackageData();
+        return resultPD.content.getFirst();
+    }
+
+    public String removeFriendRequest(String friendUsername) {
+        String[] pdContent = new String[2];
+        pdContent[0] = "/removerequest";
+        pdContent[1] = friendUsername;
+        PackageDataStructure friendUsernamePD = new PackageDataStructure(
+                pdContent
+        );
+        sendPackageData(friendUsernamePD);
+
+        PackageDataStructure resultPD = receivePackageData();
+        return resultPD.content.getFirst();
+    }
+
+    public String acceptFriendRequest(String senderUsername) {
+        String[] pdContent = new String[2];
+        pdContent[0] = "/acceptfriend";
+        pdContent[1] = senderUsername;
+        PackageDataStructure senderUsernamePD = new PackageDataStructure(
+                pdContent
+        );
+        sendPackageData(senderUsernamePD);
+
+        PackageDataStructure resultPD = receivePackageData();
+        return resultPD.content.getFirst();
+    }
+
+    public String declineFriendRequest(String senderUsername) {
+        String[] pdContent = new String[2];
+        pdContent[0] = "/declinefriend";
+        pdContent[1] = senderUsername;
+        PackageDataStructure senderUsernamePD = new PackageDataStructure(
+                pdContent
+        );
+        sendPackageData(senderUsernamePD);
+
+        PackageDataStructure resultPD = receivePackageData();
+        return resultPD.content.getFirst();
+    }
+
+    public String removeFriend(String friendUsername) {
+        String[] pdContent = new String[2];
+        pdContent[0] = "/acceptfriend";
+        pdContent[1] = friendUsername;
+        PackageDataStructure friendUsernamePD = new PackageDataStructure(
+                pdContent
+        );
+        sendPackageData(friendUsernamePD);
+
+        PackageDataStructure resultPD = receivePackageData();
+        return resultPD.content.getFirst();
+    }
+
+    public String getFriendShipStatus(String friendUsername) {
+        String[] pdContent = new String[2];
+        pdContent[0] = "/friendshipstatus";
+        pdContent[1] = friendUsername;
+        PackageDataStructure friendUsernamePD = new PackageDataStructure(
+                pdContent
+        );
+        sendPackageData(friendUsernamePD);
+
+        PackageDataStructure resultPD = receivePackageData();
+        return resultPD.content.getFirst();
     }
 }
