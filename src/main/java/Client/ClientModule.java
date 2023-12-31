@@ -288,6 +288,16 @@ public class ClientModule implements Runnable {
         return friendStatus.content;
     }
 
+    public boolean reportSpam(String username){
+        PackageDataStructure reportpd = new PackageDataStructure("/reportspam");
+        reportpd.content.add(username);
+        sendPackageData(reportpd);
+        System.out.println("Send unblock pd req");
+        PackageDataStructure unblockUser = receivePackageData();
+        System.out.println("Received unlock result");
+        return unblockUser.content.getFirst().equals("true");
+    }
+
     public ArrayList<String> getGroupChat(){
         PackageDataStructure getGroupPD = new PackageDataStructure(
                 "/getgroups"
@@ -297,10 +307,49 @@ public class ClientModule implements Runnable {
         return groupList;
     }
 
+    public boolean blockUser(String username){
+        PackageDataStructure blockUserPD = new PackageDataStructure(
+                "/blockuser"
+        );
+        blockUserPD.content.add(username);
+        sendPackageData(blockUserPD);
+        System.out.println("Sent block user pd request");
+        PackageDataStructure blockUser = receivePackageData();
+        System.out.println("Received block user pd response");
+        return blockUser.content.getFirst().equals("true");
+    }
+
+    public boolean unblockUser(String username){
+        PackageDataStructure unblockpd = new PackageDataStructure("/unblockuser");
+        unblockpd.content.add(username);
+        sendPackageData(unblockpd);
+        System.out.println("Send unblock pd req");
+        PackageDataStructure unblockUser = receivePackageData();
+        System.out.println("Received unlock result");
+        return unblockUser.content.getFirst().equals("true");
+    }
+
+    public boolean checkIsBlocked(String username){
+        PackageDataStructure checkIsBlockedPD = new PackageDataStructure(
+                "/checkisblocked"
+        );
+        checkIsBlockedPD.content.add(username);
+        sendPackageData(checkIsBlockedPD);
+        System.out.println("Sent check is blocked pd request");
+        PackageDataStructure isBlocked = receivePackageData();
+        System.out.println("Received check is blocked pd response");
+        return isBlocked.content.getFirst().equals("true");
+    }
+
     public boolean sendMessage(String msg, String sender, String receiver, int type) {
         PackageDataStructure sendMessagePD = new PackageDataStructure(
                 "/sendmessage"
         );
+        boolean isBlocked = checkIsBlocked(receiver);
+        if (isBlocked) {
+            System.out.println("Cannot send message to blocked user");
+            return false;
+        }
         sendMessagePD.content.add(msg);
         sendMessagePD.content.add(sender);
         sendMessagePD.content.add(receiver);

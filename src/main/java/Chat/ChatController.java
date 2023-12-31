@@ -45,6 +45,26 @@ public class ChatController {
         }
     }
 
+    public boolean blockStatus(String username){
+        int receiverID = userService.getUserIDFromUsername(username);
+        return userService.blockStatus(userid, receiverID);
+    }
+
+    public boolean blockUser(String username){
+        int receiverID = userService.getUserIDFromUsername(username);
+        return userService.blockUser(userid, receiverID);
+    }
+
+    public boolean unblockUser(String username){
+        int receiverID = userService.getUserIDFromUsername(username);
+        return userService.unblockUser(userid, receiverID);
+    }
+
+    public boolean reportSpammer(String username){
+        int receiverID = userService.getUserIDFromUsername(username);
+        return userService.reportSpammer(userid, receiverID);
+    }
+
     // Send a chat to a new username
     public void sendMessage(String receiver, String message) {
         int receiverID = userService.getUserIDFromUsername(receiver);

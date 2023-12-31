@@ -117,6 +117,23 @@ public class DB {
             stmt.execute(sql10);
             conn.commit();
 
+            String sql11 = "CREATE TABLE IF NOT EXISTS spammer (" +
+                    " userID INT, " +
+                    " spammerID INT, " +
+                    " FOREIGN KEY (userID) REFERENCES users(userID), " +
+                    " FOREIGN KEY (spammerID) REFERENCES users(userID), " +
+                    " PRIMARY KEY (userID, spammerID))";
+            stmt.execute(sql11);
+            conn.commit();
+
+            String sql12 = "CREATE TABLE IF NOT EXISTS blocked (" +
+                    "blockerID INT, " +
+                    "blockedID INT, " +
+                    "FOREIGN KEY (blockerID) REFERENCES users(userID), " +
+                    "FOREIGN KEY (blockedID) REFERENCES users(userID), " +
+                    "PRIMARY KEY (blockerID, blockedID))";
+            stmt.execute(sql12);
+            conn.commit();
 
         } catch (Exception e) {
             System.out.println("Error connecting to the database");

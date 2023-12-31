@@ -168,6 +168,38 @@ public class UserService {
         }
     }
 
+    public boolean reportSpammer(int userID, int spammerID) {
+        try {
+            String sql = "INSERT INTO spammer (userID, spammerID) VALUES (?, ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            stmt.setInt(2, spammerID);
+            int rows = stmt.executeUpdate();
+            conn.commit();
+            return rows != 0;
+        } catch (Exception e) {
+            System.out.println("Error reporting spammer");
+            return false;
+            //throw new RuntimeException(e);
+        }
+    }
+
+    public boolean blockUser (int userID, int blockedID) {
+        try {
+            String sql = "INSERT INTO blocked (blockerID, blockedID) VALUES (?, ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            stmt.setInt(2, blockedID);
+            stmt.executeUpdate();
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error blocking user");
+            return false;
+            //throw new RuntimeException(e);
+        }
+    }
+
     public String findUsernameWithUserID(int userID) {
         try {
             String sql = "SELECT username FROM users WHERE userID = ?";
@@ -202,5 +234,42 @@ public class UserService {
         }
     }
     public static void main(String[] args) {
+    }
+
+    public boolean unblockUser(int userid, int receiverID) {
+        try {
+            String sql = "DELETE FROM blocked WHERE blockerID = ? AND blockedID = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            stmt.setInt(2, receiverID);
+            int rows = stmt.executeUpdate();
+            conn.commit();
+
+            return rows != 0;
+        } catch (Exception e) {
+            System.out.println("Error unblocking user");
+            return false;
+            //throw new RuntimeException(e);
+        }
+    }
+
+    public boolean blockStatus(int userid, int receiverID) {
+        try {
+            String sql = "SELECT * FROM blocked WHERE (blockerID = ? AND blockedID = ?) OR (blockerID = ? AND blockedID = ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            stmt.setInt(2, receiverID);
+            stmt.setInt(3, receiverID);
+            stmt.setInt(4, userid);
+            ResultSet rs = stmt.executeQuery();
+            if(!rs.next()) {
+                System.out.println("No such user");
+                return false;
+            }
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -41,6 +41,7 @@ public class Chat extends JFrame {
     private JButton removeRequest_btn;
     private JButton unfriend_btn;
     private JButton block_btn;
+    private JButton unblock_btn;
     private JButton spam_btn;
     private JButton deleteHst_btn;
     private JButton newGroup_btn;
@@ -521,10 +522,15 @@ public class Chat extends JFrame {
 
         String messageToSend = inputChat_jtf.getText();
         boolean status = clientModule.sendMessage(messageToSend, clientModule.getUsername(), mainChatName, chatType);
+        if (!status) {
+            JOptionPane.showMessageDialog(null, "Message failed to send");
+        }
+        else {
         //clientModule.sendMessage(messageToSend);
         String message = "<div style='text-align: right;'>" + messageToSend + "\n" + "</div>";
         if (!messageToSend.isEmpty()) {
             editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
+        }
         }
         return status;
     }
@@ -678,11 +684,43 @@ public class Chat extends JFrame {
             spam_btn.setPreferredSize(new Dimension(195, 50));
             spam_btn.setBackground(new Color(150, 199, 202));
             buttons_field.add(spam_btn);
+            spam_btn.addActionListener(spam -> {
+                boolean result = clientModule.reportSpam(mainChatName);
+                if (result) {
+                    JOptionPane.showMessageDialog(this, "Report successfully, admin will consider your report");
+                }
+                else {
+                    JOptionPane.showMessageDialog(this, "Failed to send, you may have reported this person already!");
+                }
+            });
 
             block_btn = new JButton("Block");
             block_btn.setPreferredSize(new Dimension(195, 50));
             block_btn.setBackground(new Color(150, 199, 202));
             buttons_field.add(block_btn);
+            block_btn.addActionListener(block -> {
+                boolean result = clientModule.blockUser(mainChatName);
+                if (!result){
+                    JOptionPane.showMessageDialog(this, "Cannot block this user, you may have already blocked him/her ");
+                }
+                else {
+                    JOptionPane.showMessageDialog(this, "Block successfully");
+                }
+            });
+
+            unblock_btn = new JButton("Unblock");
+            unblock_btn.setPreferredSize(new Dimension(195, 50));
+            unblock_btn.setBackground(new Color(150, 199, 202));
+            buttons_field.add(unblock_btn);
+            unblock_btn.addActionListener(block -> {
+                boolean result = clientModule.unblockUser(mainChatName);
+                if (!result){
+                    JOptionPane.showMessageDialog(this, "Cannot unblock this user, you may haven't blocked him/her yet");
+                }
+                else {
+                    JOptionPane.showMessageDialog(this, "Unblock successfully");
+                }
+            });
 
             deleteHst_btn = new JButton("Delete History");
             deleteHst_btn.setPreferredSize(new Dimension(195, 50));

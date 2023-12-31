@@ -347,6 +347,46 @@ class ClientHandler implements Runnable {
                     result.content.addAll(usersMatch);
                 }
                 sendPackageData(result);
+            } else if (packageData.content.getFirst().equals("/checkisblocked")){
+                PackageDataStructure result = new PackageDataStructure("");
+                String username = packageData.content.get(1);
+                boolean blockStatus = chatController.blockStatus(username);
+                result.content.add(Boolean.toString(blockStatus));
+                sendPackageData(result);
+            } else if (packageData.content.getFirst().equals("/blockuser")){
+                String username = packageData.content.get(1);
+                boolean result = chatController.blockUser(username);
+                if (result) {
+                    PackageDataStructure pd = new PackageDataStructure(
+                            "true"
+                    );
+                    sendPackageData(pd);
+                } else {
+                    PackageDataStructure pd = new PackageDataStructure(
+                            "false"
+                    );
+                    sendPackageData(pd);
+                }
+            } else if (packageData.content.getFirst().equals("/unblockuser")) {
+                String username = packageData.content.get(1);
+                boolean result = chatController.unblockUser(username);
+                if (result){
+                    PackageDataStructure pd = new PackageDataStructure("true");
+                    sendPackageData(pd);
+                } else {
+                    PackageDataStructure pd = new PackageDataStructure("false");
+                    sendPackageData(pd);
+                }
+            } else if (packageData.content.getFirst().equals("/reportspam")){
+                String username = packageData.content.get(1);
+                boolean result = chatController.reportSpammer(username);
+                if (result){
+                    PackageDataStructure pd = new PackageDataStructure("true");
+                    sendPackageData(pd);
+                } else {
+                    PackageDataStructure pd = new PackageDataStructure("false");
+                    sendPackageData(pd);
+                }
             }
             else {
                 PackageDataStructure pd = new PackageDataStructure(
