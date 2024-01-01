@@ -341,7 +341,7 @@ public class ClientModule implements Runnable {
         return isBlocked.content.getFirst().equals("true");
     }
 
-    public boolean sendMessage(String msg, String sender, String receiver, int type) {
+    public boolean sendMessage(String msg, String sender, String receiver, int type, int chatid) {
         PackageDataStructure sendMessagePD = new PackageDataStructure(
                 "/sendmessage"
         );
@@ -354,12 +354,15 @@ public class ClientModule implements Runnable {
         sendMessagePD.content.add(sender);
         sendMessagePD.content.add(receiver);
         sendMessagePD.content.add(Integer.toString(type));
+        sendMessagePD.content.add(Integer.toString(chatid));
         sendPackageDataForChat(sendMessagePD);
         System.out.println("Sent send message pd request");
 
         return true;
 
     }
+
+
 
     public ArrayList<String> findUserByName(String username){
         PackageDataStructure findUserByNamePD = new PackageDataStructure(
@@ -491,5 +494,51 @@ public class ClientModule implements Runnable {
 
         PackageDataStructure resultPD = receivePackageData();
         return resultPD.content.getFirst();
+    }
+
+    public ArrayList<Integer> getGroupIDs() {
+        PackageDataStructure pd = new PackageDataStructure("/getgroupids");
+        sendPackageData(pd);
+        PackageDataStructure resultPD = receivePackageData();
+        ArrayList<Integer> result = new ArrayList<>();
+        for (String id: resultPD.content){
+            result.add(Integer.parseInt(id));
+        }
+        return result;
+    }
+
+    public boolean checkAdmin(int mainChatID) {
+        PackageDataStructure pd = new PackageDataStructure("/checkisadmin");
+        pd.content.add(Integer.toString(mainChatID));
+        sendPackageData(pd);
+        PackageDataStructure result = receivePackageData();
+        return result.content.getFirst().equals("true");
+    }
+
+    public boolean addUserToGroup(String userToAdd, int mainChatID) {
+        PackageDataStructure pd = new PackageDataStructure("/addusertogroup");
+        pd.content.add(userToAdd);
+        pd.content.add(Integer.toString(mainChatID));
+        sendPackageData(pd);
+        PackageDataStructure result = receivePackageData();
+        return result.content.getFirst().equals("true");
+    }
+
+    public boolean changeGroupName(String newname, int mainChatID){
+        PackageDataStructure pd = new PackageDataStructure("/changegroupname");
+        pd.content.add(newname);
+        pd.content.add(Integer.toString(mainChatID));
+        sendPackageData(pd);
+        PackageDataStructure result = receivePackageData();
+        return result.content.getFirst().equals("true");
+    }
+
+    public boolean addGroupAdmin(String newadmin, int mainChatID){
+        PackageDataStructure pd = new PackageDataStructure("/addgroupadmin");
+        pd.content.add(newadmin);
+        pd.content.add(Integer.toString(mainChatID));
+        sendPackageData(pd);
+        PackageDataStructure result = receivePackageData();
+        return result.content.getFirst().equals("true");
     }
 }

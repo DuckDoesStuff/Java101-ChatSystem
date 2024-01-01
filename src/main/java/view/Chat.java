@@ -15,18 +15,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
 
-class User {
-    int id;
-    String name;
-    String status;
-
-    public User(int id, String name, String status) {
-        this.id = id;
-        this.name = name;
-        this.status = status;
-    }
-}
-
 public class Chat extends JFrame {
     ClientModule clientModule;
 
@@ -59,6 +47,8 @@ public class Chat extends JFrame {
     private JPanel buttonPanel;
 
     private String mainChatName;
+
+    private int mainChatID;
     private int mainChatType;
 
     // TODO: fix the get Users function
@@ -84,9 +74,12 @@ public class Chat extends JFrame {
             //return userlist;
         }
         ArrayList<String> groupChats = clientModule.getGroupChat();
+        ArrayList<Integer> groupIDs = clientModule.getGroupIDs();
+
         if (!groupChats.isEmpty()) {
-            for (String groupChat : groupChats) {
-                userlist.add(new User(1, groupChat, "ON"));
+            for (int i = 0; i < groupChats.size(); i++) {
+                userlist.add(new Group(1, groupChats.get(i), "ON", groupIDs.get(i)));
+                System.out.println(groupIDs.get(i));
             }
         } else {
             System.out.println("This user has no group chat");
@@ -163,11 +156,24 @@ public class Chat extends JFrame {
 
                 // Change right side
                 avatar.addActionListener(usere -> {
-                    System.out.println(avatar.getText());
+                    //System.out.println(avatar.getText());
                     mainChatName = avatar.getText();
                     for (User selectedOne : users) {
+                        System.out.println("In loop");
                         if (Objects.equals(selectedOne.name, avatar.getText())) {
                             mainChatType = selectedOne.id;
+                            System.out.println(selectedOne.id);
+                            System.out.print(mainChatType);
+                            if (mainChatType == 1){
+                                System.out.println("Selected a group");
+                                Group thisGroup = (Group) selectedOne;
+                                mainChatID = thisGroup.getChatID();
+                                System.out.println("Main chat ID change to");
+                                System.out.println(mainChatID);
+                            }
+                            else {
+                                mainChatID = -1;
+                            }
                             System.out.println(selectedOne.id);
                             displayRightSide(selectedOne.id);
                             displayChatName(selectedOne.name);
@@ -228,6 +234,15 @@ public class Chat extends JFrame {
                 for (User selectedOne : users) {
                     if (Objects.equals(selectedOne.name, avatar.getText())) {
                         mainChatType = selectedOne.id;
+                        if (mainChatType == 1){
+                            System.out.println("Selected a group");
+                            Group thisGroup = (Group) selectedOne;
+                            mainChatID = thisGroup.getChatID();
+                            System.out.println("Main chat ID change to");
+                            System.out.println(mainChatID);
+                        } else {
+                            mainChatID = -1;
+                        }
                         System.out.println(selectedOne.id);
                         displayRightSide(selectedOne.id);
                         displayChatName(selectedOne.name);
@@ -258,7 +273,7 @@ public class Chat extends JFrame {
                             }
                         }
                     } else {
-                        String message = "<div style='text-align: left;'>" + split[1] + "\n" + "</div>";
+                        String message = "<div style='text-align: left;'>" + split[0] + ": " + split[1] + "\n" + "</div>";
                         if (!msg.isEmpty()) {
                             try {
                                 editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
@@ -478,7 +493,7 @@ public class Chat extends JFrame {
                                         }
                                     }
                                 } else {
-                                    String message = "<div style='text-align: left;'>" + split[1] + "\n" + "</div>";
+                                    String message = "<div style='text-align: left;'>" + split[0] + ": " + split[1] + "\n" + "</div>";
                                     if (!msg.isEmpty()) {
                                         try {
                                             editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
@@ -519,9 +534,11 @@ public class Chat extends JFrame {
     boolean sendMessage(int chatType) throws IOException, BadLocationException {
         HTMLDocument htmlDocument = (HTMLDocument) mainChat.getDocument();
         HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
+        boolean status;
 
         String messageToSend = inputChat_jtf.getText();
-        boolean status = clientModule.sendMessage(messageToSend, clientModule.getUsername(), mainChatName, chatType);
+        status = clientModule.sendMessage(messageToSend, clientModule.getUsername(), mainChatName, chatType, mainChatID);
+
         if (!status) {
             JOptionPane.showMessageDialog(null, "Message failed to send");
         }
@@ -552,8 +569,8 @@ public class Chat extends JFrame {
                         appendMessage(data.content.get(1), data.content.get(0));
                     }
                 } else if (mainChatType == 1) {
-                    if (mainChatName.equals(data.content.get(2)) && !Objects.equals(clientModule.getUsername(), data.content.get(0))) {
-                        appendMessage(data.content.get(1), data.content.get(0));
+                    if (mainChatName.equals(data.content.get(2)) && !Objects.equals(clientModule.getUsername(), data.content.get(0)) && Integer.parseInt(data.content.get(3)) == mainChatID) {
+                        appendMessage(data.content.get(1), data.content.get(0), Integer.parseInt(data.content.get(3)));
                     }
                 }
 
@@ -572,7 +589,28 @@ public class Chat extends JFrame {
                 if (Objects.equals(sender, clientModule.getUsername())) {
                     msg = "<div style='text-align: right;'>" + msgFromServer + "\n" + "</div>";
                 } else {
-                    msg = "<div style='text-align: left;'>" + msgFromServer + "\n" + "</div>";
+                    msg = "<div style='text-align: left;'>" + sender + ": " + msgFromServer + "\n" + "</div>";
+                }
+                editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), msg, 0, 0, null);
+            } catch (BadLocationException ex) {
+                throw new RuntimeException(ex);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+    }
+
+    // For group chat
+    public void appendMessage(String msgFromServer, String sender, int senderID) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                String msg = "";
+                HTMLDocument htmlDocument = (HTMLDocument) mainChat.getDocument();
+                HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
+                if (Objects.equals(sender, clientModule.getUsername())) {
+                    msg = "<div style='text-align: right;'>" + msgFromServer + "\n" + "</div>";
+                } else if (senderID == mainChatID){
+                    msg = "<div style='text-align: left;'>" + sender + ": " + msgFromServer + "\n" + "</div>";
                 }
                 editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), msg, 0, 0, null);
             } catch (BadLocationException ex) {
@@ -770,11 +808,56 @@ public class Chat extends JFrame {
             changeN_btn.setPreferredSize(new Dimension(195, 50));
             changeN_btn.setBackground(new Color(150, 199, 202));
             buttons_field.add(changeN_btn);
+            changeN_btn.addActionListener(changegroupname -> {
+                if (!clientModule.checkAdmin(mainChatID)){
+                    JOptionPane.showMessageDialog(this, "You don't have permission to add person to this group");
+                } else {
+                    String newname = JOptionPane.showInputDialog(this, "Enter the new name of this group");
+                    boolean result = clientModule.changeGroupName(newname, mainChatID);
+                    if (result){
+                        JOptionPane.showMessageDialog(this, "Successfully changed");
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Failed to changed this group's name");
+                    }
+                }
+            });
+
+            addAdmin_btn = new JButton("Add new admin");
+            addAdmin_btn.setPreferredSize(new Dimension(195, 50));
+            addAdmin_btn.setBackground(new Color(150, 199, 202));
+            buttons_field.add(addAdmin_btn);
+            addAdmin_btn.addActionListener(addadmin -> {
+                if (!clientModule.checkAdmin(mainChatID)){
+                    JOptionPane.showMessageDialog(this, "You don't have permission to add person to this group");
+                } else {
+                    String userToAdd = JOptionPane.showInputDialog(this, "Enter the username to be added");
+
+                    boolean result = clientModule.addGroupAdmin(userToAdd, mainChatID);
+                    if (result){
+                        JOptionPane.showMessageDialog(this, "Successfully added");
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Failed to add this person to group");
+                    }
+                }
+            });
 
             addPerson_btn = new JButton("Add new person");
             addPerson_btn.setPreferredSize(new Dimension(195, 50));
             addPerson_btn.setBackground(new Color(150, 199, 202));
             buttons_field.add(addPerson_btn);
+            addPerson_btn.addActionListener(addmember -> {
+                if (!clientModule.checkAdmin(mainChatID)){
+                    JOptionPane.showMessageDialog(this, "You don't have permission to add person to this group");
+                } else {
+                    String userToAdd = JOptionPane.showInputDialog(this, "Enter the username to be added");
+                    boolean result = clientModule.addUserToGroup(userToAdd, mainChatID);
+                    if (result){
+                        JOptionPane.showMessageDialog(this, "Successfully added");
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Failed to add this person to group");
+                    }
+                }
+            });
 
             leaveG_btn = new JButton("Leave group");
             leaveG_btn.setPreferredSize(new Dimension(195, 50));

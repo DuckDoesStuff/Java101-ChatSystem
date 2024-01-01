@@ -35,6 +35,35 @@ public class ChatService {
         }
     }
 
+    public boolean checkIsAdmin(int userid, int chatid){
+        try {
+            String sql = "SELECT * FROM groupadmin WHERE userid = ? and chatid = ?";
+            PreparedStatement ppstmt = conn.prepareStatement(sql);
+            ppstmt.setInt(1, userid);
+            ppstmt.setInt(2, chatid);
+            ResultSet rs = ppstmt.executeQuery();
+            if (rs.next()){
+                return true;
+            }
+            return false;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean addGroupAdmin(int userid, int chatid){
+        try {
+            String sql = "INSERT INTO groupadmin(userid, chatid) VALUES (?, ?)";
+            PreparedStatement ppstmt = conn.prepareStatement(sql);
+            ppstmt.setInt(1, userid);
+            ppstmt.setInt(2, chatid);
+            int row = ppstmt.executeUpdate();
+            return row != 0;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public ArrayList<ChatModel> getAllChat(int userid){
         try {
             String sql = "SELECT * FROM chat WHERE chatID IN (SELECT chatID FROM chatmember WHERE userID = ?)";
@@ -80,6 +109,7 @@ public class ChatService {
     }
 
 
+
     // Find chat base on senderID and receiverID
     public ChatModel findChat(int senderID, int receiverID) {
         try {
@@ -119,4 +149,16 @@ public class ChatService {
     }
 
 
+    public boolean changeGroupName(String newname, int chatID) {
+        try {
+            String sql = "UPDATE chat SET name = ? WHERE chatid = ?";
+            PreparedStatement ppstmt = conn.prepareStatement(sql);
+            ppstmt.setString(1, newname);
+            ppstmt.setInt(2, chatID);
+            int row = ppstmt.executeUpdate();
+            return row != 0;
+        } catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+    }
 }

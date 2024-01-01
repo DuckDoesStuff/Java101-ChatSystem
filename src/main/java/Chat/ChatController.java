@@ -28,20 +28,31 @@ public class ChatController {
         this.chatMemberService = new ChatMemberService(conn);
     }
 
+    public boolean addGroupAdmin(String username, int chatID){
+        return chatService.addGroupAdmin(userService.getUserIDFromUsername(username), chatID);
+    }
+
+    public boolean checkGroupAdmin(String username, int chatID){
+        return chatService.checkIsAdmin(userService.getUserIDFromUsername(username), chatID);
+    }
+
     public boolean setUserID(int userid){
         this.userid = userid;
         return true;
     }
-    public void createChat(String username, boolean isGroup) {
+    public int createChat(String username, boolean isGroup) {
         if (isGroup) {
             ChatModel newChat = chatService.addChat(isGroup, "Group of " + userService.findUsernameWithUserID(userid));
             chatMemberService.addChatMember(newChat.getChatID(), userid);
             chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(username));
+            return newChat.getChatID();
+
         }
         else {
             ChatModel newChat = chatService.addChat(isGroup, userService.findUsernameWithUserID(userid) + ',' + username);
             chatMemberService.addChatMember(newChat.getChatID(), userid);
             chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(username));
+            return newChat.getChatID();
         }
     }
 
@@ -73,13 +84,35 @@ public class ChatController {
 
     }
 
-    public void sendGroupMessage(String groupName, String message) {
-        int chatID = chatService.getChatIdFromName(groupName);
+    public void sendGroupMessage(int chatID, String message) {
+        //int chatID = chatService.getChatIdFromName(groupName);
         messageService.addMessage(chatID, userid, message);
     }
 
-    public ArrayList<String> getGroupMembers(String groupName){
-        return chatMemberService.getGroupMembers(chatService.getChatIdFromName(groupName));
+    public boolean addGroupMember(String username, int groupID){
+        // Check for admin
+
+        // Add member code goes from here
+        int userID = userService.getUserIDFromUsername(username);
+        int result = chatMemberService.addChatMember(groupID, userID);
+        if (result != -1){
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    public boolean changeGroupName(String newname, int chatID){
+        return chatService.changeGroupName(newname, chatID);
+    }
+
+    public boolean addNewAdmin(String username, int chatid){
+        return chatService.addGroupAdmin(userService.getUserIDFromUsername(username), chatid);
+    }
+
+    public ArrayList<String> getGroupMembers(int groupID){
+        return chatMemberService.getGroupMembers(groupID);
     }
 
     // TODO: Get chat history

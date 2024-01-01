@@ -110,8 +110,12 @@ class ChatHandler implements Runnable {
                         pd.content.add(sender);
                         pd.content.add(msg);
                         pd.content.add(groupName);
-                        ArrayList<String> groupMembers = chatController.getGroupMembers(groupName);
-                        chatController.sendGroupMessage(groupName, msg);
+
+                        String id = packageDataForChat.content.get(5);
+                        pd.content.add(id);
+
+                        ArrayList<String> groupMembers = chatController.getGroupMembers(Integer.parseInt(id));
+                        chatController.sendGroupMessage(Integer.parseInt(id), msg);
                         sendToClient(pd, groupMembers);
                     }
                 }
@@ -242,8 +246,16 @@ class ClientHandler implements Runnable {
                 }
                 sendPackageData(pd);
             } else if (packageData.content.getFirst().equals("/creategroup")) {
-                chatController.createChat(packageData.content.get(1), true);
-            } else if (packageData.content.getFirst().equals("/grouphistory")) {
+                int chatid = chatController.createChat(packageData.content.get(1), true);
+                chatController.addGroupAdmin(username, chatid);
+            } else if (packageData.content.getFirst().equals("/getgroupids")) {
+                ArrayList<ChatModel> allGroups = chatController.getAllGroupChat();
+                PackageDataStructure result = new PackageDataStructure("");
+                for (ChatModel group: allGroups){
+                    result.content.add(Integer.toString(group.getChatID()));
+                }
+                sendPackageData(result);
+            }else if (packageData.content.getFirst().equals("/grouphistory")) {
                 String groupName = packageData.content.get(1);
                 ArrayList<MessageModel> history = chatController.getGroupMessageHistory(groupName);
                 PackageDataStructure result = new PackageDataStructure("");
@@ -252,6 +264,53 @@ class ClientHandler implements Runnable {
                     result.content.add(msg);
                 }
                 sendPackageData(result);
+            } else if (packageData.content.getFirst().equals("/checkisadmin")) {
+                int mainChatID = Integer.parseInt(packageData.content.get(1));
+                boolean result = chatController.checkGroupAdmin(username, mainChatID);
+                if (result){
+                    PackageDataStructure pd = new PackageDataStructure("true");
+                    sendPackageData(pd);
+                }
+                else {
+                    PackageDataStructure pd = new PackageDataStructure("false");
+                    sendPackageData(pd);
+                }
+            } else if (packageData.content.getFirst().equals("/addusertogroup")) {
+                String userToAdd = packageData.content.get(1);
+                int mainChatID = Integer.parseInt(packageData.content.get(2));
+                boolean result = chatController.addGroupMember(userToAdd, mainChatID);
+                if (result){
+                    PackageDataStructure pd = new PackageDataStructure("true");
+                    sendPackageData(pd);
+                }
+                else {
+                    PackageDataStructure pd = new PackageDataStructure("false");
+                    sendPackageData(pd);
+                }
+            } else if (packageData.content.getFirst().equals("/changegroupname")) {
+                String newname = packageData.content.get(1);
+                int chatID = Integer.parseInt(packageData.content.get(2));
+                boolean result = chatController.changeGroupName(newname, chatID);
+                if (result){
+                    PackageDataStructure pd = new PackageDataStructure("true");
+                    sendPackageData(pd);
+                }
+                else {
+                    PackageDataStructure pd = new PackageDataStructure("false");
+                    sendPackageData(pd);
+                }
+            } else if (packageData.content.getFirst().equals("/addgroupadmin")) {
+                String newadmin = packageData.content.get(1);
+                int chatID = Integer.parseInt(packageData.content.get(2));
+                boolean result = chatController.addNewAdmin(newadmin, chatID);
+                if (result){
+                    PackageDataStructure pd = new PackageDataStructure("true");
+                    sendPackageData(pd);
+                }
+                else {
+                    PackageDataStructure pd = new PackageDataStructure("false");
+                    sendPackageData(pd);
+                }
             }
             else if (packageData.content.getFirst().equals("/addfriend")) {
                 PackageDataStructure resultPd = new PackageDataStructure(
