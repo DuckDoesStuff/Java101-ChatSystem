@@ -406,7 +406,6 @@ public class Chat extends JFrame {
         //Handling the filtering of user lists
         filter_btn.addActionListener(e -> {
             final ArrayList<User> usersUpdated = getUsers();
-            displayChatName("TVA - 123");
             //call function display user
             String selectedStatus = (String) status.getSelectedItem();
 
@@ -424,6 +423,64 @@ public class Chat extends JFrame {
                     avatar.setMaximumSize(buttonSize);
                     avatar.setBackground(new Color(156, 156, 156));
                     buttonPanel.add(avatar);
+                    avatar.addActionListener(ae -> {
+                        System.out.println(avatar.getText());
+                        mainChatName = avatar.getText();
+                        for (User selectedOne : users) {
+                            if (Objects.equals(selectedOne.name, avatar.getText())) {
+                                mainChatType = selectedOne.id;
+                                if (mainChatType == 1){
+                                    System.out.println("Selected a group");
+                                    Group thisGroup = (Group) selectedOne;
+                                    mainChatID = thisGroup.getChatID();
+                                    System.out.println("Main chat ID change to");
+                                    System.out.println(mainChatID);
+                                } else {
+                                    mainChatID = -1;
+                                }
+                                System.out.println(selectedOne.id);
+                                displayRightSide(selectedOne.id);
+                                displayChatName(selectedOne.name);
+                            }
+                        }
+                        ArrayList<String> history;
+                        mainChat.setText("");
+                        if (mainChatType == 0) {
+                            history = clientModule.getChatHistory(avatar.getText());
+                        } else if (mainChatType == 1) {
+                            history = clientModule.getGroupHistory(avatar.getText());
+                        } else {
+                            history = new ArrayList<>();
+                        }
+                        HTMLDocument htmlDocument = (HTMLDocument) mainChat.getDocument();
+                        HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
+                        for (String msg : history) {
+                            String[] split = msg.split(",");
+                            if (Objects.equals(split[0], clientModule.getUsername())) {
+                                String message = "<div style='text-align: right;'>" + split[1] + "\n" + "</div>";
+                                if (!msg.isEmpty()) {
+                                    try {
+                                        editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
+                                    } catch (BadLocationException ex) {
+                                        throw new RuntimeException(ex);
+                                    } catch (IOException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
+                                }
+                            } else {
+                                String message = "<div style='text-align: left;'>" + split[0] + ": " + split[1] + "\n" + "</div>";
+                                if (!msg.isEmpty()) {
+                                    try {
+                                        editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
+                                    } catch (BadLocationException ex) {
+                                        throw new RuntimeException(ex);
+                                    } catch (IOException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
+                                }
+                            }
+                        }
+                    });
                 }
 
             } else if (Objects.equals(selectedStatus, "Online list")) {
@@ -441,6 +498,64 @@ public class Chat extends JFrame {
                         avatar.setMaximumSize(buttonSize);
                         avatar.setBackground(new Color(156, 156, 156));
                         buttonPanel.add(avatar);
+                        avatar.addActionListener(ae2 -> {
+                            System.out.println(avatar.getText());
+                            mainChatName = avatar.getText();
+                            for (User selectedOne : users) {
+                                if (Objects.equals(selectedOne.name, avatar.getText())) {
+                                    mainChatType = selectedOne.id;
+                                    if (mainChatType == 1){
+                                        System.out.println("Selected a group");
+                                        Group thisGroup = (Group) selectedOne;
+                                        mainChatID = thisGroup.getChatID();
+                                        System.out.println("Main chat ID change to");
+                                        System.out.println(mainChatID);
+                                    } else {
+                                        mainChatID = -1;
+                                    }
+                                    System.out.println(selectedOne.id);
+                                    displayRightSide(selectedOne.id);
+                                    displayChatName(selectedOne.name);
+                                }
+                            }
+                            ArrayList<String> history;
+                            mainChat.setText("");
+                            if (mainChatType == 0) {
+                                history = clientModule.getChatHistory(avatar.getText());
+                            } else if (mainChatType == 1) {
+                                history = clientModule.getGroupHistory(avatar.getText());
+                            } else {
+                                history = new ArrayList<>();
+                            }
+                            HTMLDocument htmlDocument = (HTMLDocument) mainChat.getDocument();
+                            HTMLEditorKit editorKit = (HTMLEditorKit) mainChat.getEditorKit();
+                            for (String msg : history) {
+                                String[] split = msg.split(",");
+                                if (Objects.equals(split[0], clientModule.getUsername())) {
+                                    String message = "<div style='text-align: right;'>" + split[1] + "\n" + "</div>";
+                                    if (!msg.isEmpty()) {
+                                        try {
+                                            editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
+                                        } catch (BadLocationException ex) {
+                                            throw new RuntimeException(ex);
+                                        } catch (IOException ex) {
+                                            throw new RuntimeException(ex);
+                                        }
+                                    }
+                                } else {
+                                    String message = "<div style='text-align: left;'>" + split[0] + ": " + split[1] + "\n" + "</div>";
+                                    if (!msg.isEmpty()) {
+                                        try {
+                                            editorKit.insertHTML(htmlDocument, htmlDocument.getLength(), message, 0, 0, null);
+                                        } catch (BadLocationException ex) {
+                                            throw new RuntimeException(ex);
+                                        } catch (IOException ex) {
+                                            throw new RuntimeException(ex);
+                                        }
+                                    }
+                                }
+                            }
+                        });
                     }
                 }
             } else {
@@ -516,6 +631,7 @@ public class Chat extends JFrame {
         //handling logout
         logout_btn.addActionListener(e -> {
             //call function to logout
+
         });
         //handling sending messages
 //        send_btn.addActionListener(e -> {
