@@ -1,12 +1,17 @@
 package User;
 
+import Database.DB;
+
 import java.sql.*;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 
 public class UserService {
-    Connection conn;
+    static Connection conn;
     public UserService(Connection conn) {
         this.conn = conn;
     }
@@ -284,10 +289,11 @@ public class UserService {
                 String username = rs.getString("username");
                 String password = rs.getString("password");
                 String email = rs.getString("email");
+                String address = rs.getString("address");
                 Date dateOfBirth = rs.getDate("dateOfBirth");
-                Boolean gender = rs.getBoolean("gender");
+                boolean gender = rs.getBoolean("gender");
                 Timestamp first_joined = rs.getTimestamp("first_joined");
-                UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, dateOfBirth, gender, first_joined);
+                UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
                 userList.add(temp);
             }
         } catch (SQLException e) {
@@ -313,10 +319,11 @@ public class UserService {
                 String username = rs.getString("username");
                 String password = rs.getString("password");
                 String email = rs.getString("email");
+                String address = rs.getString("address");
                 Date dateOfBirth = rs.getDate("dateOfBirth");
-                Boolean gender = rs.getBoolean("gender");
+                boolean gender = rs.getBoolean("gender");
                 Timestamp first_joined = rs.getTimestamp("first_joined");
-                UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, dateOfBirth, gender, first_joined);
+                UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
                 userList.add(temp);
             }
         } catch (SQLException e) {
@@ -337,10 +344,11 @@ public class UserService {
                 String username = rs.getString("username");
                 String password = rs.getString("password");
                 String email = rs.getString("email");
+                String address = rs.getString("address");
                 Date dateOfBirth = rs.getDate("dateOfBirth");
-                Boolean gender = rs.getBoolean("gender");
+                boolean gender = rs.getBoolean("gender");
                 Timestamp first_joined = rs.getTimestamp("first_joined");
-                UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, dateOfBirth, gender, first_joined);
+                UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
                 userList.add(temp);
             }
             UserModel temp;
@@ -373,10 +381,11 @@ public class UserService {
                 String username = rs.getString("username");
                 String password = rs.getString("password");
                 String email = rs.getString("email");
+                String address = rs.getString("address");
                 Date dateOfBirth = rs.getDate("dateOfBirth");
-                Boolean gender = rs.getBoolean("gender");
+                boolean gender = rs.getBoolean("gender");
                 Timestamp first_joined = rs.getTimestamp("first_joined");
-                UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, dateOfBirth, gender, first_joined);
+                UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
                 userList.add(temp);
             }
             UserModel temp;
@@ -536,10 +545,11 @@ public class UserService {
                     String username = rs.getString("username");
                     String password = rs.getString("password");
                     String email = rs.getString("email");
+                    String address = rs.getString("address");
                     Date dateOfBirth = rs.getDate("dateOfBirth");
-                    Boolean gender = rs.getBoolean("gender");
+                    boolean gender = rs.getBoolean("gender");
                     Timestamp first_joined = rs.getTimestamp("first_joined");
-                    UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, dateOfBirth, gender, first_joined);
+                    UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
                     friends.add(temp);
                 }
             }
@@ -595,8 +605,116 @@ public class UserService {
         return userList;
     }
 
+    //xem ds người dùng đăng kí mới, isByName = true (sx theo tên)/ false (sx theo thời gian tạo)
+    public static ArrayList<UserModel> newUserWithSort(Date dateStart, Date dateEnd, boolean isByName) {
+        ArrayList<UserModel> newUsers = new ArrayList<>();
+        try {
+            String sql = "SELECT * FROM users WHERE first_joined BETWEEN ? AND ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setTimestamp(1, new Timestamp(dateStart.getTime()));
+            stmt.setTimestamp(2, new Timestamp(dateEnd.getTime()));
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                newUsers.add(user);
+            }
+
+            if (isByName) {
+                Collections.sort(newUsers, Comparator.comparing(UserModel::getFirstName));
+            }
+            else{
+                Collections.sort(newUsers, Comparator.comparing(UserModel::getFirst_joined));
+            }
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return newUsers;
+    }
+
+    //xem ds người dùng đăng kí mới, lọc theo tên
+    public static ArrayList<UserModel> newUserByName(Date dateStart, Date dateEnd, String name) {
+        ArrayList<UserModel> newUsers = new ArrayList<>();
+        try {
+            String sql = "SELECT * FROM users " +
+                    "WHERE (first_joined BETWEEN ? AND ?) " +
+                    "AND (LOWER(first_name) LIKE ? OR LOWER(last_name) LIKE ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setTimestamp(1, new Timestamp(dateStart.getTime()));
+            stmt.setTimestamp(2, new Timestamp(dateEnd.getTime()));
+            stmt.setString(3, "%" + name.toLowerCase() + "%");
+            stmt.setString(4, "%" + name.toLowerCase() + "%");
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                newUsers.add(user);
+            }
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return newUsers;
+    }
+
+    //Số lượng người đăng kí mới theo năm
+    public static int [] numberOfNewUserByYear(int year){
+        int [] numberOfNewUser = new int [12];
+        try {
+            for (int i = 0; i < 12; i++){
+                String sql = "SELECT COUNT(*) AS count\n" +
+                        "FROM users\n" +
+                        "WHERE EXTRACT(MONTH FROM first_joined) = ? AND EXTRACT(YEAR FROM first_joined) = ?";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, i + 1);
+                stmt.setInt(2, year);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()){
+                    numberOfNewUser[i] = rs.getInt("count");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return numberOfNewUser;
+    }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParseException {
+        DB db = new DB();
+        new UserService(db.getConnection());
+
+        String s = "2023-12-20 14:41:29.85";
+        String e = "2023-12-28 16:41:30.86";
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS");
+        Date start = dateFormat.parse(s);
+        Date end = dateFormat.parse(e);
+
+
+        ArrayList<UserModel> list = newUserByName(start,end, "pHương");
+        for (int i = 0; i < list.size(); i++){
+            System.out.println(list.get(i).getUsername());
+        }
+        db.closeConnection();
     }
 }

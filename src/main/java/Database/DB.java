@@ -8,11 +8,11 @@ public class DB {
     public DB() {
         try {
             Class.forName("org.postgresql.Driver");
-            conn = DriverManager.getConnection("jdbc:postgresql://ep-falling-resonance-56588782.ap-southeast-1.aws.neon.tech/JavaChat?user=mailtienduc&password=cwESY8fOn6Gs&sslmode=require");
-//            conn = DriverManager.getConnection(
-//                    "jdbc:postgresql://localhost:5432/javaChat",
-//                    "postgres",
-//                    "0112");
+           // conn = DriverManager.getConnection("jdbc:postgresql://ep-falling-resonance-56588782.ap-southeast-1.aws.neon.tech/JavaChat?user=mailtienduc&password=cwESY8fOn6Gs&sslmode=require");
+            conn = DriverManager.getConnection(
+                    "jdbc:postgresql://localhost:5432/javaChat",
+                    "postgres",
+                    "12345678");
 
             System.out.println("Connected to database");
 

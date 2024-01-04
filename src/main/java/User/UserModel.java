@@ -29,13 +29,14 @@ public class UserModel {
         this.gender = gender;
     }
 
-    public UserModel(int userID, String firstName, String lastName, String username, String password, String email, Date dateOfBirth, boolean gender, Timestamp first_joined) {
+    public UserModel(int userID, String firstName, String lastName, String username, String password, String email, String address, Date dateOfBirth, boolean gender, Timestamp first_joined) {
         this.userID = userID;
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
         this.password = password;
         this.email = email;
+        this.address = address;
         this.dateOfBirth = dateOfBirth;
         this.gender = gender;
         this.first_joined = first_joined;
@@ -47,6 +48,11 @@ public class UserModel {
 
     public String getUsername() {
         return username;
+    }
+    public String getFirstName(){return firstName; }
+
+    public Timestamp getFirst_joined() {
+        return first_joined;
     }
 }
 
