@@ -606,7 +606,7 @@ public class UserService {
     }
 
     //xem ds người dùng đăng kí mới, isByName = true (sx theo tên)/ false (sx theo thời gian tạo)
-    public static ArrayList<UserModel> newUserWithSort(Date dateStart, Date dateEnd, boolean isByName) {
+    public ArrayList<UserModel> newUserWithSort(Date dateStart, Date dateEnd, boolean isByName) {
         ArrayList<UserModel> newUsers = new ArrayList<>();
         try {
             String sql = "SELECT * FROM users WHERE first_joined BETWEEN ? AND ?";
@@ -643,7 +643,7 @@ public class UserService {
     }
 
     //xem ds người dùng đăng kí mới, lọc theo tên
-    public static ArrayList<UserModel> newUserByName(Date dateStart, Date dateEnd, String name) {
+    public ArrayList<UserModel> newUserByName(Date dateStart, Date dateEnd, String name) {
         ArrayList<UserModel> newUsers = new ArrayList<>();
         try {
             String sql = "SELECT * FROM users " +
@@ -702,7 +702,7 @@ public class UserService {
     //7. Xem danh sách người dùng và số lượng bạn bè (1 cột bạn bè trực tiếp, 1 cột tính luôn số lượng bạn của bạn)
 
     //Số lượng bạn bè trực tiếp
-    public static int numberOfDirectFriends(int userid){
+    public int numberOfDirectFriends(int userid){
         int ans = 0;
         try {
             String sql =  "SELECT COUNT(DISTINCT friendid) AS count " +
@@ -720,7 +720,7 @@ public class UserService {
         return ans;
     }
     //Số lượng bạn + bạn của bạn
-    public static int numberOfDirectAndIndirectFriends(int userid){
+    public int numberOfDirectAndIndirectFriends(int userid){
         int ans = 0;
         try {
             ArrayList<Integer> userIds = new ArrayList<>();
@@ -754,7 +754,7 @@ public class UserService {
         return ans;
     }
     //7a. Sắp xếp theo tên (isByName = true)/ thời gian tạo (isByName = false)
-    public static ArrayList<UserModel> userListWithSort(boolean isByName){
+    public ArrayList<UserModel> userListWithSort(boolean isByName){
         ArrayList<UserModel> users = new ArrayList<>();
         try {
             String sql;
@@ -790,7 +790,7 @@ public class UserService {
         return users;
     }
     //7b. Lọc theo tên
-    public static ArrayList<UserModel> userListByName(String name) {
+    public ArrayList<UserModel> userListByName(String name) {
         ArrayList<UserModel> userList = new ArrayList<>();
         try {
             String sql = "SELECT * FROM users " +
@@ -820,7 +820,7 @@ public class UserService {
         return userList;
     }
     //7c. c. Lọc theo số lượng bạn trực tiếp (bằng - type=0, nhỏ hơn - type=-1, lớn hơn 1 số được nhập - type=1)
-    public static ArrayList<UserModel> userListByNumberOfDirectFriends(int num, int type) {
+    public ArrayList<UserModel> userListByNumberOfDirectFriends(int num, int type) {
         ArrayList<UserModel> userList = new ArrayList<>();
         try {
             ArrayList<UserModel> tmp = new ArrayList<>();
@@ -864,7 +864,7 @@ public class UserService {
     //hoạt động và các số liệu (mở ứng dụng, chat với bao nhiêu người, chat bao nhiêu nhóm)
 
     //Số lần mở ứng dụng
-    public static int numOpenning (int userid){
+    public int numOpenning (int userid){
         int ans = 0;
         try {
             String sql =  "SELECT opened_time " +
@@ -882,7 +882,7 @@ public class UserService {
         return ans;
     }
     //Chat với bao nhiêu người
-    public static int numChatPersons (int userid){
+    public int numChatPersons (int userid){
         int ans = 0;
         try {
             String sql =  "SELECT COUNT(DISTINCT c.chatID) AS count " +
@@ -903,7 +903,7 @@ public class UserService {
     }
 
     //Chat với bao nhiêu nhóm
-    public static int numChatGroups (int userid){
+    public int numChatGroups (int userid){
         int ans = 0;
         try {
             String sql =  "SELECT COUNT(DISTINCT c.chatID) AS count " +
@@ -924,7 +924,7 @@ public class UserService {
     }
 
     //8a.  Sắp xếp theo tên (isByName = true)/ thời gian tạo (isByName = false)
-    public static ArrayList<UserModel> activeUserWithSort(Date dateStart, Date dateEnd, boolean isByName) {
+    public ArrayList<UserModel> activeUserWithSort(Date dateStart, Date dateEnd, boolean isByName) {
         ArrayList<UserModel> activeUsers = new ArrayList<>();
         try {
             String sql = "SELECT DISTINCT u.* " +
@@ -962,7 +962,7 @@ public class UserService {
         return activeUsers;
     }
     //8b. Lọc theo tên
-    public static ArrayList<UserModel> activeUserByName(Date dateStart, Date dateEnd, String name) {
+    public ArrayList<UserModel> activeUserByName(Date dateStart, Date dateEnd, String name) {
         ArrayList<UserModel> activeUsers = new ArrayList<>();
         try {
             String sql = "SELECT DISTINCT u.* " +
@@ -997,7 +997,7 @@ public class UserService {
         return activeUsers;
     }
     //8c. Lọc theo số lượng hoạt động (bằng - type=0, nhỏ hơn - type=-1, lớn hơn 1 số được nhập - type=1)
-    public static ArrayList<UserModel> activeUsersByNumberOfActivities(Date dateStart, Date dateEnd, int num, int type) {
+    public ArrayList<UserModel> activeUsersByNumberOfActivities(Date dateStart, Date dateEnd, int num, int type) {
         ArrayList<UserModel> activeList = new ArrayList<>();
         try {
             ArrayList<UserModel> tmp = new ArrayList<>();
@@ -1067,26 +1067,8 @@ public class UserService {
     }
 
     public static void main(String[] args) throws ParseException {
-        DB db = new DB();
-        new UserService(db.getConnection());
-
-//        String s = "2023-12-20 14:41:29.85";
-//        String e = "2023-12-28 17:00:30.86";
-//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS");
-//        Date start = dateFormat.parse(s);
-//        Date end = dateFormat.parse(e);
-//
-//        ArrayList<UserModel> list = activeUsersByNumberOfActivities(start,end, 0, 1);
-//        for (int i = 0; i < list.size(); i++){
-//            System.out.println(list.get(i).getUsername());
-//        }
-
-//        System.out.println(numberOfDirectAndIndirectFriends(3));
-//        ArrayList<UserModel> list = userListByNumberOfDirectFriends(1, -1);
-//        for (int i = 0; i < list.size(); i++){
-//            System.out.println(list.get(i).getUsername());
-//        }
-//        System.out.println(numChatGroups(1));
-        db.closeConnection();
+//        DB db = new DB();
+//        new UserService(db.getConnection());
+//        db.closeConnection();
     }
 }

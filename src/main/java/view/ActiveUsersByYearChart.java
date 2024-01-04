@@ -11,7 +11,6 @@ import javax.swing.*;
 import java.awt.*;
 
 import User.UserService;
-
 import static User.UserService.numberOfActiveUserByYear;
 
 public class ActiveUsersByYearChart extends JFrame {
