@@ -860,26 +860,210 @@ public class UserService {
         return userList;
     }
 
+    //8. Xem danh sách người dùng hoạt động: chọn khoảng thời gian, hiện ra danh sách người dùng có
+    //hoạt động và các số liệu (mở ứng dụng, chat với bao nhiêu người, chat bao nhiêu nhóm)
+
+    //Số lần mở ứng dụng
+    public static int numOpenning (int userid){
+        int ans = 0;
+        try {
+            String sql =  "SELECT opened_time " +
+                    "FROM users WHERE userid = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()){
+                ans = rs.getInt("opened_time");
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return ans;
+    }
+    //Chat với bao nhiêu người
+    public static int numChatPersons (int userid){
+        int ans = 0;
+        try {
+            String sql =  "SELECT COUNT(DISTINCT c.chatID) AS count " +
+                    "FROM Message AS m " +
+                    "JOIN Chat AS c ON c.chatID = m.chatID " +
+                    " WHERE senderID = ? AND isGroup = false";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()){
+                ans = rs.getInt("count");
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return ans;
+    }
+
+    //Chat với bao nhiêu nhóm
+    public static int numChatGroups (int userid){
+        int ans = 0;
+        try {
+            String sql =  "SELECT COUNT(DISTINCT c.chatID) AS count " +
+                    "FROM Message AS m " +
+                    "JOIN Chat AS c ON c.chatID = m.chatID " +
+                    " WHERE senderID = ? AND isGroup = true";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()){
+                ans = rs.getInt("count");
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return ans;
+    }
+
+    //8a.  Sắp xếp theo tên (isByName = true)/ thời gian tạo (isByName = false)
+    public static ArrayList<UserModel> activeUserWithSort(Date dateStart, Date dateEnd, boolean isByName) {
+        ArrayList<UserModel> activeUsers = new ArrayList<>();
+        try {
+            String sql = "SELECT DISTINCT u.* " +
+                    "FROM LoginHistory AS lh " +
+                    "JOIN users AS u ON lh.userID = u.userID " +
+                    "WHERE timeLog BETWEEN ? AND ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setTimestamp(1, new Timestamp(dateStart.getTime()));
+            stmt.setTimestamp(2, new Timestamp(dateEnd.getTime()));
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                activeUsers.add(user);
+            }
+            if (isByName) {
+                Collections.sort(activeUsers, Comparator.comparing(UserModel::getFirstName));
+            }
+            else{
+                Collections.sort(activeUsers, Comparator.comparing(UserModel::getFirst_joined));
+            }
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return activeUsers;
+    }
+    //8b. Lọc theo tên
+    public static ArrayList<UserModel> activeUserByName(Date dateStart, Date dateEnd, String name) {
+        ArrayList<UserModel> activeUsers = new ArrayList<>();
+        try {
+            String sql = "SELECT DISTINCT u.* " +
+                    "FROM LoginHistory AS lh " +
+                    "JOIN users AS u ON lh.userID = u.userID " +
+                    "WHERE timeLog BETWEEN ? AND ? " +
+                    "AND (LOWER(u.first_name) LIKE ? OR LOWER(u.last_name) LIKE ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setTimestamp(1, new Timestamp(dateStart.getTime()));
+            stmt.setTimestamp(2, new Timestamp(dateEnd.getTime()));
+            stmt.setString(3, "%" + name.toLowerCase() + "%");
+            stmt.setString(4, "%" + name.toLowerCase() + "%");
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                activeUsers.add(user);
+            }
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return activeUsers;
+    }
+    //8c. Lọc theo số lượng hoạt động (bằng - type=0, nhỏ hơn - type=-1, lớn hơn 1 số được nhập - type=1)
+    public static ArrayList<UserModel> activeUsersByNumberOfActivities(Date dateStart, Date dateEnd, int num, int type) {
+        ArrayList<UserModel> activeList = new ArrayList<>();
+        try {
+            ArrayList<UserModel> tmp = new ArrayList<>();
+            String sql = "SELECT DISTINCT u.* " +
+                    "FROM LoginHistory AS lh " +
+                    "JOIN users AS u ON lh.userID = u.userID " +
+                    "WHERE timeLog BETWEEN ? AND ? ";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setTimestamp(1, new Timestamp(dateStart.getTime()));
+            stmt.setTimestamp(2, new Timestamp(dateEnd.getTime()));
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                tmp.add(user);
+            }
+            for(int i = 0; i < tmp.size(); i++){
+                if (type == 0 && numOpenning(tmp.get(i).getUserID()) == num){
+                    activeList.add(tmp.get(i));
+                }
+                else if (type == 1 && numOpenning(tmp.get(i).getUserID()) > num){
+                    activeList.add(tmp.get(i));
+                }
+                else if (type == -1 && numOpenning(tmp.get(i).getUserID()) < num){
+                    activeList.add(tmp.get(i));
+                }
+            }
+            tmp.clear();
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return activeList;
+    }
+
+
     public static void main(String[] args) throws ParseException {
         DB db = new DB();
         new UserService(db.getConnection());
 
-//        String s = "2023-12-20 14:41:29.85";
-//        String e = "2023-12-28 16:41:30.86";
-//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS");
-//        Date start = dateFormat.parse(s);
-//        Date end = dateFormat.parse(e);
-//
-//        ArrayList<UserModel> list = newUserByName(start,end, "pHương");
-//        for (int i = 0; i < list.size(); i++){
-//            System.out.println(list.get(i).getUsername());
-//        }
+        String s = "2023-12-20 14:41:29.85";
+        String e = "2023-12-28 17:00:30.86";
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS");
+        Date start = dateFormat.parse(s);
+        Date end = dateFormat.parse(e);
 
-//        System.out.println(numberOfDirectAndIndirectFriends(3));
-        ArrayList<UserModel> list = userListByNumberOfDirectFriends(1, -1);
+        ArrayList<UserModel> list = activeUsersByNumberOfActivities(start,end, 0, 1);
         for (int i = 0; i < list.size(); i++){
             System.out.println(list.get(i).getUsername());
         }
+
+//        System.out.println(numberOfDirectAndIndirectFriends(3));
+//        ArrayList<UserModel> list = userListByNumberOfDirectFriends(1, -1);
+//        for (int i = 0; i < list.size(); i++){
+//            System.out.println(list.get(i).getUsername());
+//        }
+//        System.out.println(numChatGroups(1));
         db.closeConnection();
     }
 }
