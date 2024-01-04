@@ -13,10 +13,10 @@ import java.awt.*;
 import User.UserService;
 import static User.UserService.numberOfNewUserByYear;
 
-public class NewUserByNameChart extends JFrame {
+public class NewUserByYearChart extends JFrame {
     int year;
 
-    public NewUserByNameChart(int year) {
+    public NewUserByYearChart(int year) {
         this.year = year;
         setTitle("Biểu đồ số lượng người đăng ký mới theo năm " + year);
         setSize(800, 600);
@@ -70,7 +70,7 @@ public class NewUserByNameChart extends JFrame {
         SwingUtilities.invokeLater(() -> {
             DB db = new DB();
             new UserService(db.getConnection());
-            new NewUserByNameChart(2023);
+            new NewUserByYearChart(2023);
         });
     }
 }

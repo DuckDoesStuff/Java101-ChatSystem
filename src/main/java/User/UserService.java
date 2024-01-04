@@ -681,8 +681,8 @@ public class UserService {
         int [] numberOfNewUser = new int [12];
         try {
             for (int i = 0; i < 12; i++){
-                String sql = "SELECT COUNT(*) AS count" +
-                        "FROM users" +
+                String sql = "SELECT COUNT(*) AS count " +
+                        "FROM users " +
                         "WHERE EXTRACT(MONTH FROM first_joined) = ? AND EXTRACT(YEAR FROM first_joined) = ?";
                 PreparedStatement stmt = conn.prepareStatement(sql);
                 stmt.setInt(1, i + 1);
@@ -1042,21 +1042,44 @@ public class UserService {
         return activeList;
     }
 
+    //9. Biểu đồ số lượng người hoạt động theo năm: chọn năm, vẽ biểu đồ với trục hoành là tháng, trục tung là số lượng người có mở ứng dụng.
+    //Số lượng người hoạt động theo năm
+    public static int [] numberOfActiveUserByYear(int year){
+        int [] numberOfNewUser = new int [12];
+        try {
+            for (int i = 0; i < 12; i++){
+                String sql = "SELECT COUNT(DISTINCT userid) AS count " +
+                        "FROM LoginHistory " +
+                        "WHERE EXTRACT(MONTH FROM timeLog) = ? AND EXTRACT(YEAR FROM timeLog) = ?";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, i + 1);
+                stmt.setInt(2, year);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()){
+                    numberOfNewUser[i] = rs.getInt("count");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return numberOfNewUser;
+    }
 
     public static void main(String[] args) throws ParseException {
         DB db = new DB();
         new UserService(db.getConnection());
 
-        String s = "2023-12-20 14:41:29.85";
-        String e = "2023-12-28 17:00:30.86";
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS");
-        Date start = dateFormat.parse(s);
-        Date end = dateFormat.parse(e);
-
-        ArrayList<UserModel> list = activeUsersByNumberOfActivities(start,end, 0, 1);
-        for (int i = 0; i < list.size(); i++){
-            System.out.println(list.get(i).getUsername());
-        }
+//        String s = "2023-12-20 14:41:29.85";
+//        String e = "2023-12-28 17:00:30.86";
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS");
+//        Date start = dateFormat.parse(s);
+//        Date end = dateFormat.parse(e);
+//
+//        ArrayList<UserModel> list = activeUsersByNumberOfActivities(start,end, 0, 1);
+//        for (int i = 0; i < list.size(); i++){
+//            System.out.println(list.get(i).getUsername());
+//        }
 
 //        System.out.println(numberOfDirectAndIndirectFriends(3));
 //        ArrayList<UserModel> list = userListByNumberOfDirectFriends(1, -1);
