@@ -681,8 +681,8 @@ public class UserService {
         int [] numberOfNewUser = new int [12];
         try {
             for (int i = 0; i < 12; i++){
-                String sql = "SELECT COUNT(*) AS count\n" +
-                        "FROM users\n" +
+                String sql = "SELECT COUNT(*) AS count" +
+                        "FROM users" +
                         "WHERE EXTRACT(MONTH FROM first_joined) = ? AND EXTRACT(YEAR FROM first_joined) = ?";
                 PreparedStatement stmt = conn.prepareStatement(sql);
                 stmt.setInt(1, i + 1);
@@ -699,19 +699,184 @@ public class UserService {
         return numberOfNewUser;
     }
 
+    //7. Xem danh sách người dùng và số lượng bạn bè (1 cột bạn bè trực tiếp, 1 cột tính luôn số lượng bạn của bạn)
+
+    //Số lượng bạn bè trực tiếp
+    public static int numberOfDirectFriends(int userid){
+        int ans = 0;
+        try {
+            String sql =  "SELECT COUNT(DISTINCT friendid) AS count " +
+                    "FROM friendlist WHERE userid = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()){
+                ans = rs.getInt("count");
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return ans;
+    }
+    //Số lượng bạn + bạn của bạn
+    public static int numberOfDirectAndIndirectFriends(int userid){
+        int ans = 0;
+        try {
+            ArrayList<Integer> userIds = new ArrayList<>();
+            String sql =  "SELECT DISTINCT friendid " +
+                    "FROM friendlist WHERE userid = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()){
+                ans = rs.getInt("friendid");
+                if (ans != userid && !userIds.contains(ans))
+                    userIds.add(ans);
+            }
+            sql =  "SELECT DISTINCT f.friendid " +
+                    "FROM friendlist AS u " +
+                    "JOIN friendlist AS f ON u.friendid = f.userid " +
+                    "WHERE u.userid = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            rs = stmt.executeQuery();
+            while (rs.next()){
+                ans = rs.getInt("friendid");
+                if (ans != userid && !userIds.contains(ans))
+                    userIds.add(ans);
+            }
+            ans = userIds.size();
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return ans;
+    }
+    //7a. Sắp xếp theo tên (isByName = true)/ thời gian tạo (isByName = false)
+    public static ArrayList<UserModel> userListWithSort(boolean isByName){
+        ArrayList<UserModel> users = new ArrayList<>();
+        try {
+            String sql;
+            if (isByName){
+                sql = "SELECT * FROM users " +
+                        "ORDER BY first_name, last_name";
+            }
+            else {
+                sql = "SELECT * FROM users " +
+                        "ORDER BY first_joined DESC";
+            }
+
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                users.add(user);
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return users;
+    }
+    //7b. Lọc theo tên
+    public static ArrayList<UserModel> userListByName(String name) {
+        ArrayList<UserModel> userList = new ArrayList<>();
+        try {
+            String sql = "SELECT * FROM users " +
+                    "WHERE LOWER(first_name) LIKE ? OR LOWER(last_name) LIKE ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, "%" + name.toLowerCase() + "%");
+            stmt.setString(2, "%" + name.toLowerCase() + "%");
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                userList.add(user);
+            }
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return userList;
+    }
+    //7c. c. Lọc theo số lượng bạn trực tiếp (bằng - type=0, nhỏ hơn - type=-1, lớn hơn 1 số được nhập - type=1)
+    public static ArrayList<UserModel> userListByNumberOfDirectFriends(int num, int type) {
+        ArrayList<UserModel> userList = new ArrayList<>();
+        try {
+            ArrayList<UserModel> tmp = new ArrayList<>();
+            String sql = "SELECT * FROM users";
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                tmp.add(user);
+            }
+            for(int i = 0; i < tmp.size(); i++){
+                if (type == 0 && numberOfDirectFriends(tmp.get(i).getUserID()) == num){
+                    userList.add(tmp.get(i));
+                }
+                else if (type == 1 && numberOfDirectFriends(tmp.get(i).getUserID()) > num){
+                    userList.add(tmp.get(i));
+                }
+                else if (type == -1 && numberOfDirectFriends(tmp.get(i).getUserID()) < num){
+                    userList.add(tmp.get(i));
+                }
+            }
+            tmp.clear();
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return userList;
+    }
 
     public static void main(String[] args) throws ParseException {
         DB db = new DB();
         new UserService(db.getConnection());
 
-        String s = "2023-12-20 14:41:29.85";
-        String e = "2023-12-28 16:41:30.86";
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS");
-        Date start = dateFormat.parse(s);
-        Date end = dateFormat.parse(e);
+//        String s = "2023-12-20 14:41:29.85";
+//        String e = "2023-12-28 16:41:30.86";
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS");
+//        Date start = dateFormat.parse(s);
+//        Date end = dateFormat.parse(e);
+//
+//        ArrayList<UserModel> list = newUserByName(start,end, "pHương");
+//        for (int i = 0; i < list.size(); i++){
+//            System.out.println(list.get(i).getUsername());
+//        }
 
-
-        ArrayList<UserModel> list = newUserByName(start,end, "pHương");
+//        System.out.println(numberOfDirectAndIndirectFriends(3));
+        ArrayList<UserModel> list = userListByNumberOfDirectFriends(1, -1);
         for (int i = 0; i < list.size(); i++){
             System.out.println(list.get(i).getUsername());
         }

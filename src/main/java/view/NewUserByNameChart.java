@@ -1,4 +1,4 @@
-package User;
+package view;
 
 import Database.DB;
 import org.jfree.chart.*;
@@ -9,6 +9,9 @@ import org.jfree.data.category.*;
 
 import javax.swing.*;
 import java.awt.*;
+
+import User.UserService;
+import static User.UserService.numberOfNewUserByYear;
 
 public class NewUserByNameChart extends JFrame {
     int year;
@@ -32,7 +35,7 @@ public class NewUserByNameChart extends JFrame {
     private CategoryDataset createDataset() {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         for (int i = 0; i < 12; i++){
-            dataset.addValue(UserService.numberOfNewUserByYear(year)[i], "Số lượng", "Tháng " + (i + 1));
+            dataset.addValue(numberOfNewUserByYear(year)[i], "Số lượng", "Tháng " + (i + 1));
         }
         return dataset;
     }
