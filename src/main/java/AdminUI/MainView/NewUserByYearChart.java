@@ -1,4 +1,4 @@
-package view;
+package AdminUI.MainView;
 
 import Database.DB;
 import org.jfree.chart.*;
@@ -13,14 +13,14 @@ import java.sql.Connection;
 
 import User.UserService;
 
-public class ActiveUsersByYearChart extends JFrame {
+public class NewUserByYearChart extends JFrame {
     int year;
     UserService userService;
 
-    public ActiveUsersByYearChart(int year, Connection conn) {
+    public NewUserByYearChart(int year, Connection conn) {
         this.year = year;
         userService = new UserService(conn);
-        setTitle("Biểu đồ số lượng người hoạt động theo năm " + year);
+        setTitle("Biểu đồ số lượng người đăng ký mới theo năm " + year);
         setSize(800, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -36,18 +36,18 @@ public class ActiveUsersByYearChart extends JFrame {
 
     private CategoryDataset createDataset() {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        int [] numberOfActiveUserByYear = userService.numberOfActiveUserByYear(year);
+        int[] numberOfNewUserByYear = userService.numberOfNewUserByYear(year);
         for (int i = 0; i < 12; i++){
-            dataset.addValue(numberOfActiveUserByYear[i], "Số lượng", "Tháng " + (i + 1));
+            dataset.addValue(numberOfNewUserByYear[i], "Số lượng", "Tháng " + (i + 1));
         }
         return dataset;
     }
 
     private JFreeChart createChart(CategoryDataset dataset) {
         JFreeChart chart = ChartFactory.createBarChart(
-                "Biểu đồ số lượng người hoạt động theo năm " + year,
+                "Biểu đồ số lượng người đăng ký mới theo năm " + year,
                 "Tháng",
-                "Số lượng người hoạt động",
+                "Số lượng người đăng kí mới",
                 dataset,
                 PlotOrientation.VERTICAL,
                 true,
@@ -72,7 +72,7 @@ public class ActiveUsersByYearChart extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             DB db = new DB();
-            new ActiveUsersByYearChart(2023,db.getConnection());
+            new NewUserByYearChart(2023, db.getConnection());
         });
     }
 }
