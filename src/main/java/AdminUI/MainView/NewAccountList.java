@@ -47,6 +47,7 @@ public class NewAccountList extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
+        setTitle("New Account List");
         titleLabel.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         titleLabel.setText("New Account Registration");
 
@@ -89,6 +90,11 @@ public class NewAccountList extends javax.swing.JFrame {
         });
 
         backToMainMenuBtn.setText("Back To Main Menu");
+        backToMainMenuBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                backToMainMenuBtnActionPerformed(evt);
+            }
+        });
 
         searchButton.setText("Search");
         searchButton.addActionListener(new java.awt.event.ActionListener() {
@@ -234,6 +240,12 @@ public class NewAccountList extends javax.swing.JFrame {
 
     private void sortModeComboboxActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
+    }
+
+    private void backToMainMenuBtnActionPerformed(java.awt.event.ActionEvent evt) {
+        // TODO add your handling code here:
+        dispose();
+        new MainMenu().setVisible(true);
     }
 
     private void clearTable(){
