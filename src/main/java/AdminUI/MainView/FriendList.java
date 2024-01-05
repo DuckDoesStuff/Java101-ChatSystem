@@ -25,7 +25,7 @@ public class FriendList extends javax.swing.JFrame {
     public FriendList(Connection connection) {
         userService = new UserService(connection);
         initComponents();
-        users = userService.userListByNumberOfDirectFriends(-1, 1);
+        users = userService.userListByNumberOfDirectFriends("");
         loadMainTable();
     }
 
@@ -186,6 +186,9 @@ public class FriendList extends javax.swing.JFrame {
 
     private void searchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchButtonActionPerformed
         // TODO add your handling code here:
+        String username = searchField.getText();
+        users = userService.userListByNumberOfDirectFriends(username);
+        loadMainTable();
     }//GEN-LAST:event_searchButtonActionPerformed
 
     private void searchFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchFieldActionPerformed
@@ -213,6 +216,21 @@ public class FriendList extends javax.swing.JFrame {
 
     private void filterSelectorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_filterSelectorActionPerformed
         // TODO add your handling code here:
+        String selected = filterSelector.getSelectedItem().toString();
+        String username = searchField.getText();
+        int count = Integer.parseInt(countField.getText());
+        if (selected.equals("Filter by greater than")) {
+            users = userService.userListByNumberOfDirectFriends(username);
+            users.removeIf(user -> user.getFriendsCount() <= count);
+        } else if (selected.equals("Filter by smaller than")) {
+            users = userService.userListByNumberOfDirectFriends(username);
+            users.removeIf(user -> user.getFriendsCount() >= count);
+        } else if (selected.equals("Filter by equal to")) {
+            users = userService.userListByNumberOfDirectFriends(username);
+            users.removeIf(user -> user.getFriendsCount() != count);
+        }
+
+        loadMainTable();
     }//GEN-LAST:event_filterSelectorActionPerformed
 
     private void backToMenuButtonActionPerformed(java.awt.event.ActionEvent evt) {

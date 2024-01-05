@@ -28,7 +28,7 @@ class ChatHandler implements Runnable {
 
     UserController userController;
     Connection conn;
-    public static ArrayList<ChatHandler> clients = new ArrayList<>();
+    public static volatile ArrayList<ChatHandler> clients = new ArrayList<>();
     String username;
     Socket clientChatSocket;
     ObjectInputStream inChat; // for chat

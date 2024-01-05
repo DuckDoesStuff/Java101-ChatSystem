@@ -301,23 +301,35 @@ public class UserService {
         return userList;
     }
 
-    public ArrayList<UserModel> getOnlineUsers() {
+    public ArrayList<UserModel> getOnlineUsers(String keyword) {
         ArrayList<UserModel> userList = new ArrayList<UserModel>();
         try {
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM users WHERE online_status = true");
+            String sql =
+                    "SELECT U.userid, U.username, U.first_name, U.last_name, MAX(loginhistory.timeLog) AS latest_login " +
+                    "FROM users AS U " +
+                    "JOIN loginhistory ON U.userid = loginhistory.userid " +
+                    "WHERE online_status = true " +
+                    "GROUP BY U.userid";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            if(!keyword.equals("")) {
+                sql =   "SELECT U.userid, U.username, U.first_name, U.last_name, MAX(loginhistory.timeLog) AS latest_login " +
+                        "FROM users AS U " +
+                        "JOIN loginhistory ON U.userid = loginhistory.userid " +
+                        "WHERE online_status = true AND (U.username LIKE ? OR U.first_name LIKE ? OR U.last_name LIKE ?) " +
+                        "GROUP BY U.userid";
+                stmt = conn.prepareStatement(sql);
+                stmt.setString(1, "%" + keyword + "%");
+                stmt.setString(2, "%" + keyword + "%");
+                stmt.setString(3, "%" + keyword + "%");
+            }
+            ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 int userID = rs.getInt("userID");
                 String first_name = rs.getString("first_name");
                 String last_name = rs.getString("last_name");
                 String username = rs.getString("username");
-                String password = rs.getString("password");
-                String email = rs.getString("email");
-                String address = rs.getString("address");
-                Date dateOfBirth = rs.getDate("dateOfBirth");
-                boolean gender = rs.getBoolean("gender");
-                Timestamp first_joined = rs.getTimestamp("first_joined");
-                UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                Timestamp latest_login = rs.getTimestamp("latest_login");
+                UserModel temp = new UserModel(userID, username, first_name, last_name, latest_login);
                 userList.add(temp);
             }
         } catch (SQLException e) {
@@ -349,10 +361,13 @@ public class UserService {
         return user;
     }
 
-    public ArrayList<UserModel> filterUser(String keyword) {
+    public ArrayList<UserModel> filterUser(String keyword, boolean onlineOnly) {
         ArrayList<UserModel> userList = new ArrayList<UserModel>();
         try {
-            String sql = "SELECT * FROM users WHERE username LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR email LIKE ?";
+            String sql = "SELECT * FROM users WHERE (username LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)";
+            if(!onlineOnly) {
+                sql = "SELECT * FROM users WHERE (username LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR email LIKE ?) AND online_status = true";
+            }
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, "%" + keyword + "%");
             stmt.setString(2, "%" + keyword + "%");
@@ -995,17 +1010,28 @@ public class UserService {
         }
         return userList;
     }
-    //7c. c. Lọc theo số lượng bạn trực tiếp (bằng - type=0, nhỏ hơn - type=-1, lớn hơn 1 số được nhập - type=1)
-    public ArrayList<UserModel> userListByNumberOfDirectFriends(int num, int type) {
+
+    public ArrayList<UserModel> userListByNumberOfDirectFriends(String keyword) {
         ArrayList<UserModel> userList = new ArrayList<>();
         try {
-            String sql =    "SELECT U.*, COUNT(FL.friendid) AS num_friends, COUNT(FL2.friendid) as num_friends_of_friends " +
-                            "FROM users as U " +
-                            "JOIN friendlist as FL ON U.userID = FL.userID " +
-                            "JOIN friendlist as FL2 ON FL.friendid = FL2.userid " +
-                            "GROUP BY U.userID";
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
+            String sql =
+                    "SELECT u.userid, u.username, u.first_joined, COUNT(DISTINCT f1.friendid) AS num_friends, COUNT(DISTINCT fof.friendid) AS num_friends_of_friends " +
+                    "FROM users AS u " +
+                    "LEFT JOIN friendlist AS f1 ON u.userid = f1.userid " +
+                    "LEFT JOIN friendlist AS fof ON f1.friendid = fof.userid " +
+                    "GROUP BY u.userid;";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            if(!keyword.equals("")) {
+                sql =   "SELECT u.userid, u.username, u.first_joined, COUNT(DISTINCT f1.friendid) AS num_friends, COUNT(DISTINCT fof.friendid) AS num_friends_of_friends " +
+                        "FROM users AS u " +
+                        "LEFT JOIN friendlist AS f1 ON u.userid = f1.userid " +
+                        "LEFT JOIN friendlist AS fof ON f1.friendid = fof.userid " +
+                        "WHERE u.username LIKE ? " +
+                        "GROUP BY u.userid;";
+                stmt = conn.prepareStatement(sql);
+                stmt.setString(1, "%" + keyword + "%");
+            }
+            ResultSet rs = stmt.executeQuery();
             while(rs.next()) {
                 int userID = rs.getInt("userID");
                 String username = rs.getString("username");

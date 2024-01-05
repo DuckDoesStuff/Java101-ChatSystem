@@ -637,6 +637,7 @@ public class Chat extends JFrame {
         logout_btn.addActionListener(e -> {
             //call function to logout
             clientModule.closeConnection();
+            dispose();
         });
         //handling sending messages
 //        send_btn.addActionListener(e -> {

@@ -217,7 +217,7 @@ public class UserList extends javax.swing.JFrame {
     private void searchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchButtonActionPerformed
         // TODO add your handling code here:
         String username = searchField.getText();
-        userList = userService.filterUser(username);
+        userList = userService.filterUser(username, true);
         loadUserTable();
     }//GEN-LAST:event_searchButtonActionPerformed
 

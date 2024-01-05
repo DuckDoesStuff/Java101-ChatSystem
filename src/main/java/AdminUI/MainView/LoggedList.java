@@ -26,7 +26,7 @@ public class LoggedList extends javax.swing.JFrame {
         userService = new UserService(connection);
         initComponents();
 
-        onlineUsers = userService.getOnlineUsers();
+        onlineUsers = userService.getOnlineUsers("");
         loadOnlineUsers();
     }
 
@@ -170,7 +170,7 @@ public class LoggedList extends javax.swing.JFrame {
     private void searchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchButtonActionPerformed
         // TODO add your handling code here:
         String username = searchField.getText();
-        onlineUsers = userService.filterUser(username);
+        onlineUsers = userService.getOnlineUsers(username);
         loadOnlineUsers();
     }//GEN-LAST:event_searchButtonActionPerformed
 
@@ -197,7 +197,7 @@ public class LoggedList extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) onlineTable.getModel();
         model.setRowCount(0);
         for (UserModel user : onlineUsers) {
-            model.addRow(new Object[]{user.getFirst_joined(), user.getUsername(), user.getFirstName(), user.getLastName()});
+            model.addRow(new Object[]{user.getOnlineSince(), user.getUsername(), user.getFirstName(), user.getLastName()});
         }
     }
 

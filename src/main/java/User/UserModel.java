@@ -33,6 +33,14 @@ public class UserModel {
         this.friends_of_friends_count = friends_of_friends_count;
     }
 
+    public UserModel(int userID, String username, String firstName, String lastName, Timestamp online_since) {
+        this.userID = userID;
+        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.online_since = online_since;
+    }
+
     public UserModel(int userID, String firstName, String lastName, String username, String password, String email, String address, Date dateOfBirth, boolean gender, Timestamp first_joined) {
         this.userID = userID;
         this.firstName = firstName;
@@ -125,6 +133,10 @@ public class UserModel {
 
     public int getFriendsOfFriendsCount() {
         return friends_of_friends_count;
+    }
+
+    public Timestamp getOnlineSince() {
+        return online_since;
     }
 }
 
