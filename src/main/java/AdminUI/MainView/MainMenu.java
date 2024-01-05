@@ -147,10 +147,13 @@ public class MainMenu extends javax.swing.JFrame {
 
     private void usersManagerButtonActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
+        dispose();
+        new UserList(database.getConnection()).setVisible(true);
     }
 
     private void exitButtonActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
+        dispose();
     }
 
     private void groupsManagerButtonActionPerformed(java.awt.event.ActionEvent evt) {
@@ -177,10 +180,14 @@ public class MainMenu extends javax.swing.JFrame {
 
     private void friendsManagerButtonActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
+        dispose();
+        new FriendList(database.getConnection()).setVisible(true);
     }
 
     private void onlineUserManagerActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
+        dispose();
+        new LoggedList(database.getConnection()).setVisible(true);
     }
 
     /**
