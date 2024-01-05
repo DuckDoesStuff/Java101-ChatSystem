@@ -3,6 +3,7 @@ package AdminUI.MainView;
 import User.Spam;
 import User.UserService;
 
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.sql.Connection;
@@ -37,7 +38,7 @@ public class SpamReports extends javax.swing.JFrame {
         sortByTitle = new javax.swing.JLabel();
         banUserTitle = new javax.swing.JLabel();
         backToMainMenuBtn = new javax.swing.JButton();
-        sortBtn = new javax.swing.JButton();
+
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setPreferredSize(new java.awt.Dimension(740, 480));
@@ -106,7 +107,6 @@ public class SpamReports extends javax.swing.JFrame {
 
         backToMainMenuBtn.setText("Back To Main Menu");
 
-        sortBtn.setText("Sort");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -126,7 +126,7 @@ public class SpamReports extends javax.swing.JFrame {
                                                         .addComponent(banUserTitle)
                                                         .addComponent(backToMainMenuBtn)
                                                         .addComponent(sortModeCombobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(sortBtn))))
+                                                        )))
                                 .addContainerGap(14, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -144,7 +144,7 @@ public class SpamReports extends javax.swing.JFrame {
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addComponent(sortModeCombobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(sortBtn)
+
                                                 .addGap(44, 44, 44)
                                                 .addComponent(banUserTitle)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -183,6 +183,14 @@ public class SpamReports extends javax.swing.JFrame {
 
     private void banBtnActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
+        String username = bannedUsernameInput.getText();
+        boolean result = userService.banUser(username);
+        if (result){
+            JOptionPane.showMessageDialog(null, "User " + username + " has been banned");
+        }
+        else{
+            JOptionPane.showMessageDialog(null, "Ban " + username + " failed");
+        }
     }
 
     private void clearTable(){
@@ -232,7 +240,8 @@ public class SpamReports extends javax.swing.JFrame {
     private javax.swing.JLabel banUserTitle;
     private javax.swing.JTextField bannedUsernameInput;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JButton sortBtn;
+    private javax.swing.JTextField nameToSearch;
+    private javax.swing.JButton searchButton;
     private javax.swing.JLabel sortByTitle;
     private javax.swing.JComboBox<String> sortModeCombobox;
     private javax.swing.JTable tableOfSpamTicket;

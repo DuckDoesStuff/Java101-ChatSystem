@@ -32,7 +32,7 @@ public class DB {
                     " last_joined TIMESTAMP," +
                     " first_joined TIMESTAMP," +
                     " opened_time INT," +
-                    " banned BOOLEAN)";
+                    " banned BOOLEAN DEFAULT FALSE)";
             stmt.execute(sql1);
             conn.commit();
 

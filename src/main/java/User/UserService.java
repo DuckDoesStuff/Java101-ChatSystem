@@ -963,6 +963,22 @@ public class UserService {
 //        return spamList;
 //    }
 
+    public boolean banUser(String username){
+        try {
+            String sql = "UPDATE users SET banned = ? WHERE username = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setBoolean(1, true);
+            stmt.setString(2, username);
+            stmt.executeUpdate();
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error banning user");
+            return false;
+            //throw new RuntimeException(e);
+        }
+    }
+
     public static void main(String[] args) {
     }
 }
