@@ -9,15 +9,17 @@ import org.jfree.data.category.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.Connection;
 
 import User.UserService;
-import static User.UserService.numberOfActiveUserByYear;
 
 public class ActiveUsersByYearChart extends JFrame {
     int year;
+    UserService userService;
 
-    public ActiveUsersByYearChart(int year) {
+    public ActiveUsersByYearChart(int year, Connection conn) {
         this.year = year;
+        userService = new UserService(conn);
         setTitle("Biểu đồ số lượng người hoạt động theo năm " + year);
         setSize(800, 600);
         setLocationRelativeTo(null);
@@ -34,8 +36,9 @@ public class ActiveUsersByYearChart extends JFrame {
 
     private CategoryDataset createDataset() {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        int [] numberOfActiveUserByYear = userService.numberOfActiveUserByYear(year);
         for (int i = 0; i < 12; i++){
-            dataset.addValue(numberOfActiveUserByYear(year)[i], "Số lượng", "Tháng " + (i + 1));
+            dataset.addValue(numberOfActiveUserByYear[i], "Số lượng", "Tháng " + (i + 1));
         }
         return dataset;
     }
@@ -69,8 +72,7 @@ public class ActiveUsersByYearChart extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             DB db = new DB();
-            new UserService(db.getConnection());
-            new ActiveUsersByYearChart(2023);
+            new ActiveUsersByYearChart(2023,db.getConnection());
         });
     }
 }

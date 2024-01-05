@@ -11,7 +11,7 @@ import java.util.Comparator;
 import java.util.Date;
 
 public class UserService {
-    static Connection conn;
+    Connection conn;
     public UserService(Connection conn) {
         this.conn = conn;
     }
@@ -754,20 +754,22 @@ public class UserService {
     }
 
     //Số lượng người đăng kí mới theo năm
-    public static int [] numberOfNewUserByYear(int year){
+    public int [] numberOfNewUserByYear(int year){
         int [] numberOfNewUser = new int [12];
         try {
-            for (int i = 0; i < 12; i++){
-                String sql = "SELECT COUNT(*) AS count " +
-                        "FROM users " +
-                        "WHERE EXTRACT(MONTH FROM first_joined) = ? AND EXTRACT(YEAR FROM first_joined) = ?";
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                stmt.setInt(1, i + 1);
-                stmt.setInt(2, year);
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()){
-                    numberOfNewUser[i] = rs.getInt("count");
-                }
+            String sql =
+                    "SELECT EXTRACT(MONTH FROM first_joined) AS month, COUNT(*) AS count " +
+                    "FROM users " +
+                    "WHERE EXTRACT(YEAR FROM first_joined) = ? " +
+                    "GROUP BY month " +
+                    "ORDER BY month";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, year);
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int month = rs.getInt("month");
+                int count = rs.getInt("count");
+                numberOfNewUser[month - 1] = count;
             }
         } catch (Exception e) {
             System.out.println("Error");
@@ -1421,20 +1423,22 @@ public class UserService {
 
     //9. Biểu đồ số lượng người hoạt động theo năm: chọn năm, vẽ biểu đồ với trục hoành là tháng, trục tung là số lượng người có mở ứng dụng.
     //Số lượng người hoạt động theo năm
-    public static int [] numberOfActiveUserByYear(int year){
+    public int [] numberOfActiveUserByYear(int year){
         int [] numberOfNewUser = new int [12];
         try {
-            for (int i = 0; i < 12; i++){
-                String sql = "SELECT COUNT(DISTINCT userid) AS count " +
-                        "FROM LoginHistory " +
-                        "WHERE EXTRACT(MONTH FROM timeLog) = ? AND EXTRACT(YEAR FROM timeLog) = ?";
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                stmt.setInt(1, i + 1);
-                stmt.setInt(2, year);
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()){
-                    numberOfNewUser[i] = rs.getInt("count");
-                }
+            String sql =
+                    "SELECT EXTRACT(MONTH FROM first_joined) AS month, COUNT(*) AS count " +
+                            "FROM users " +
+                            "WHERE EXTRACT(YEAR FROM first_joined) = ? " +
+                            "GROUP BY month " +
+                            "ORDER BY month";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, year);
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int month = rs.getInt("month");
+                int count = rs.getInt("count");
+                numberOfNewUser[month - 1] = count;
             }
         } catch (Exception e) {
             System.out.println("Error");
