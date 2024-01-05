@@ -24,7 +24,6 @@ public class MainMenu extends javax.swing.JFrame {
         usersManagerButton = new javax.swing.JButton();
         groupsManagerButton = new javax.swing.JButton();
         spamManagerButton = new javax.swing.JButton();
-        loginsManagerButton = new javax.swing.JButton();
         newUserManagerButton = new javax.swing.JButton();
         friendsManagerButton = new javax.swing.JButton();
         exitButton = new javax.swing.JButton();
@@ -56,12 +55,7 @@ public class MainMenu extends javax.swing.JFrame {
             }
         });
 
-        loginsManagerButton.setText("Logins Manager");
-        loginsManagerButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                loginsManagerButtonActionPerformed(evt);
-            }
-        });
+
 
         newUserManagerButton.setText("New User Manager");
         newUserManagerButton.addActionListener(new java.awt.event.ActionListener() {
@@ -103,9 +97,6 @@ public class MainMenu extends javax.swing.JFrame {
                                                 .addGap(187, 187, 187)
                                                 .addComponent(menuTitle))
                                         .addGroup(layout.createSequentialGroup()
-                                                .addGap(330, 330, 330)
-                                                .addComponent(exitButton))
-                                        .addGroup(layout.createSequentialGroup()
                                                 .addGap(297, 297, 297)
                                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                                         .addComponent(onlineUserManager)
@@ -113,9 +104,11 @@ public class MainMenu extends javax.swing.JFrame {
                                                                 .addComponent(groupsManagerButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                                                 .addComponent(usersManagerButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                                                 .addComponent(spamManagerButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                                .addComponent(loginsManagerButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                                                 .addComponent(newUserManagerButton, javax.swing.GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE)
-                                                                .addComponent(friendsManagerButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
+                                                                .addComponent(friendsManagerButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addGap(329, 329, 329)
+                                                .addComponent(exitButton)))
                                 .addContainerGap(200, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -132,17 +125,16 @@ public class MainMenu extends javax.swing.JFrame {
                                 .addGap(12, 12, 12)
                                 .addComponent(spamManagerButton, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(loginsManagerButton, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(newUserManagerButton, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(friendsManagerButton, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(exitButton)
-                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addContainerGap(55, Short.MAX_VALUE))
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>
 
     private void usersManagerButtonActionPerformed(java.awt.event.ActionEvent evt) {
@@ -229,7 +221,6 @@ public class MainMenu extends javax.swing.JFrame {
     private javax.swing.JButton exitButton;
     private javax.swing.JButton friendsManagerButton;
     private javax.swing.JButton groupsManagerButton;
-    private javax.swing.JButton loginsManagerButton;
     private javax.swing.JLabel menuTitle;
     private javax.swing.JButton newUserManagerButton;
     private javax.swing.JButton onlineUserManager;

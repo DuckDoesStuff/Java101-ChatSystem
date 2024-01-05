@@ -208,11 +208,9 @@ public class GroupList extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(backToMainMenuBtn))
         );
-        for (GroupChat groupChat : allGroups) {
-            addRowForGroupTable(groupChat.getName(), groupChat.getTimeCreated());
-        }
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>
 
     private void sortModeComboboxActionPerformed(java.awt.event.ActionEvent evt) {

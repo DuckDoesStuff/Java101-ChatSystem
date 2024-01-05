@@ -238,6 +238,8 @@ public class SpamReports extends javax.swing.JFrame {
         );
 
         pack();
+        setLocationRelativeTo(null);
+
     }// </editor-fold>
 //"Username of Reporter: A-Z", "Username of Reporter: Z-A", "Creation Time: oldest to latest", "Creation Time: latest to oldest"
     private void sortModeComboboxActionPerformed(ActionEvent e) {
