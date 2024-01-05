@@ -420,6 +420,30 @@ public class ClientModule implements Runnable {
         System.out.println(createGroup.content.getFirst());
     }
 
+    public int getChatID(String username){
+        PackageDataStructure getChatIDPD = new PackageDataStructure(
+                "/getchatid"
+        );
+        getChatIDPD.content.add(username);
+        sendPackageData(getChatIDPD);
+        System.out.println("Sent get chat id pd request");
+        PackageDataStructure getChatID = receivePackageData();
+        System.out.println("Received get chat id pd response");
+        return Integer.parseInt(getChatID.content.getFirst());
+    }
+
+    public boolean deleteChatHistory(int chatID) {
+        PackageDataStructure deleteChatHistoryPD = new PackageDataStructure(
+                "/deletechathistory"
+        );
+        deleteChatHistoryPD.content.add(Integer.toString(chatID));
+        sendPackageData(deleteChatHistoryPD);
+        System.out.println("Sent delete chat history pd request");
+        PackageDataStructure deleteChatHistory = receivePackageData();
+        System.out.println("Received delete chat history pd response");
+        return deleteChatHistory.content.getFirst().equals("true");
+    }
+
     public String sendFriendRequest(String friendUsername) {
         String[] pdContent = new String[2];
         pdContent[0] = "/addfriend";
@@ -538,6 +562,15 @@ public class ClientModule implements Runnable {
     public boolean addGroupAdmin(String newadmin, int mainChatID){
         PackageDataStructure pd = new PackageDataStructure("/addgroupadmin");
         pd.content.add(newadmin);
+        pd.content.add(Integer.toString(mainChatID));
+        sendPackageData(pd);
+        PackageDataStructure result = receivePackageData();
+        return result.content.getFirst().equals("true");
+    }
+
+    public boolean deleteUserFromGroup(String userToDelete, int mainChatID) {
+        PackageDataStructure pd = new PackageDataStructure("/deleteuserfromgroup");
+        pd.content.add(userToDelete);
         pd.content.add(Integer.toString(mainChatID));
         sendPackageData(pd);
         PackageDataStructure result = receivePackageData();

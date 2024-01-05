@@ -171,6 +171,8 @@ public class MainMenu extends javax.swing.JFrame {
 
     private void newUserManagerButtonActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
+        dispose();
+        new NewAccountList(database.getConnection()).setVisible(true);
     }
 
     private void friendsManagerButtonActionPerformed(java.awt.event.ActionEvent evt) {

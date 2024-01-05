@@ -54,5 +54,9 @@ public class UserModel {
     public Timestamp getFirst_joined() {
         return first_joined;
     }
+
+    public String getLastName() {
+        return lastName;
+    }
 }
 

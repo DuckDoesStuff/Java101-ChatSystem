@@ -9,9 +9,11 @@ import java.awt.event.ActionEvent;
 import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class SpamReports extends javax.swing.JFrame {
 
+    private UserService userService;
     /**
      * Creates new form SpamReports
      */
@@ -40,10 +42,17 @@ public class SpamReports extends javax.swing.JFrame {
         backToMainMenuBtn = new javax.swing.JButton();
         nameToSearch = new javax.swing.JTextField();
         searchButton = new javax.swing.JButton();
-
+        dateChooserFrom = new datechooser.beans.DateChooserCombo();
+        dateChooserTo = new datechooser.beans.DateChooserCombo();
+        filterByTimeButton = new javax.swing.JButton();
+        unbanUserTitle = new javax.swing.JLabel();
+        unbannedUsernameInput = new javax.swing.JTextField();
+        unbanBtn = new javax.swing.JButton();
+        From = new javax.swing.JLabel();
+        To = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(740, 480));
+        setPreferredSize(new java.awt.Dimension(800, 570));
 
         title.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         title.setText("Spam Reports");
@@ -108,6 +117,11 @@ public class SpamReports extends javax.swing.JFrame {
         banUserTitle.setText("Ban user");
 
         backToMainMenuBtn.setText("Back To Main Menu");
+        backToMainMenuBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                backToMainMenuBtnActionPerformed(evt);
+            }
+        });
 
         nameToSearch.setText("Search by name...");
 
@@ -119,6 +133,32 @@ public class SpamReports extends javax.swing.JFrame {
             }
         });
 
+        filterByTimeButton.setText("Filter by time");
+        filterByTimeButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                filterByTimeButtonActionPerformed(evt);
+            }
+        });
+
+        unbanUserTitle.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        unbanUserTitle.setText("Unban user");
+
+        unbannedUsernameInput.setText("Username to be unbanned...");
+
+        unbanBtn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        unbanBtn.setForeground(new java.awt.Color(0, 255, 0));
+        unbanBtn.setText("Unban");
+        unbanBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                unbanBtnActionPerformed(evt);
+            }
+        });
+
+        From.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        From.setText("From");
+
+        To.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        To.setText("To");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -127,11 +167,20 @@ public class SpamReports extends javax.swing.JFrame {
                         .addGroup(layout.createSequentialGroup()
                                 .addGap(26, 26, 26)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 551, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addGroup(layout.createSequentialGroup()
-                                                .addComponent(title, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(nameToSearch))
-                                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 551, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(title, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(From, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(nameToSearch)
+                                                        .addGroup(layout.createSequentialGroup()
+                                                                .addComponent(dateChooserFrom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 58, Short.MAX_VALUE)
+                                                                .addComponent(To)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(dateChooserTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                                 .addGap(18, 18, 18)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addComponent(bannedUsernameInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -140,39 +189,56 @@ public class SpamReports extends javax.swing.JFrame {
                                         .addComponent(banUserTitle)
                                         .addComponent(backToMainMenuBtn)
                                         .addComponent(sortModeCombobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(searchButton))
-                                .addContainerGap(14, Short.MAX_VALUE))
+                                        .addComponent(searchButton)
+                                        .addComponent(filterByTimeButton)
+                                        .addComponent(unbanUserTitle)
+                                        .addComponent(unbannedUsernameInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(unbanBtn))
+                                .addContainerGap(9, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(title, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(nameToSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(searchButton))
+                                .addGap(18, 18, 18)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(filterByTimeButton)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                .addComponent(To, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(dateChooserFrom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(dateChooserTo, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(From))))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addGroup(layout.createSequentialGroup()
-                                                .addContainerGap()
-                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                                        .addComponent(title, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(nameToSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(searchButton))
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addGap(37, 37, 37)
                                                 .addComponent(sortByTitle)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addComponent(sortModeCombobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addGap(73, 73, 73)
+                                                .addGap(46, 46, 46)
                                                 .addComponent(banUserTitle)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                                 .addComponent(bannedUsernameInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addComponent(banBtn)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                .addComponent(backToMainMenuBtn)))
-                                .addContainerGap(8, Short.MAX_VALUE))
+                                                .addGap(46, 46, 46)
+                                                .addComponent(unbanUserTitle)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addComponent(unbannedUsernameInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(unbanBtn)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 126, Short.MAX_VALUE)
+                                                .addComponent(backToMainMenuBtn))
+                                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(15, 15, 15))
         );
 
         pack();
-    }
+    }// </editor-fold>
 //"Username of Reporter: A-Z", "Username of Reporter: Z-A", "Creation Time: oldest to latest", "Creation Time: latest to oldest"
     private void sortModeComboboxActionPerformed(ActionEvent e) {
         clearTable();
@@ -197,6 +263,24 @@ public class SpamReports extends javax.swing.JFrame {
     }
 
 
+    private void unbanBtnActionPerformed(java.awt.event.ActionEvent evt) {
+        // TODO add your handling code here:
+        String username = unbannedUsernameInput.getText();
+        boolean result = userService.unblockByAdmin(username);
+        if (result){
+            JOptionPane.showMessageDialog(null, "User " + username + " has been unbanned");
+        }
+        else{
+            JOptionPane.showMessageDialog(null, "Unban " + username + " failed");
+        }
+    }
+
+    private void backToMainMenuBtnActionPerformed(java.awt.event.ActionEvent evt) {
+        // TODO add your handling code here:
+        this.dispose();
+        new MainMenu().setVisible(true);
+    }
+
     private void searchButtonActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
         clearTable();
@@ -216,6 +300,21 @@ public class SpamReports extends javax.swing.JFrame {
         }
         else{
             JOptionPane.showMessageDialog(null, "Ban " + username + " failed");
+        }
+    }
+
+
+
+    private void filterByTimeButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        // TODO add your handling code here:
+        clearTable();
+        Calendar dateFrom = dateChooserFrom.getSelectedDate();
+        Timestamp dateFromTimestamp = new Timestamp(dateFrom.getTimeInMillis());
+        Calendar dateTo = dateChooserTo.getSelectedDate();
+        Timestamp dateToTimestamp = new Timestamp(dateTo.getTimeInMillis());
+        ArrayList<Spam> spamList = userService.filterSpamByTime(dateFromTimestamp, dateToTimestamp);
+        for (Spam spam: spamList){
+            addRow(spam.getUserName(), spam.getSpammerName(), spam.getTimeSpam());
         }
     }
 
@@ -260,11 +359,15 @@ public class SpamReports extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify
-    private UserService userService;
+    private javax.swing.JLabel From;
+    private javax.swing.JLabel To;
     private javax.swing.JButton backToMainMenuBtn;
     private javax.swing.JButton banBtn;
     private javax.swing.JLabel banUserTitle;
     private javax.swing.JTextField bannedUsernameInput;
+    private datechooser.beans.DateChooserCombo dateChooserFrom;
+    private datechooser.beans.DateChooserCombo dateChooserTo;
+    private javax.swing.JButton filterByTimeButton;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField nameToSearch;
     private javax.swing.JButton searchButton;
@@ -272,6 +375,9 @@ public class SpamReports extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> sortModeCombobox;
     private javax.swing.JTable tableOfSpamTicket;
     private javax.swing.JLabel title;
+    private javax.swing.JButton unbanBtn;
+    private javax.swing.JLabel unbanUserTitle;
+    private javax.swing.JTextField unbannedUsernameInput;
     // End of variables declaration
 }
 

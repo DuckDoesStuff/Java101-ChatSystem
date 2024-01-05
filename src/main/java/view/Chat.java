@@ -172,9 +172,11 @@ public class Chat extends JFrame {
                                 System.out.println(mainChatID);
                             }
                             else {
-                                mainChatID = -1;
+                                mainChatID = clientModule.getChatID(mainChatName);
                             }
-                            System.out.println(selectedOne.id);
+                            System.out.println(mainChatID);
+
+                            //System.out.println(selectedOne.id);
                             displayRightSide(selectedOne.id);
                             displayChatName(selectedOne.name);
                         }
@@ -241,8 +243,10 @@ public class Chat extends JFrame {
                             System.out.println("Main chat ID change to");
                             System.out.println(mainChatID);
                         } else {
-                            mainChatID = -1;
+                            mainChatID = clientModule.getChatID(mainChatName);
                         }
+                        System.out.println(mainChatID);
+
                         System.out.println(selectedOne.id);
                         displayRightSide(selectedOne.id);
                         displayChatName(selectedOne.name);
@@ -436,8 +440,10 @@ public class Chat extends JFrame {
                                     System.out.println("Main chat ID change to");
                                     System.out.println(mainChatID);
                                 } else {
-                                    mainChatID = -1;
+                                    mainChatID = clientModule.getChatID(mainChatName);
                                 }
+                                System.out.println(mainChatID);
+
                                 System.out.println(selectedOne.id);
                                 displayRightSide(selectedOne.id);
                                 displayChatName(selectedOne.name);
@@ -511,8 +517,9 @@ public class Chat extends JFrame {
                                         System.out.println("Main chat ID change to");
                                         System.out.println(mainChatID);
                                     } else {
-                                        mainChatID = -1;
+                                        mainChatID = clientModule.getChatID(mainChatName);
                                     }
+                                    System.out.println(mainChatID);
                                     System.out.println(selectedOne.id);
                                     displayRightSide(selectedOne.id);
                                     displayChatName(selectedOne.name);
@@ -879,6 +886,24 @@ public class Chat extends JFrame {
             deleteHst_btn = new JButton("Delete History");
             deleteHst_btn.setPreferredSize(new Dimension(195, 50));
             deleteHst_btn.setBackground(new Color(150, 199, 202));
+            deleteHst_btn.addActionListener(deleteHis ->{
+                if (mainChatType == 1){
+                    JOptionPane.showMessageDialog(this, "Cannot delete history of a group chat");
+                } else {
+                    String confirm = JOptionPane.showInputDialog(this, "Are you sure you want to delete history of this chat? (Y/N)");
+                    if (confirm == null || confirm.equals("N") || confirm.equals("n")  || confirm.isEmpty()){
+                        JOptionPane.showMessageDialog(this, "Cancelled");
+                    } else if (confirm.equals("Y") || confirm.equals("y")){
+                        System.out.println("Deleting history");
+                        boolean result = clientModule.deleteChatHistory(mainChatID);
+                        if (result){
+                            JOptionPane.showMessageDialog(this, "Successfully deleted");
+                        } else {
+                            JOptionPane.showMessageDialog(this, "Failed to delete");
+                        }
+                    }
+                }
+            });
             buttons_field.add(deleteHst_btn);
 
             newGroup_btn = new JButton("New Group Chat");
@@ -971,6 +996,28 @@ public class Chat extends JFrame {
                         JOptionPane.showMessageDialog(this, "Successfully added");
                     } else {
                         JOptionPane.showMessageDialog(this, "Failed to add this person to group");
+                    }
+                }
+            });
+
+            deletePerson_btn = new JButton("Delete person");
+            deletePerson_btn.setPreferredSize(new Dimension(195, 50));
+            deletePerson_btn.setBackground(new Color(150, 199, 202));
+            buttons_field.add(deletePerson_btn);
+            deletePerson_btn.addActionListener(deletemember -> {
+                if (!clientModule.checkAdmin(mainChatID)){
+                    JOptionPane.showMessageDialog(this, "You don't have permission to delete person from this group");
+                } else {
+                    String userToDelete = JOptionPane.showInputDialog(this, "Enter the username to be deleted");
+                    if (clientModule.getUsername().equals(userToDelete)){
+                        JOptionPane.showMessageDialog(this, "Cannot delete yourself");
+                    } else {
+                        boolean result = clientModule.deleteUserFromGroup(userToDelete, mainChatID);
+                        if (result){
+                            JOptionPane.showMessageDialog(this, "Successfully deleted");
+                        } else {
+                            JOptionPane.showMessageDialog(this, "Failed to delete this person from group");
+                        }
                     }
                 }
             });

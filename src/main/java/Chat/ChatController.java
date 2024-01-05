@@ -36,6 +36,10 @@ public class ChatController {
         return chatService.checkIsAdmin(userService.getUserIDFromUsername(username), chatID);
     }
 
+    public boolean deleteChatHistory(int chatID){
+        return messageService.deleteChatHistory(chatID);
+    }
+
     public boolean setUserID(int userid){
         this.userid = userid;
         return true;
@@ -127,5 +131,26 @@ public class ChatController {
 
     public ArrayList<ChatModel> getAllGroupChat(){
         return chatService.getAllGroupChat(userid);
+    }
+
+    public void deleteChat(String username, String s) {
+        int receiverID = userService.getUserIDFromUsername(s);
+        ChatModel chat = chatService.findChat(userid, receiverID);
+        messageService.deleteChatHistory(chat.getChatID());
+        chatService.deleteChat(chat.getChatID());
+        chatMemberService.deleteChatMember(receiverID,chat.getChatID());
+        chatMemberService.deleteChatMember(userid,chat.getChatID());
+
+    }
+
+    public int findChatID(String username){
+        int receiverID = userService.getUserIDFromUsername(username);
+        ChatModel chat = chatService.findChat(userid, receiverID);
+        return chat.getChatID();
+    }
+
+    public boolean deleteGroupMember(String userToDelete, int mainChatID) {
+        int userID = userService.getUserIDFromUsername(userToDelete);
+        return chatMemberService.deleteChatMember(userID, mainChatID);
     }
 }

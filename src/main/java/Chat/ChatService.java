@@ -116,7 +116,7 @@ public class ChatService {
     public ChatModel findChat(int senderID, int receiverID) {
         try {
             // Error here
-            String sql = "SELECT * FROM chat WHERE chatID IN ((SELECT chatID FROM chatmember WHERE userID = ?) INTERSECT  (SELECT chatID FROM chatmember WHERE userID = ?))";
+            String sql = "SELECT * FROM chat WHERE chatID IN ((SELECT chatID FROM chatmember WHERE userID = ?) INTERSECT  (SELECT chatID FROM chatmember WHERE userID = ?)) AND isGroup = false";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, senderID);
             stmt.setInt(2, receiverID);
@@ -160,6 +160,19 @@ public class ChatService {
             int row = ppstmt.executeUpdate();
             return row != 0;
         } catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteChat(int chatID) {
+        try {
+            String sql = "DELETE FROM chat WHERE chatID = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, chatID);
+            stmt.executeUpdate();
+            conn.commit();
+        } catch (Exception e) {
+            System.out.println("Error deleting chat");
             throw new RuntimeException(e);
         }
     }

@@ -45,4 +45,20 @@ public class ChatMemberService {
             throw new RuntimeException(e);
         }
     }
+
+    public boolean deleteChatMember(int userIDFromUsername, int userIDFromUsername1) {
+        try {
+            String sql = "DELETE FROM chatmember WHERE userID = ? AND chatID = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userIDFromUsername);
+            stmt.setInt(2, userIDFromUsername1);
+            int rows = stmt.executeUpdate();
+            conn.commit();
+            return rows != 0;
+        } catch (Exception e) {
+            System.out.println("Error deleting chat member");
+            throw new RuntimeException(e);
+        }
+
+    }
 }

@@ -261,7 +261,7 @@ class ClientHandler implements Runnable {
                     result.content.add(Integer.toString(group.getChatID()));
                 }
                 sendPackageData(result);
-            }else if (packageData.content.getFirst().equals("/grouphistory")) {
+            } else if (packageData.content.getFirst().equals("/grouphistory")) {
                 String groupName = packageData.content.get(1);
                 ArrayList<MessageModel> history = chatController.getGroupMessageHistory(groupName);
                 PackageDataStructure result = new PackageDataStructure("");
@@ -270,6 +270,20 @@ class ClientHandler implements Runnable {
                     result.content.add(msg);
                 }
                 sendPackageData(result);
+            } else if (packageData.content.getFirst().equals("/deletechathistory")){
+                System.out.println("Receive delete chat history request");
+                int chatid = Integer.parseInt(packageData.content.get(1));
+                boolean result = chatController.deleteChatHistory(chatid);
+
+                System.out.println("Result is: " + result);
+                if (result){
+                    PackageDataStructure pd = new PackageDataStructure("true");
+                    sendPackageData(pd);
+                }
+                else {
+                    PackageDataStructure pd = new PackageDataStructure("false");
+                    sendPackageData(pd);
+                }
             } else if (packageData.content.getFirst().equals("/checkisadmin")) {
                 int mainChatID = Integer.parseInt(packageData.content.get(1));
                 boolean result = chatController.checkGroupAdmin(username, mainChatID);
@@ -281,7 +295,22 @@ class ClientHandler implements Runnable {
                     PackageDataStructure pd = new PackageDataStructure("false");
                     sendPackageData(pd);
                 }
-            } else if (packageData.content.getFirst().equals("/addusertogroup")) {
+            } else if (packageData.content.getFirst().equals("/deleteuserfromgroup")){
+                String userToDelete = packageData.content.get(1);
+                int mainChatID = Integer.parseInt(packageData.content.get(2));
+                boolean result = chatController.deleteGroupMember(userToDelete, mainChatID);
+                if (result){
+                    PackageDataStructure pd = new PackageDataStructure("true");
+                    sendPackageData(pd);
+                }
+                else {
+                    PackageDataStructure pd = new PackageDataStructure("false");
+                    sendPackageData(pd);
+                }
+
+            }
+
+            else if (packageData.content.getFirst().equals("/addusertogroup")) {
                 String userToAdd = packageData.content.get(1);
                 int mainChatID = Integer.parseInt(packageData.content.get(2));
                 boolean result = chatController.addGroupMember(userToAdd, mainChatID);
@@ -327,6 +356,7 @@ class ClientHandler implements Runnable {
                 PackageDataStructure resultPd = new PackageDataStructure(
                         friendService.acceptRequest(packageData.content.get(1), username)
                 );
+                chatController.createChat(packageData.content.get(1), false);
                 sendPackageData(resultPd);
             } else if (packageData.content.getFirst().equals("/declinefriend")) {
                 PackageDataStructure resultPd = new PackageDataStructure(
@@ -400,6 +430,7 @@ class ClientHandler implements Runnable {
                 PackageDataStructure resultPd = new PackageDataStructure(
                         friendService.removeFriend(username, packageData.content.get(1))
                 );
+                chatController.deleteChat(username, packageData.content.get(1));
                 sendPackageData(resultPd);
             } else if (packageData.content.getFirst().equals("/finduserbyname")){
                 ArrayList<String> usersMatch;
@@ -418,7 +449,14 @@ class ClientHandler implements Runnable {
                 boolean blockStatus = chatController.blockStatus(username);
                 result.content.add(Boolean.toString(blockStatus));
                 sendPackageData(result);
-            } else if (packageData.content.getFirst().equals("/blockuser")){
+            } else if (packageData.content.getFirst().equals("/getchatid")) {
+                String username = packageData.content.get(1);
+                int chatID = chatController.findChatID(username);
+                PackageDataStructure result = new PackageDataStructure("");
+                result.content.add(Integer.toString(chatID));
+                sendPackageData(result);
+            }
+            else if (packageData.content.getFirst().equals("/blockuser")){
                 String username = packageData.content.get(1);
                 boolean result = chatController.blockUser(username);
                 if (result) {

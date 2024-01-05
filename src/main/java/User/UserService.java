@@ -471,14 +471,14 @@ public class UserService {
         }
     }
 
-    public boolean unblockByAdmin(int userID) {
+    public boolean unblockByAdmin(String username) {
         try {
-            String sql = "UPDATE users " + "SET banned = false WHERE userID LIKE ?";
+            String sql = "UPDATE users " + "SET banned = false WHERE username = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, userID);
-            stmt.executeUpdate();
+            stmt.setString(1, username);
+            int rows = stmt.executeUpdate();
             conn.commit();
-            return true;
+            return rows != 0;
         } catch (Exception e) {
             System.out.println("Error banned user");
             return false;
@@ -687,6 +687,12 @@ public class UserService {
         ArrayList<UserModel> newUsers = new ArrayList<>();
         try {
             String sql = "SELECT * FROM users WHERE first_joined BETWEEN ? AND ?";
+            if (isByName){
+                sql += " ORDER BY username ASC";
+            }
+            else {
+                sql += " ORDER BY username DESC ";
+            }
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setTimestamp(1, new Timestamp(dateStart.getTime()));
             stmt.setTimestamp(2, new Timestamp(dateEnd.getTime()));
@@ -706,12 +712,7 @@ public class UserService {
                 newUsers.add(user);
             }
 
-            if (isByName) {
-                Collections.sort(newUsers, Comparator.comparing(UserModel::getFirstName));
-            }
-            else{
-                Collections.sort(newUsers, Comparator.comparing(UserModel::getFirst_joined));
-            }
+
         } catch (Exception e) {
             System.out.println("Error finding user");
             throw new RuntimeException(e);
@@ -725,12 +726,12 @@ public class UserService {
         try {
             String sql = "SELECT * FROM users " +
                     "WHERE (first_joined BETWEEN ? AND ?) " +
-                    "AND (LOWER(first_name) LIKE ? OR LOWER(last_name) LIKE ?)";
+                    "AND username LIKE ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setTimestamp(1, new Timestamp(dateStart.getTime()));
             stmt.setTimestamp(2, new Timestamp(dateEnd.getTime()));
-            stmt.setString(3, "%" + name.toLowerCase() + "%");
-            stmt.setString(4, "%" + name.toLowerCase() + "%");
+            stmt.setString(3, "%" + name + "%");
+            //stmt.setString(4, "%" + name.toLowerCase() + "%");
             ResultSet rs = stmt.executeQuery();
             while(rs.next()) {
                 int userID = rs.getInt("userID");
@@ -1184,58 +1185,28 @@ public class UserService {
         return spamList;
     }
     //TODO
-    public ArrayList<Spam> sortSpamByTime() {
+    public ArrayList<Spam> filterSpamByTime(Timestamp from, Timestamp to){
         ArrayList<Spam> spamList = new ArrayList<Spam>();
         try {
-            String sql = "SELECT s.userID, s.spammerID, s.timeSpam, u.username, u2.username * FROM spammer s " +
+            String sql = "SELECT s.userID as userID, s.spammerID as spammerID, s.time as time, u.username as username, u2.username as spammer FROM spammer s " +
                     "INNER JOIN users u ON s.userID = u.userID " +
-                    "INNER JOIN users u2 ON s.spammerID = u2.userID";
+                    "INNER JOIN users u2 ON s.spammerID = u2.userID " +
+                    "WHERE s.time BETWEEN ? AND ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setTimestamp(1, from);
+            stmt.setTimestamp(2, to);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                int userID = rs.getInt("s.userID");
-                int spammerID = rs.getInt("s.spammerID");
-                String userName = rs.getString("u.username");
-                String spammerName = rs.getString("u2.username");
-                Timestamp timeSpam = rs.getTimestamp("timeSpam");
+                int userID = rs.getInt("userID");
+                int spammerID = rs.getInt("spammerID");
+                String userName = rs.getString("username");
+                String spammerName = rs.getString("spammer");
+                Timestamp timeSpam = rs.getTimestamp("time");
                 Spam temp = new Spam(userID, spammerID, userName, spammerName, timeSpam);
                 spamList.add(temp);
             }
+        } catch (SQLException e){
 
-//            for (int i = 0; i < spamList.size(); i++) {
-//                sql = ("SELECT * FROM users WHERE userID LIKE ?");
-//                stmt = conn.prepareStatement(sql);
-//                stmt.setInt(1, spamList.get(i).userID);
-//                rs = stmt.executeQuery();
-//                while (rs.next()) {
-//                    spamList.get(i).userName = rs.getString("username");
-//                }
-//            }
-//
-//            for (int i = 0; i < spamList.size(); i++) {
-//                sql = ("SELECT * FROM users WHERE userID LIKE ?");
-//                stmt = conn.prepareStatement(sql);
-//                stmt.setInt(1, spamList.get(i).spammerID);
-//                rs = stmt.executeQuery();
-//                while (rs.next()) {
-//                    spamList.get(i).spammerName = rs.getString("username");
-//                }
-//            }
-
-            Spam temp;
-            for (int i = 0; i < spamList.size(); i++) {
-                for (int j = i + 1; j < spamList.size(); j++) {
-                    Timestamp time1 = spamList.get(i).timeSpam;
-                    Timestamp time2 = spamList.get(j).timeSpam;
-                    if (time1.compareTo(time2) > 0) {
-                        temp = spamList.get(i);
-                        spamList.set(i, spamList.get(j));
-                        spamList.set(j, temp);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
         return spamList;
     }

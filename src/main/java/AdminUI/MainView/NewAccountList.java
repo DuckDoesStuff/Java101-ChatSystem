@@ -1,11 +1,25 @@
 package AdminUI.MainView;
 
+import User.UserModel;
+import User.UserService;
+
+import javax.swing.table.DefaultTableModel;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Calendar;
+
 public class NewAccountList extends javax.swing.JFrame {
 
+    private UserService userService;
     /**
      * Creates new form NewAccountList
      */
-    public NewAccountList() {
+    public NewAccountList(Connection conn) {
+        this.userService = new UserService(conn);
         initComponents();
     }
 
@@ -25,6 +39,11 @@ public class NewAccountList extends javax.swing.JFrame {
         backToMainMenuBtn = new javax.swing.JButton();
         searchButton = new javax.swing.JButton();
         sortModeCombobox = new javax.swing.JComboBox<>();
+        dateChooserFrom = new datechooser.beans.DateChooserCombo();
+        dateChooserTo = new datechooser.beans.DateChooserCombo();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        findBtn = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -33,20 +52,17 @@ public class NewAccountList extends javax.swing.JFrame {
 
         tableOfNewRegistration.setModel(new javax.swing.table.DefaultTableModel(
                 new Object [][] {
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null}
+
                 },
                 new String [] {
-                        "Username", "Firstname", "Lastname"
+                        "Username", "Firstname", "Lastname", "Date of registration"
                 }
         ) {
             Class[] types = new Class [] {
-                    java.lang.String.class, java.lang.String.class, java.lang.String.class
+                    java.lang.String.class, java.lang.String.class, java.lang.String.class, java.sql.Timestamp.class
             };
             boolean[] canEdit = new boolean [] {
-                    false, false, false
+                    false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -62,6 +78,7 @@ public class NewAccountList extends javax.swing.JFrame {
             tableOfNewRegistration.getColumnModel().getColumn(0).setResizable(false);
             tableOfNewRegistration.getColumnModel().getColumn(1).setResizable(false);
             tableOfNewRegistration.getColumnModel().getColumn(2).setResizable(false);
+            tableOfNewRegistration.getColumnModel().getColumn(3).setResizable(false);
         }
 
         searchBar.setText("Search...");
@@ -74,13 +91,42 @@ public class NewAccountList extends javax.swing.JFrame {
         backToMainMenuBtn.setText("Back To Main Menu");
 
         searchButton.setText("Search");
+        searchButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                searchButtonActionPerformed(evt);
+            }
 
-        sortModeCombobox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Name: A-Z", "Name: Z-A", "Creation Time: oldest to latest", "Creation Time: latest to oldest" }));
+        });
+
+        sortModeCombobox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Name: A-Z", "Name: Z-A"}));
         sortModeCombobox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 sortModeComboboxActionPerformed(evt);
             }
         });
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jLabel1.setText("From");
+
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jLabel2.setText("To");
+
+
+        dateChooserTo.addPropertyChangeListener("date", new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                System.out.println("Date changed");
+            }
+        }
+        );
+
+        findBtn.setText("Find registrations");
+        findBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                findBtnActionPerformed(evt);
+            }
+        }
+        );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -91,16 +137,33 @@ public class NewAccountList extends javax.swing.JFrame {
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addComponent(backToMainMenuBtn)
                                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 706, javax.swing.GroupLayout.PREFERRED_SIZE)
                                                 .addGroup(layout.createSequentialGroup()
-                                                        .addComponent(titleLabel)
-                                                        .addGap(46, 46, 46)
-                                                        .addComponent(searchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addGap(18, 18, 18)
-                                                        .addComponent(searchButton)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                        .addComponent(sortModeCombobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 706, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                                .addGroup(layout.createSequentialGroup()
+                                                                        .addComponent(titleLabel)
+                                                                        .addGap(46, 46, 46))
+                                                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                                                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)))
+                                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                                .addComponent(searchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addGroup(layout.createSequentialGroup()
+                                                                        .addComponent(dateChooserFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                                        .addComponent(jLabel2)))
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                                .addGroup(layout.createSequentialGroup()
+                                                                        .addComponent(searchButton)
+                                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                                        .addComponent(sortModeCombobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                                .addGroup(layout.createSequentialGroup()
+                                                                        .addComponent(dateChooserTo, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                                        .addComponent(findBtn)
+                                                                        .addGap(0, 0, Short.MAX_VALUE))))))
+                                .addContainerGap(12, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -111,9 +174,16 @@ public class NewAccountList extends javax.swing.JFrame {
                                         .addComponent(searchBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(searchButton)
                                         .addComponent(sortModeCombobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(dateChooserTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel2)
+                                        .addComponent(findBtn)
+                                        .addComponent(dateChooserFrom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel1))
+                                .addGap(18, 18, 18)
                                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 396, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 7, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(backToMainMenuBtn)
                                 .addContainerGap())
         );
@@ -125,8 +195,55 @@ public class NewAccountList extends javax.swing.JFrame {
         // TODO add your handling code here:
     }
 
+    private void searchButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        // TODO add your handling code here:
+        clearTable();
+        String search = searchBar.getText();
+        Calendar from = dateChooserFrom.getSelectedDate();
+        Calendar to = dateChooserTo.getSelectedDate();
+        Date fromTimestamp = new Date(from.getTimeInMillis());
+        Date toTimestamp = new Date(to.getTimeInMillis());
+        ArrayList<UserModel> result = userService.newUserByName(fromTimestamp, toTimestamp, search);
+        for (UserModel user : result){
+            addRow(user.getUsername(), user.getFirstName(), user.getLastName(), user.getFirst_joined());
+        }
+    }
+
+    private void findBtnActionPerformed(java.awt.event.ActionEvent evt) {
+        // TODO add your handling code here:
+        clearTable();
+        Calendar from = dateChooserFrom.getSelectedDate();
+        Calendar to = dateChooserTo.getSelectedDate();
+        Date fromTimestamp = new Date(from.getTimeInMillis());
+        Date toTimestamp = new Date(to.getTimeInMillis());
+        System.out.println(fromTimestamp);
+        System.out.println(toTimestamp);
+        String sortmode = sortModeCombobox.getSelectedItem().toString();
+        boolean sort = true;
+        if (sortmode.equals("Name: A-Z")){
+            sort = true;
+        }
+        else if (sortmode.equals("Name: Z-A")){
+            sort = false;
+        }
+        ArrayList<UserModel> result = userService.newUserWithSort(fromTimestamp, toTimestamp, sort);
+        for (UserModel user : result){
+            addRow(user.getUsername(), user.getFirstName(), user.getLastName(), user.getFirst_joined());
+        }
+    }
+
     private void sortModeComboboxActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
+    }
+
+    private void clearTable(){
+        DefaultTableModel model = (DefaultTableModel) tableOfNewRegistration.getModel();
+        model.setRowCount(0);
+    }
+
+    private void addRow(String username, String firstname, String lastname, Timestamp time){
+        DefaultTableModel model = (DefaultTableModel) tableOfNewRegistration.getModel();
+        model.addRow(new Object[]{username, firstname, lastname, time});
     }
 
     /**
@@ -162,11 +279,17 @@ public class NewAccountList extends javax.swing.JFrame {
 
     // Variables declaration - do not modify
     private javax.swing.JButton backToMainMenuBtn;
+    private datechooser.beans.DateChooserCombo dateChooserFrom;
+    private datechooser.beans.DateChooserCombo dateChooserTo;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField searchBar;
     private javax.swing.JButton searchButton;
     private javax.swing.JComboBox<String> sortModeCombobox;
     private javax.swing.JTable tableOfNewRegistration;
     private javax.swing.JLabel titleLabel;
+    private javax.swing.JButton findBtn;
+
     // End of variables declaration
 }

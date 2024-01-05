@@ -54,4 +54,17 @@ public class MessageService {
         this.conn = conn;
     }
 
+    public boolean deleteChatHistory(int chatID) {
+        try {
+            String sql = "DELETE FROM message WHERE chatID = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, chatID);
+            stmt.executeUpdate();
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error deleting chat history");
+            throw new RuntimeException(e);
+        }
+    }
 }
