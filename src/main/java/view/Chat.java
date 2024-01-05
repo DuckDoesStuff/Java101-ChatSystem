@@ -119,8 +119,8 @@ public class Chat extends JFrame {
         topPart.setBackground(new Color(227, 235, 240));
         leftArea.add(topPart);
         //title
-        JLabel title = new JLabel("Chats");
-        title.setFont(new Font("Arial", Font.BOLD, 30));
+        JLabel title = new JLabel(clientModule.getUsername());
+        title.setFont(new Font("Arial", Font.BOLD, 20));
         title.setBounds(10, 0, 200, 60);
         topPart.add(title);
         //find user
@@ -169,7 +169,7 @@ public class Chat extends JFrame {
                                 System.out.println(mainChatID);
                             }
                             else {
-                                mainChatID = clientModule.getChatID(mainChatName);
+                                //mainChatID = clientModule.getChatID(mainChatName);
                             }
                             System.out.println(mainChatID);
 

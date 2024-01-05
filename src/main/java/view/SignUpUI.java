@@ -203,7 +203,8 @@ public class SignUpUI extends JFrame {
         String email = email_jtf.getText();
         String pw = pw_jtf.getText();
 
-        if (!Objects.equals(userN, "") && !Objects.equals(pw, "") && !Objects.equals(email, "")){
+        if (!Objects.equals(userN, "") && !Objects.equals(pw, "") && !Objects.equals(email, "") && dob != null &&
+                !Objects.equals(firstN, "") && !Objects.equals(lastN, "") && !Objects.equals(address, "")) {
             String result = clientModule.registerUser(userN, email, pw, firstN, lastN, address, dob, gender);
             if (result.equals("success")) {
                 JOptionPane.showMessageDialog(null, "Register successfully");
@@ -212,6 +213,8 @@ public class SignUpUI extends JFrame {
             } else {
                 JOptionPane.showMessageDialog(null, result);
             }
+        } else {
+            JOptionPane.showMessageDialog(null, "Please fill all the fields");
         }
     }
 

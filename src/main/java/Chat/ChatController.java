@@ -139,10 +139,9 @@ public class ChatController {
         int receiverID = userService.getUserIDFromUsername(s);
         ChatModel chat = chatService.findChat(userid, receiverID);
         messageService.deleteChatHistory(chat.getChatID());
-        chatService.deleteChat(chat.getChatID());
         chatMemberService.deleteChatMember(receiverID,chat.getChatID());
         chatMemberService.deleteChatMember(userid,chat.getChatID());
-
+        chatService.deleteChat(chat.getChatID());
     }
 
     public int findChatID(String username){

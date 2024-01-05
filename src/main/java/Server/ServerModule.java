@@ -434,7 +434,7 @@ class ClientHandler implements Runnable {
             } else if (packageData.content.getFirst().equals("/finduserbyname")){
                 ArrayList<String> usersMatch;
                 String name = packageData.content.get(1);
-                usersMatch = userService.findUserWithUsername(name);
+                usersMatch = userService.findUserWithUsername(name, username);
                 PackageDataStructure result = new PackageDataStructure("");
                 if (usersMatch == null || usersMatch.isEmpty()) {
                     result.content.add("No users found");

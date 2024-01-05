@@ -496,7 +496,7 @@ public class ClientModule implements Runnable {
 
     public String removeFriend(String friendUsername) {
         String[] pdContent = new String[2];
-        pdContent[0] = "/acceptfriend";
+        pdContent[0] = "/unfriend";
         pdContent[1] = friendUsername;
         PackageDataStructure friendUsernamePD = new PackageDataStructure(
                 pdContent

@@ -144,13 +144,14 @@ public class UserService {
         }
     }
 
-    public ArrayList<String> findUserWithUsername(String userNameToFind) {
+    public ArrayList<String> findUserWithUsername(String userNameToFind, String userWhoFind) {
         ArrayList<String> userList = new ArrayList<>();
         try {
-            String sql = "SELECT username FROM users WHERE username LIKE ?";
+            String sql = "SELECT username FROM users WHERE username LIKE ? AND username != ?";
             String keyword = "%" + userNameToFind + "%";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, keyword);
+            stmt.setString(2, userWhoFind);
             ResultSet rs = stmt.executeQuery();
             if(!rs.next()) {
                 System.out.println("No such user");
