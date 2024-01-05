@@ -161,6 +161,8 @@ public class MainMenu extends javax.swing.JFrame {
 
     private void spamManagerButtonActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
+        dispose();
+        new SpamReports(database.getConnection()).setVisible(true);
     }
 
     private void loginsManagerButtonActionPerformed(java.awt.event.ActionEvent evt) {

@@ -21,4 +21,16 @@ public class Spam {
         this.spammerName = spammerName;
         this.timeSpam = timeSpam;
     }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public String getSpammerName() {
+        return spammerName;
+    }
+
+    public Timestamp getTimeSpam() {
+        return timeSpam;
+    }
 }

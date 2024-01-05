@@ -773,20 +773,29 @@ public class UserService {
     }
 
     //TODO
-    public ArrayList<Spam> getAllSpam() {
+    public ArrayList<Spam> getAllSpam(String sortBy) {
         ArrayList<Spam> spamList = new ArrayList<Spam>();
         try {
-            String sql = "SELECT s.userID, s.spammerID, s.timeSpam, u.username, u2.username * FROM spammer s " +
+            String sql = "SELECT s.userID as userID, s.spammerID as spammerID, s.time as time, u.username as username, u2.username as usernamespammer FROM spammer s " +
                     "INNER JOIN users u ON s.userID = u.userID " +
                     "INNER JOIN users u2 ON s.spammerID = u2.userID";
+            if (sortBy.equals("nameasc")){
+                sql += " ORDER BY username ASC";
+            } else if (sortBy.equals("namedes")){
+                sql += " ORDER BY username DESC";
+            } else if (sortBy.equals("timeasc")){
+                sql += " ORDER BY time ASC";
+            } else if (sortBy.equals("timedes")){
+                sql += " ORDER BY time DESC";
+            }
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                int userID = rs.getInt("s.userID");
-                int spammerID = rs.getInt("s.spammerID");
-                String userName = rs.getString("u.username");
-                String spammerName = rs.getString("u2.username");
-                Timestamp timeSpam = rs.getTimestamp("timeSpam");
+                int userID = rs.getInt("userID");
+                int spammerID = rs.getInt("spammerID");
+                String userName = rs.getString("username");
+                String spammerName = rs.getString("usernamespammer");
+                Timestamp timeSpam = rs.getTimestamp("time");
                 Spam temp = new Spam(userID, spammerID, userName, spammerName, timeSpam);
                 spamList.add(temp);
             }
