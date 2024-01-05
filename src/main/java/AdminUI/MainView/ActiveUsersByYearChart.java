@@ -1,53 +1,78 @@
 package AdminUI.MainView;
 
-import Database.DB;
-import org.jfree.chart.*;
-import org.jfree.chart.axis.*;
-import org.jfree.chart.plot.*;
-import org.jfree.chart.renderer.category.*;
-import org.jfree.data.category.*;
+        import Database.DB;
+        import org.jfree.chart.*;
+        import org.jfree.chart.axis.*;
+        import org.jfree.chart.plot.*;
+        import org.jfree.chart.renderer.category.*;
+        import org.jfree.data.category.*;
 
-import javax.swing.*;
-import java.awt.*;
-import java.sql.Connection;
+        import javax.swing.*;
+        import java.awt.*;
+        import java.awt.event.ActionEvent;
+        import java.awt.event.ActionListener;
+        import java.sql.Connection;
 
-import User.UserService;
+        import User.UserService;
 
 public class ActiveUsersByYearChart extends JFrame {
-    int year;
     UserService userService;
 
-    public ActiveUsersByYearChart(int year, Connection conn) {
-        this.year = year;
+    public ActiveUsersByYearChart(Connection conn) {
         userService = new UserService(conn);
-        setTitle("Biểu đồ số lượng người hoạt động theo năm " + year);
+        setTitle("Chart of number of active people by year");
         setSize(800, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
         setVisible(true);
 
-        CategoryDataset dataset = createDataset();
-        JFreeChart chart = createChart(dataset);
+        JTextField yearTextField = new JTextField(10);
+        JButton drawChart = new JButton("View Chart");
+        drawChart.setBackground(new Color(117, 184, 190));
+        JButton back = new JButton("Back to menu");
+        drawChart.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String yearString = yearTextField.getText();
+                try {
+                    int year = Integer.parseInt(yearString);
+                    CategoryDataset dataset = createDataset(year);
+                    JFreeChart chart = createChart(dataset, year);
+                    ChartPanel chartPanel = new ChartPanel(chart);
+                    chartPanel.setPreferredSize(new Dimension(800, 600));
+                    setContentPane(chartPanel);
+                    pack();
+                    repaint();
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(null, "Please enter a valid year.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        JPanel inputPanel = new JPanel();
+        inputPanel.add(new JLabel("Enter year: "));
+        inputPanel.add(yearTextField);
+        inputPanel.add(drawChart);
+        inputPanel.add(back);
 
-        ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new Dimension(560, 370));
-        setContentPane(chartPanel);
+        // Đặt JPanel vào JFrame
+        add(inputPanel, BorderLayout.NORTH);
     }
 
-    private CategoryDataset createDataset() {
+    private CategoryDataset createDataset(int year) {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        int [] numberOfActiveUserByYear = userService.numberOfActiveUserByYear(year);
+        int[] numberOfActiveUserByYear = userService.numberOfActiveUserByYear(year);
         for (int i = 0; i < 12; i++){
-            dataset.addValue(numberOfActiveUserByYear[i], "Số lượng", "Tháng " + (i + 1));
+            dataset.addValue(numberOfActiveUserByYear[i], "Quantity", "Month " + (i + 1));
         }
         return dataset;
     }
 
-    private JFreeChart createChart(CategoryDataset dataset) {
+    private JFreeChart createChart(CategoryDataset dataset, int year) {
         JFreeChart chart = ChartFactory.createBarChart(
-                "Biểu đồ số lượng người hoạt động theo năm " + year,
-                "Tháng",
-                "Số lượng người hoạt động",
+                "Chart of number of active people by year " + year,
+                "Month",
+                "Number of active people",
                 dataset,
                 PlotOrientation.VERTICAL,
                 true,
@@ -72,7 +97,7 @@ public class ActiveUsersByYearChart extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             DB db = new DB();
-            new ActiveUsersByYearChart(2023,db.getConnection());
+            new ActiveUsersByYearChart(db.getConnection());
         });
     }
 }

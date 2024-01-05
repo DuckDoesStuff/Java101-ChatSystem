@@ -9,45 +9,68 @@ import org.jfree.data.category.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.Connection;
 
 import User.UserService;
 
 public class NewUserByYearChart extends JFrame {
-    int year;
     UserService userService;
 
-    public NewUserByYearChart(int year, Connection conn) {
-        this.year = year;
+    public NewUserByYearChart(Connection conn) {
         userService = new UserService(conn);
-        setTitle("Biểu đồ số lượng người đăng ký mới theo năm " + year);
+        setTitle("Shows graph of the number of new register by year");
         setSize(800, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
         setVisible(true);
 
-        CategoryDataset dataset = createDataset();
-        JFreeChart chart = createChart(dataset);
-
-        ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new Dimension(560, 370));
-        setContentPane(chartPanel);
+        JTextField yearTextField = new JTextField(10);
+        JButton drawChart = new JButton("View Chart");
+        drawChart.setBackground(new Color(117, 184, 190));
+        JButton back = new JButton("Back to menu");
+        drawChart.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String yearString = yearTextField.getText();
+                try {
+                    int year = Integer.parseInt(yearString);
+                    CategoryDataset dataset = createDataset(year);
+                    JFreeChart chart = createChart(dataset, year);
+                    ChartPanel chartPanel = new ChartPanel(chart);
+                    chartPanel.setPreferredSize(new Dimension(800, 600));
+                    setContentPane(chartPanel);
+                    pack();
+                    repaint();
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(null, "Please enter a valid year.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        JPanel inputPanel = new JPanel();
+        inputPanel.add(new JLabel("Enter year: "));
+        inputPanel.add(yearTextField);
+        inputPanel.add(drawChart);
+        inputPanel.add(back);
+        add(inputPanel, BorderLayout.NORTH);
     }
 
-    private CategoryDataset createDataset() {
+    private CategoryDataset createDataset(int year) {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         int[] numberOfNewUserByYear = userService.numberOfNewUserByYear(year);
         for (int i = 0; i < 12; i++){
-            dataset.addValue(numberOfNewUserByYear[i], "Số lượng", "Tháng " + (i + 1));
+            dataset.addValue(numberOfNewUserByYear[i], "Số lượng", "Month " + (i + 1));
         }
         return dataset;
     }
 
-    private JFreeChart createChart(CategoryDataset dataset) {
+    private JFreeChart createChart(CategoryDataset dataset, int year) {
         JFreeChart chart = ChartFactory.createBarChart(
-                "Biểu đồ số lượng người đăng ký mới theo năm " + year,
-                "Tháng",
-                "Số lượng người đăng kí mới",
+                "Chart of new registers by year " + year,
+                "Month",
+                "Number of new registers",
                 dataset,
                 PlotOrientation.VERTICAL,
                 true,
@@ -72,7 +95,7 @@ public class NewUserByYearChart extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             DB db = new DB();
-            new NewUserByYearChart(2023, db.getConnection());
+            new NewUserByYearChart(db.getConnection());
         });
     }
 }

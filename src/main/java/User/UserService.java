@@ -1397,12 +1397,13 @@ public class UserService {
     public int [] numberOfActiveUserByYear(int year){
         int [] numberOfNewUser = new int [12];
         try {
+
             String sql =
-                    "SELECT EXTRACT(MONTH FROM first_joined) AS month, COUNT(*) AS count " +
-                            "FROM users " +
-                            "WHERE EXTRACT(YEAR FROM first_joined) = ? " +
+                    "SELECT EXTRACT(MONTH FROM timeLog) AS month, COUNT(DISTINCT userid) AS count " +
+                            "FROM loginhistory " +
+                            "WHERE EXTRACT(YEAR FROM timeLog) = ? " +
                             "GROUP BY month " +
-                            "ORDER BY month";
+                            "ORDER BY month";;
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, year);
             ResultSet rs = stmt.executeQuery();
