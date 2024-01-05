@@ -46,7 +46,6 @@ public class ChatController {
             chatMemberService.addChatMember(newChat.getChatID(), userid);
             chatMemberService.addChatMember(newChat.getChatID(), userService.getUserIDFromUsername(username));
             return newChat.getChatID();
-
         }
         else {
             ChatModel newChat = chatService.addChat(isGroup, userService.findUsernameWithUserID(userid) + ',' + username);

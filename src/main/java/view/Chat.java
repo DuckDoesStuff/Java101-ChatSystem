@@ -89,7 +89,7 @@ public class Chat extends JFrame {
 
 
     public Chat() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        clientModule = ClientModule.getInstance("localhost", 4000, 3000);
+        clientModule = ClientModule.getInstance("localhost", 1234, 5678);
         new Thread(new listenForMessage()).start();
         UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         setSize(1000, 740);

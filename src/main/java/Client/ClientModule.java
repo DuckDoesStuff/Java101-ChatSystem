@@ -416,6 +416,8 @@ public class ClientModule implements Runnable {
         createGroupPD.content.add(chatMember);
         sendPackageData(createGroupPD);
         System.out.println("Sent create group pd request");
+        PackageDataStructure createGroup = receivePackageData();
+        System.out.println(createGroup.content.getFirst());
     }
 
     public String sendFriendRequest(String friendUsername) {

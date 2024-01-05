@@ -58,6 +58,8 @@ public class ChatService {
             ppstmt.setInt(1, userid);
             ppstmt.setInt(2, chatid);
             int row = ppstmt.executeUpdate();
+            conn.commit();
+            System.out.println(row);
             return row != 0;
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -82,7 +84,7 @@ public class ChatService {
             return chats;
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+             throw new RuntimeException(e);
         }
     }
 

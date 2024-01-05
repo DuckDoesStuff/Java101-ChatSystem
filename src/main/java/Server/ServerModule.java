@@ -5,16 +5,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.sql.Connection;
-import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+
 import java.util.Objects;
 import java.util.Scanner;
 
 import Chat.ChatController;
 import Chat.ChatModel;
-import Chat.ChatService;
-import ChatMember.ChatMemberService;
+
 import DataStructure.PackageDataStructure;
 import DataStructure.UserInfo;
 import Database.DB;
@@ -247,7 +245,15 @@ class ClientHandler implements Runnable {
                 sendPackageData(pd);
             } else if (packageData.content.getFirst().equals("/creategroup")) {
                 int chatid = chatController.createChat(packageData.content.get(1), true);
-                chatController.addGroupAdmin(username, chatid);
+                System.out.println("Created group with id " + chatid);
+                System.out.println("Admin adding: " + username);
+                boolean result = chatController.addGroupAdmin(username, chatid);
+                System.out.println(result);
+                System.out.println("Done adding admin");
+                PackageDataStructure pd = new PackageDataStructure(
+                        (result ? "true" : "false")
+                );
+                sendPackageData(pd);
             } else if (packageData.content.getFirst().equals("/getgroupids")) {
                 ArrayList<ChatModel> allGroups = chatController.getAllGroupChat();
                 PackageDataStructure result = new PackageDataStructure("");

@@ -600,15 +600,26 @@ public class UserService {
         return userList;
     }
 
-    public ArrayList<GroupChat> getAllGroupChat() {
+    public ArrayList<GroupChat> getAllGroupChat(String sortBy) {
         ArrayList<GroupChat> groupList = new ArrayList<GroupChat>();
         try {
+            String sql = "SELECT * FROM Chat WHERE isGroup = true";
+            if (sortBy.equals("nameasc")){
+                sql += " ORDER BY name ASC";
+            } else if (sortBy.equals("namedes")){
+                sql += " ORDER BY name DESC";
+            } else if (sortBy.equals("timeasc")){
+                sql += " ORDER BY createdTime ASC";
+            } else if (sortBy.equals("timedes")){
+                sql += " ORDER BY createdTime DESC";
+            }
             Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM Chat WHERE isGroup = true");
+            ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
                 int chatID = rs.getInt("chatID");
                 String name = rs.getString("name");
-                GroupChat temp = new GroupChat(chatID, name);
+                Timestamp createdTime = rs.getTimestamp("createdTime");
+                GroupChat temp = new GroupChat(chatID, name, createdTime);
                 groupList.add(temp);
             }
         } catch (SQLException e) {
@@ -656,7 +667,9 @@ public class UserService {
             while (rs.next()) {
                 int chatID = rs.getInt("chatID");
                 String name = rs.getString("name");
-                GroupChat temp = new GroupChat(chatID, name);
+
+                Timestamp createdTime = rs.getTimestamp("createdTime");
+                GroupChat temp = new GroupChat(chatID, name, createdTime);
                 groupList.add(temp);
             }
         } catch (SQLException e) {
@@ -665,13 +678,21 @@ public class UserService {
         return groupList;
     }
 
-    public ArrayList<UserModel> MemberGroupChat(int chatID) {
+    public ArrayList<UserModel> MemberGroupChat(String groupName, Timestamp createdTime) {
         ArrayList<Integer> memberList = new ArrayList<Integer>();
         ArrayList<UserModel> members = new ArrayList<UserModel>();
         try {
-            String sql = "SELECT * FROM ChatMember WHERE chatID LIKE ?";
+            int chatID=-1;
+            String sqlchatID = "SELECT * FROM Chat WHERE name = ? AND createdTime = ?";
+            PreparedStatement stmtchatID = conn.prepareStatement(sqlchatID);
+            stmtchatID.setString(1, groupName);
+            stmtchatID.setTimestamp(2, createdTime);
+            ResultSet rschatID = stmtchatID.executeQuery();
+            if(rschatID.next())
+                chatID = rschatID.getInt("chatID");
+            String sql = "SELECT * FROM ChatMember WHERE chatID = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, "%" + chatID + "%");
+            stmt.setInt(1, chatID);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 int userID = rs.getInt("userID");
@@ -679,7 +700,7 @@ public class UserService {
             }
 
             for (int i = 0; i < memberList.size(); i++) {
-                sql = ("SELECT * FROM users WHERE userID LIKE ?");
+                sql = ("SELECT * FROM users WHERE userID = ?");
                 stmt = conn.prepareStatement(sql);
                 stmt.setInt(1, memberList.get(i));
                 rs = stmt.executeQuery();
@@ -704,13 +725,21 @@ public class UserService {
         return members;
     }
 
-    public ArrayList<UserModel> AdminGroupChat(int chatID) {
+    public ArrayList<UserModel> AdminGroupChat(String name, Timestamp createdTime) {
+        int chatID=-1;
         ArrayList<Integer> memberList = new ArrayList<Integer>();
         ArrayList<UserModel> members = new ArrayList<UserModel>();
         try {
-            String sql = "SELECT * FROM groupAdmin WHERE chatID LIKE ?";
+            String sqlchatID = "SELECT * FROM Chat WHERE name = ? AND createdTime = ?";
+            PreparedStatement stmtchatID = conn.prepareStatement(sqlchatID);
+            stmtchatID.setString(1, name);
+            stmtchatID.setTimestamp(2, createdTime);
+            ResultSet rschatID = stmtchatID.executeQuery();
+            if(rschatID.next())
+                chatID = rschatID.getInt("chatID");
+            String sql = "SELECT * FROM groupAdmin WHERE chatID = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, "%" + chatID + "%");
+            stmt.setInt(1, chatID);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 int userID = rs.getInt("userID");
@@ -718,7 +747,7 @@ public class UserService {
             }
 
             for (int i = 0; i < memberList.size(); i++) {
-                sql = ("SELECT * FROM users WHERE userID LIKE ?");
+                sql = ("SELECT * FROM users WHERE userID = ?");
                 stmt = conn.prepareStatement(sql);
                 stmt.setInt(1, memberList.get(i));
                 rs = stmt.executeQuery();
@@ -899,31 +928,31 @@ public class UserService {
         return spamList;
     }
     //TODO
-    public ArrayList<Spam> filterSpam(String keyword) {
-        ArrayList<Spam> spamList = new ArrayList<Spam>();
-        try {
-            String sql = "SELECT s.userID, s.spammerID, s.timeSpam, u.username, u2.username * FROM spammer s " +
-                    "INNER JOIN users u ON s.userID = u.userID " +
-                    "INNER JOIN users u2 ON s.spammerID = u2.userID " +
-                    "WHERE u.username LIKE ? OR s.timeSpam LIKE ?";;
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, "%" + keyword + "%");
-            stmt.setString(2, "%" + keyword + "%");
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                int userID = rs.getInt("userID");
-                int spammerID = rs.getInt("spammerID");
-                String userName = rs.getString("u.username");
-                String spammerName = rs.getString("u2.username");
-                Timestamp timeSpam = rs.getTimestamp("timeSpam");
-                Spam temp = new Spam(userID, spammerID, userName, spammerName, timeSpam);
-                spamList.add(temp);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        return spamList;
-    }
+//    public ArrayList<Spam> filterSpam(String keyword) {
+//        ArrayList<Spam> spamList = new ArrayList<Spam>();
+//        try {
+//            String sql = "SELECT s.userID, s.spammerID, s.timeSpam, u.username, u2.username * FROM spammer s " +
+//                    "INNER JOIN users u ON s.userID = u.userID " +
+//                    "INNER JOIN users u2 ON s.spammerID = u2.userID " +
+//                    "WHERE u.username LIKE ? OR s.timeSpam LIKE ?";;
+//            PreparedStatement stmt = conn.prepareStatement(sql);
+//            stmt.setString(1, "%" + keyword + "%");
+//            stmt.setString(2, "%" + keyword + "%");
+//            ResultSet rs = stmt.executeQuery();
+//            while (rs.next()) {
+//                int userID = rs.getInt("userID");
+//                int spammerID = rs.getInt("spammerID");
+//                String userName = rs.getString("u.username");
+//                String spammerName = rs.getString("u2.username");
+//                Timestamp timeSpam = rs.getTimestamp("timeSpam");
+//                Spam temp = new Spam(userID, spammerID, userName, spammerName, timeSpam);
+//                spamList.add(temp);
+//            }
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+//        return spamList;
+//    }
 
     public static void main(String[] args) {
     }

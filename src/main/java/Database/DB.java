@@ -66,7 +66,8 @@ public class DB {
             String sql5 = "CREATE TABLE IF NOT EXISTS Chat (" +
                     " chatID SERIAL PRIMARY KEY, " +
                     " isGroup BOOLEAN NOT NULL, " +
-                    " name VARCHAR(255) )";
+                    " name VARCHAR(255), " +
+                    " createdTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";
 
             stmt.execute(sql5);
             conn.commit();
@@ -99,14 +100,7 @@ public class DB {
             stmt.execute(sql8);
             conn.commit();
 
-            String sql9 = "CREATE TABLE IF NOT EXISTS reports (" +
-                    " userID INT, " +
-                    " spammerID INT, " +
-                    " date_reported DATE," +
-                    " FOREIGN KEY (userID) REFERENCES users(userID)," +
-                    " FOREIGN KEY (spammerID) REFERENCES users(userID))";
-            stmt.execute(sql9);
-            conn.commit();
+
 
             String sql10 = "CREATE TABLE IF NOT EXISTS groupAdmin (" +
                     " chatID INT, " +
@@ -120,6 +114,7 @@ public class DB {
             String sql11 = "CREATE TABLE IF NOT EXISTS spammer (" +
                     " userID INT, " +
                     " spammerID INT, " +
+                    " time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
                     " FOREIGN KEY (userID) REFERENCES users(userID), " +
                     " FOREIGN KEY (spammerID) REFERENCES users(userID), " +
                     " PRIMARY KEY (userID, spammerID))";

@@ -25,7 +25,7 @@ public class SignUpUI extends JFrame {
     ClientModule clientModule;
 
     public SignUpUI(){
-        clientModule = ClientModule.getInstance("localhost", 4000, 3000);
+        clientModule = ClientModule.getInstance("localhost", 1234, 5678);
         setSize(1000,700);
         setTitle("Sign Up");
         setLocationRelativeTo(null);
