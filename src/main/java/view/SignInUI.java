@@ -130,7 +130,7 @@ public class SignInUI extends JFrame {
         setVisible(true);
     }
 
-    void loginUser() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public void loginUser() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         String userN = userN_jtf.getText();
         String pw = pw_jtf.getText();
 

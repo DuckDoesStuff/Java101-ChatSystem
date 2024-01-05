@@ -158,6 +158,7 @@ public class ChatService {
             ppstmt.setString(1, newname);
             ppstmt.setInt(2, chatID);
             int row = ppstmt.executeUpdate();
+            conn.commit();
             return row != 0;
         } catch (SQLException e){
             throw new RuntimeException(e);

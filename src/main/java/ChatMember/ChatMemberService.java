@@ -35,6 +35,7 @@ public class ChatMemberService {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, chatID);
             ResultSet rs = stmt.executeQuery();
+
             ArrayList<String> members = new ArrayList<>();
             while(rs.next()) {
                 members.add(rs.getString("username"));

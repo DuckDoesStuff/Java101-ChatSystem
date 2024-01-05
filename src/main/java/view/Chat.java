@@ -14,6 +14,7 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Chat extends JFrame {
     ClientModule clientModule;
@@ -140,12 +141,12 @@ public class Chat extends JFrame {
             buttonPanel.repaint();
             String keyword = inputUser_jtf.getText();
             ArrayList<String> usersFound = clientModule.findUserByName(keyword);
-            ArrayList<User> users = new ArrayList<>();
+            ArrayList<User> usersListFound = new ArrayList<>();
             for (String user : usersFound) {
                 System.out.println(user);
-                users.add(new User(0, user, "ON"));
+                usersListFound.add(new User(0, user, "ON"));
             }
-            for (User user : users) {
+            for (User user : usersListFound) {
                 JButton avatar = new JButton(user.name);
                 Dimension buttonSize = new Dimension(228, 60);
                 avatar.setPreferredSize(buttonSize);
@@ -158,12 +159,9 @@ public class Chat extends JFrame {
                 avatar.addActionListener(usere -> {
                     //System.out.println(avatar.getText());
                     mainChatName = avatar.getText();
-                    for (User selectedOne : users) {
-                        System.out.println("In loop");
+                    for (User selectedOne : usersListFound) {
                         if (Objects.equals(selectedOne.name, avatar.getText())) {
                             mainChatType = selectedOne.id;
-                            System.out.println(selectedOne.id);
-                            System.out.print(mainChatType);
                             if (mainChatType == 1){
                                 System.out.println("Selected a group");
                                 Group thisGroup = (Group) selectedOne;
@@ -212,15 +210,15 @@ public class Chat extends JFrame {
 //        usersField.setBounds(0, 50, 249, 380);
 //        usersField.setBackground(new Color(217, 217, 217));
 
-        ArrayList<User> users = getUsers();
+        AtomicReference<ArrayList<User>> users = new AtomicReference<>(getUsers());
         buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
-        if (users == null) {
+        if (users.get() == null) {
             System.out.println("No friends");
         } else {
 
         }
-        for (User user : users) {
+        for (User user : users.get()) {
             JButton avatar = new JButton(user.name);
             Dimension buttonSize = new Dimension(228, 60);
             avatar.setPreferredSize(buttonSize);
@@ -233,7 +231,7 @@ public class Chat extends JFrame {
             avatar.addActionListener(e -> {
                 System.out.println(avatar.getText());
                 mainChatName = avatar.getText();
-                for (User selectedOne : users) {
+                for (User selectedOne : users.get()) {
                     if (Objects.equals(selectedOne.name, avatar.getText())) {
                         mainChatType = selectedOne.id;
                         if (mainChatType == 1){
@@ -409,7 +407,8 @@ public class Chat extends JFrame {
 
         //Handling the filtering of user lists
         filter_btn.addActionListener(e -> {
-            final ArrayList<User> usersUpdated = getUsers();
+            ArrayList<User> usersUpdated = getUsers();
+            users.set(usersUpdated);
             //call function display user
             String selectedStatus = (String) status.getSelectedItem();
 
@@ -430,7 +429,7 @@ public class Chat extends JFrame {
                     avatar.addActionListener(ae -> {
                         System.out.println(avatar.getText());
                         mainChatName = avatar.getText();
-                        for (User selectedOne : users) {
+                        for (User selectedOne : usersUpdated) {
                             if (Objects.equals(selectedOne.name, avatar.getText())) {
                                 mainChatType = selectedOne.id;
                                 if (mainChatType == 1){
@@ -507,7 +506,7 @@ public class Chat extends JFrame {
                         avatar.addActionListener(ae2 -> {
                             System.out.println(avatar.getText());
                             mainChatName = avatar.getText();
-                            for (User selectedOne : users) {
+                            for (User selectedOne : usersUpdated) {
                                 if (Objects.equals(selectedOne.name, avatar.getText())) {
                                     mainChatType = selectedOne.id;
                                     if (mainChatType == 1){
@@ -582,7 +581,7 @@ public class Chat extends JFrame {
                         avatar.addActionListener(avatarae -> {
                             System.out.println(avatar.getText());
                             mainChatName = avatar.getText();
-                            for (User selectedOne : users) {
+                            for (User selectedOne : usersUpdated) {
                                 if (Objects.equals(selectedOne.name, avatar.getText())) {
                                     mainChatType = selectedOne.id;
                                     System.out.println(selectedOne.id);
@@ -943,7 +942,7 @@ public class Chat extends JFrame {
 
             newName_jtf = new JTextField(17);
             newName_jtf.setFont(new Font("Arial", Font.PLAIN, 14));
-            buttons_field.add(newName_jtf);
+            //buttons_field.add(newName_jtf);
 
             changeN_btn = new JButton("Change chat name");
             changeN_btn.setPreferredSize(new Dimension(195, 50));
