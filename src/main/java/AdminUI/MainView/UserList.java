@@ -7,18 +7,41 @@ package AdminUI.MainView;
 import AdminUI.User.AddUser;
 import AdminUI.User.EditUser;
 import AdminUI.User.UserDetail;
+import Database.DB;
+import User.UserModel;
+import User.UserService;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  *
  * @author Admin
  */
 public class UserList extends javax.swing.JFrame {
-
+    UserService userService;
+    ArrayList<UserModel> userList = new ArrayList<>();
     /**
      * Creates new form UserList
      */
-    public UserList() {
+    public UserList(Connection connection) {
         initComponents();
+
+        userService = new UserService(connection);
+        userList = userService.getAllUser();
+        userList.sort((o1, o2) -> {
+            if (o1.getUserID() > o2.getUserID()) {
+                return 1;
+            } else if (o1.getUserID() < o2.getUserID()) {
+                return -1;
+            } else {
+                return 0;
+            }
+        });
+        loadUserTable();
     }
 
     /**
@@ -31,7 +54,7 @@ public class UserList extends javax.swing.JFrame {
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        userTable = new javax.swing.JTable();
         searchField = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
         searchButton = new javax.swing.JButton();
@@ -46,7 +69,7 @@ public class UserList extends javax.swing.JFrame {
 
         jScrollPane1.setHorizontalScrollBar(null);
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        userTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null, null, null, null},
                 {null, null, null, null, null, null, null, null, null},
@@ -58,7 +81,7 @@ public class UserList extends javax.swing.JFrame {
             }
         ) {
             Class[] types = new Class [] {
-                String.class, String.class, String.class, String.class, String.class, String.class, String.class, String.class, Boolean.class
+                String.class, String.class, String.class, String.class, String.class, String.class, String.class, String.class, String.class
             };
             boolean[] canEdit = new boolean [] {
                 false, false, false, false, false, false, false, false, false
@@ -72,12 +95,12 @@ public class UserList extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
-        jTable1.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jTable1.setShowGrid(true);
-        jTable1.setShowHorizontalLines(true);
-        jTable1.setShowVerticalLines(true);
-        jTable1.getTableHeader().setReorderingAllowed(false);
-        jScrollPane1.setViewportView(jTable1);
+        userTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        userTable.setShowGrid(true);
+        userTable.setShowHorizontalLines(true);
+        userTable.setShowVerticalLines(true);
+        userTable.getTableHeader().setReorderingAllowed(false);
+        jScrollPane1.setViewportView(userTable);
 
         searchField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -86,7 +109,7 @@ public class UserList extends javax.swing.JFrame {
         });
 
         jLabel1.setFont(new java.awt.Font("sansserif", 1, 14)); // NOI18N
-        jLabel1.setText("Enter username");
+        jLabel1.setText("Search: ");
 
         searchButton.setText("Search");
         searchButton.addActionListener(new java.awt.event.ActionListener() {
@@ -116,7 +139,7 @@ public class UserList extends javax.swing.JFrame {
             }
         });
 
-        sortSelector.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Sort by ID (Asc)", "Sort by ID (Desc)", "Sort by Username (Asc)", "Sort by Username (Desc)", "Sort by First joined (Asc)", "Sort by First joined (Desc)" }));
+        sortSelector.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Sort by ID (Asc)", "Sort by ID (Desc)", "Sort by First name (Asc)", "Sort by First name (Desc)", "Sort by First joined (Asc)", "Sort by First joined (Desc)" }));
         sortSelector.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 sortSelectorActionPerformed(evt);
@@ -183,6 +206,9 @@ public class UserList extends javax.swing.JFrame {
 
     private void searchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchButtonActionPerformed
         // TODO add your handling code here:
+        String username = searchField.getText();
+        userList = userService.filterUser(username);
+        loadUserTable();
     }//GEN-LAST:event_searchButtonActionPerformed
 
     private void searchFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchFieldActionPerformed
@@ -191,27 +217,95 @@ public class UserList extends javax.swing.JFrame {
 
     private void editButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editButtonActionPerformed
         // TODO add your handling code here:
-        new EditUser().setVisible(true);
+        int selectedRow = userTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(null, "Please select a user to edit");
+            return;
+        }
+        new EditUser((int)userTable.getValueAt(selectedRow, 0), userService).setVisible(true);
     }//GEN-LAST:event_editButtonActionPerformed
 
     private void addButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addButtonActionPerformed
         // TODO add your handling code here:
-        new AddUser().setVisible(true);
+        new AddUser(userService).setVisible(true);
     }//GEN-LAST:event_addButtonActionPerformed
 
     private void sortSelectorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sortSelectorActionPerformed
         // TODO add your handling code here:
+        String selected = sortSelector.getSelectedItem().toString();
+        switch (selected) {
+            case "Sort by ID (Asc)":
+                userList.sort((o1, o2) -> {
+                    if (o1.getUserID() > o2.getUserID()) {
+                        return 1;
+                    } else if (o1.getUserID() < o2.getUserID()) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                });
+                break;
+            case "Sort by ID (Desc)":
+                userList.sort((o1, o2) -> {
+                    if (o1.getUserID() > o2.getUserID()) {
+                        return -1;
+                    } else if (o1.getUserID() < o2.getUserID()) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                });
+                break;
+            case "Sort by First name (Asc)":
+                userList = userService.sortUserByFirstName();
+                break;
+            case "Sort by First name (Desc)":
+                userList = userService.sortUserByFirstName();
+                Collections.reverse(userList);
+                break;
+            case "Sort by First joined (Asc)":
+                userList = userService.sortUserByFirstJoined();
+                break;
+            case "Sort by First joined (Desc)":
+                userList = userService.sortUserByFirstJoined();
+                Collections.reverse(userList);
+                break;
+        }
+        loadUserTable();
     }//GEN-LAST:event_sortSelectorActionPerformed
 
     private void detailButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_detailButtonActionPerformed
         // TODO add your handling code here:
-        // Should check for currently selected user
-        new UserDetail().setVisible(true);
+        int selectedRow = userTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(null, "Please select a user to view detail");
+            return;
+        }
+        new UserDetail((int) userTable.getValueAt(selectedRow, 0), userService).setVisible(true);
     }//GEN-LAST:event_detailButtonActionPerformed
 
     private void removeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeButtonActionPerformed
         // TODO add your handling code here:
+        int selected = userTable.getSelectedRow();
+        if (selected == -1) {
+            JOptionPane.showMessageDialog(null, "Please select a user to remove");
+            return;
+        }
+
+        int userID = (int) userTable.getValueAt(selected, 0);
+        userService.deleteByAdmin(userID);
+        JOptionPane.showMessageDialog(null, "User: " + userID + " has been removed");
+        DefaultTableModel model = (DefaultTableModel) userTable.getModel();
+        model.removeRow(selected);
     }//GEN-LAST:event_removeButtonActionPerformed
+
+    private void loadUserTable() {
+        DefaultTableModel model = (DefaultTableModel) userTable.getModel();
+        model.setRowCount(0);
+        for (UserModel user : userList) {
+            model.addRow(new Object[]{user.getUserID(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getAddress(), user.getDateOfBirth(), user.getFirst_joined(), user.isGender()});
+        }
+    }
 
     /**
      * @param args the command line arguments
@@ -243,7 +337,8 @@ public class UserList extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new UserList().setVisible(true);
+                DB db = new DB();
+                new UserList(db.getConnection()).setVisible(true);
             }
         });
     }
@@ -254,7 +349,7 @@ public class UserList extends javax.swing.JFrame {
     private javax.swing.JButton editButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
+    private javax.swing.JTable userTable;
     private javax.swing.JButton removeButton;
     private javax.swing.JButton searchButton;
     private javax.swing.JTextField searchField;

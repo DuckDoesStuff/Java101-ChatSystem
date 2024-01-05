@@ -4,17 +4,29 @@
  */
 package AdminUI.User;
 
+import Database.DB;
+import User.UserModel;
+import User.UserService;
+
+import javax.swing.*;
+
 /**
  *
  * @author Admin
  */
 public class EditUser extends javax.swing.JFrame {
-
+    int userID;
+    UserService userService;
+    UserModel user;
     /**
      * Creates new form AddUser
      */
-    public EditUser() {
+    public EditUser(int userID, UserService userService) {
+        this.userID = userID;
+        this.userService = userService;
+        user = userService.getUser(userID);
         initComponents();
+        loadUserDetail();
     }
 
     /**
@@ -47,7 +59,7 @@ public class EditUser extends javax.swing.JFrame {
         genderSelector = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("Add a new user");
+        setTitle("Edit a user");
         setResizable(false);
 
         usernameField.addActionListener(new java.awt.event.ActionListener() {
@@ -102,6 +114,12 @@ public class EditUser extends javax.swing.JFrame {
 
         jLabel8.setText("Gender");
 
+        dobField.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                dobFieldMouseClicked(evt);
+            }
+        });
+
         jLabel9.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel9.setText("Edit user");
@@ -121,6 +139,11 @@ public class EditUser extends javax.swing.JFrame {
         });
 
         genderSelector.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Male", "Female" }));
+        genderSelector.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                genderSelectorActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -234,7 +257,41 @@ public class EditUser extends javax.swing.JFrame {
 
     private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
         // TODO add your handling code here:
+        user.setUsername(usernameField.getText());
+        user.setFirstName(fNameField.getText());
+        user.setLastName(lNameField.getText());
+        user.setEmail(emailField.getText());
+        user.setPassword(passwordField.getText());
+        user.setAddress(addrField.getText());
+        user.setDateOfBirth(dobField.getDate());
+        user.setGender(genderSelector.getSelectedItem().toString().equals("Male") ? true : false);
+
+        String result = userService.editByAdmin(user);
+        if (result.equals("success")) {
+            dispose();
+        } else {
+            JOptionPane.showMessageDialog(null, result);
+        }
     }//GEN-LAST:event_saveButtonActionPerformed
+
+    private void genderSelectorActionPerformed(java.awt.event.ActionEvent evt) {
+        // TODO add your handling code here:
+    }
+
+    private void dobFieldMouseClicked(java.awt.event.MouseEvent evt) {
+        // TODO add your handling code here:
+    }
+
+    private void loadUserDetail() {
+        usernameField.setText(user.getUsername());
+        fNameField.setText(user.getFirstName());
+        lNameField.setText(user.getLastName());
+        emailField.setText(user.getEmail());
+        passwordField.setText(user.getPassword());
+        addrField.setText(user.getAddress());
+        dobField.setDate(user.getDateOfBirth());
+        genderSelector.setSelectedItem(user.isGender());
+    }
 
     /**
      * @param args the command line arguments
@@ -266,8 +323,10 @@ public class EditUser extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            DB db = new DB();
+            UserService userService = new UserService(db.getConnection());
             public void run() {
-                new EditUser().setVisible(true);
+                new EditUser(1, userService).setVisible(true);
             }
         });
     }

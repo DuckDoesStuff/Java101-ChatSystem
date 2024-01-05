@@ -1,7 +1,6 @@
 package User;
 
-import java.sql.*;
-import java.util.ArrayList;
+import java.sql.Connection;
 
 public class UserController {
     UserService userService;

@@ -8,7 +8,6 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 import java.awt.*;
-import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -637,7 +636,7 @@ public class Chat extends JFrame {
         //handling logout
         logout_btn.addActionListener(e -> {
             //call function to logout
-
+            clientModule.closeConnection();
         });
         //handling sending messages
 //        send_btn.addActionListener(e -> {

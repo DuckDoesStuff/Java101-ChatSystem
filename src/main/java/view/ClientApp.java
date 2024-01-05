@@ -1,5 +1,7 @@
 package view;
+
 import Client.ClientModule;
+
 import javax.swing.*;
 
 class ClientUI {

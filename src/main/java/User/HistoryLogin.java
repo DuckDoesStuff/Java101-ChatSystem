@@ -20,5 +20,9 @@ public class HistoryLogin {
         this.firstName = firstName;
         this.lastName = lastName;
     }
+
+    public String getTimeLog() {
+        return timeLog.toString();
+    }
 }
 

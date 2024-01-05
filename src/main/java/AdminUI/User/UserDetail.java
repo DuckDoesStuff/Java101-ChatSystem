@@ -4,17 +4,39 @@
  */
 package AdminUI.User;
 
+import Database.DB;
+import User.HistoryLogin;
+import User.UserModel;
+import User.UserService;
+
+import javax.swing.table.DefaultTableModel;
+import java.util.ArrayList;
+
 /**
  *
  * @author Admin
  */
 public class UserDetail extends javax.swing.JFrame {
+    int userID;
+    UserService userService;
+    UserModel user;
 
+    ArrayList<HistoryLogin> historyLogin;
+    ArrayList<String> friendList;
     /**
      * Creates new form AddUser
      */
-    public UserDetail() {
+    public UserDetail(int userID, UserService userService) {
+        this.userID = userID;
+        this.userService = userService;
         initComponents();
+        user = userService.getUser(userID);
+        historyLogin = userService.getUserLoginHistory(userID);
+        friendList = userService.getUserFriendList(userID);
+
+        loadUserDetail();
+        loadHistoryLogin();
+        loadFriendList();
     }
 
     /**
@@ -46,11 +68,11 @@ public class UserDetail extends javax.swing.JFrame {
         closeButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         dateTable = new javax.swing.JTable();
-        friendTable = new javax.swing.JScrollPane();
-        jTable2 = new javax.swing.JTable();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        friendTable = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("Add a new user");
+        setTitle("User detail");
         setResizable(false);
 
         usernameField.setEditable(false);
@@ -159,7 +181,7 @@ public class UserDetail extends javax.swing.JFrame {
         dateTable.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(dateTable);
 
-        jTable2.setModel(new javax.swing.table.DefaultTableModel(
+        friendTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null},
                 {null},
@@ -185,12 +207,12 @@ public class UserDetail extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
-        jTable2.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jTable2.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jTable2.setShowGrid(true);
-        jTable2.getTableHeader().setResizingAllowed(false);
-        jTable2.getTableHeader().setReorderingAllowed(false);
-        friendTable.setViewportView(jTable2);
+        friendTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        friendTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        friendTable.setShowGrid(true);
+        friendTable.getTableHeader().setResizingAllowed(false);
+        friendTable.getTableHeader().setReorderingAllowed(false);
+        jScrollPane2.setViewportView(friendTable);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -225,7 +247,7 @@ public class UserDetail extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 221, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(friendTable, javax.swing.GroupLayout.PREFERRED_SIZE, 221, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 221, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(35, 35, 35))
         );
         layout.setVerticalGroup(
@@ -266,7 +288,7 @@ public class UserDetail extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel8)
                             .addComponent(genderField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addComponent(friendTable, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 26, Short.MAX_VALUE)
                 .addComponent(closeButton)
@@ -306,6 +328,33 @@ public class UserDetail extends javax.swing.JFrame {
         dispose();
     }//GEN-LAST:event_closeButtonActionPerformed
 
+    private void loadHistoryLogin() {
+        DefaultTableModel model = (DefaultTableModel) dateTable.getModel();
+        model.setRowCount(0);
+        for (HistoryLogin historyLogin : historyLogin) {
+            model.addRow(new Object[]{historyLogin.getTimeLog()});
+        }
+    }
+
+    private void loadFriendList() {
+        DefaultTableModel model = (DefaultTableModel) friendTable.getModel();
+        model.setRowCount(0);
+        for (String friend : friendList) {
+            model.addRow(new Object[]{friend});
+        }
+    }
+
+    private void loadUserDetail() {
+        usernameField.setText(user.getUsername());
+        fNameField.setText(user.getFirstName());
+        lNameField.setText(user.getLastName());
+        emailField.setText(user.getEmail());
+        passwordField.setText(user.getPassword());
+        addrField.setText(user.getAddress());
+        dobField.setText(user.getDateOfBirth().toString());
+        genderField.setText(user.isGender());
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -339,7 +388,9 @@ public class UserDetail extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new UserDetail().setVisible(true);
+                DB db = new DB();
+                UserService userService = new UserService(db.getConnection());
+                new UserDetail(1, userService).setVisible(true);
             }
         });
     }
@@ -351,7 +402,7 @@ public class UserDetail extends javax.swing.JFrame {
     private javax.swing.JTextField dobField;
     private javax.swing.JTextField emailField;
     private javax.swing.JTextField fNameField;
-    private javax.swing.JScrollPane friendTable;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTextField genderField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -363,7 +414,7 @@ public class UserDetail extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable2;
+    private javax.swing.JTable friendTable;
     private javax.swing.JTextField lNameField;
     private javax.swing.JTextField passwordField;
     private javax.swing.JTextField usernameField;

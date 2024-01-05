@@ -5,7 +5,8 @@ import User.UserModel;
 import User.UserService;
 
 import javax.swing.table.DefaultTableModel;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 
 public class GroupList extends javax.swing.JFrame {

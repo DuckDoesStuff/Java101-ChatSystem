@@ -1,19 +1,25 @@
 package AdminUI.MainView;
 
-        import Database.DB;
-        import org.jfree.chart.*;
-        import org.jfree.chart.axis.*;
-        import org.jfree.chart.plot.*;
-        import org.jfree.chart.renderer.category.*;
-        import org.jfree.data.category.*;
+import Database.DB;
+import User.UserService;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.category.StandardBarPainter;
+import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
 
-        import javax.swing.*;
-        import java.awt.*;
-        import java.awt.event.ActionEvent;
-        import java.awt.event.ActionListener;
-        import java.sql.Connection;
-
-        import User.UserService;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.Connection;
 
 public class ActiveUsersByYearChart extends JFrame {
     UserService userService;

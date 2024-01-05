@@ -4,17 +4,23 @@
  */
 package AdminUI.User;
 
+import Database.DB;
+import User.UserService;
+
+import javax.swing.*;
+
 /**
  *
  * @author Admin
  */
 public class AddUser extends javax.swing.JFrame {
-
+    UserService userService;
     /**
      * Creates new form AddUser
      */
-    public AddUser() {
+    public AddUser(UserService userService) {
         initComponents();
+        this.userService = userService;
     }
 
     /**
@@ -234,6 +240,26 @@ public class AddUser extends javax.swing.JFrame {
 
     private void addButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addButtonActionPerformed
         // TODO add your handling code here:
+        String username = usernameField.getText();
+        String firstName = fNameField.getText();
+        String lastName = lNameField.getText();
+        String email = emailField.getText();
+        String password = passwordField.getText();
+        String address = addrField.getText();
+        java.util.Date dob = dobField.getDate();
+        boolean gender = genderSelector.getSelectedItem().toString().equals("Male") ? true : false;
+        if(username.equals("") || firstName.equals("") || lastName.equals("") || email.equals("") || password.equals("") || address.equals("") || dob == null){
+            JOptionPane.showMessageDialog(null, "Please fill in all the fields");
+            return;
+        }
+
+        String result = userService.addByAdmin(firstName,lastName,username,password,email,address,dob,gender);
+        if(result.equals("success")){
+            dispose();
+        }
+        else{
+            JOptionPane.showMessageDialog(null, result);
+        }
     }//GEN-LAST:event_addButtonActionPerformed
 
     /**
@@ -266,7 +292,9 @@ public class AddUser extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new AddUser().setVisible(true);
+                DB db = new DB();
+                UserService userService = new UserService(db.getConnection());
+                new AddUser(userService).setVisible(true);
             }
         });
     }

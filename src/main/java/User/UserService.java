@@ -1,7 +1,5 @@
 package User;
 
-import Database.DB;
-
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -302,10 +300,58 @@ public class UserService {
         return userList;
     }
 
+    public ArrayList<UserModel> getOnlineUsers() {
+        ArrayList<UserModel> userList = new ArrayList<UserModel>();
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * FROM users WHERE online_status = true");
+            while (rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                userList.add(temp);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return userList;
+    }
+
+    public UserModel getUser(int userID) {
+        UserModel user;
+        try {
+            String sql = "SELECT * FROM users WHERE userID = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            ResultSet rs = stmt.executeQuery();
+            if(!rs.next()) {
+                System.out.println("No such user");
+                return null;
+            }
+            user = new UserModel(
+                    rs.getInt("userid"),rs.getString("first_name"),rs.getString("last_name"),
+                    rs.getString("username"),rs.getString("password"),rs.getString("email"),
+                    rs.getString("address"),rs.getDate("dateofbirth"),rs.getBoolean("gender"),
+                    rs.getTimestamp("first_joined")
+                    );
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return user;
+    }
+
     public ArrayList<UserModel> filterUser(String keyword) {
         ArrayList<UserModel> userList = new ArrayList<UserModel>();
         try {
-            String sql = "SELECT * FROM users WHERE first_name LIKE ? OR last_name LIKE ? OR username LIKE ? OR online_status LIKE ?";
+            String sql = "SELECT * FROM users WHERE username LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR email LIKE ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, "%" + keyword + "%");
             stmt.setString(2, "%" + keyword + "%");
@@ -406,51 +452,132 @@ public class UserService {
         return userList;
     }
 
-    public void addByAdmin(int userID, String first_name, String last_name, String username, String password, String email, String address, Date dateOfBirth, boolean gender) {
+    public String addByAdmin(String first_name, String last_name, String username, String password, String email, String address, Date dateOfBirth, boolean gender) {
         try {
-            String sql = "INSERT INTO users (userID, first_name, last_name, username, password, email, address, dateOfBirth, gender) VALUES (?,?,?,?,?,?,?,?,?)";
+            String sql = "SELECT * FROM users WHERE username = ? OR email = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1,userID);
-            stmt.setString(2,first_name);
-            stmt.setString(3,last_name);
-            stmt.setString(4,username);
-            stmt.setString(5,password);
-            stmt.setString(6,email);
-            stmt.setString(7,address);
-            stmt.setDate(8,new java.sql.Date(dateOfBirth.getTime()));
-            stmt.setBoolean(9,gender);
+            stmt.setString(1, username);
+            stmt.setString(2, email);
+            ResultSet rs = stmt.executeQuery();
+            if(rs.next()) {
+                return "A user with the same username or email has already exists";
+            }
+
+            sql = "INSERT INTO users (first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined) VALUES (?,?,?,?,?,?,?,?,?)";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1,first_name);
+            stmt.setString(2,last_name);
+            stmt.setString(3,username);
+            stmt.setString(4,password);
+            stmt.setString(5,email);
+            stmt.setString(6,address);
+            stmt.setDate(7,new java.sql.Date(dateOfBirth.getTime()));
+            stmt.setBoolean(8,gender);
+            stmt.setTimestamp(9,new Timestamp(System.currentTimeMillis()));
 
             stmt.executeUpdate();
+            conn.commit();
+            return "success";
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void editByAdmin(int userID, String first_name, String last_name, String username, String password, String email, String address, Date dateOfBirth, boolean gender) {
+    public String editByAdmin(UserModel user) {
         try {
-            String sql = "UPDATE users " + "SET first_name = ?, last_name = ?, username = ?, password = ?, email = ?, address = ?, dateOfBirth = ?, gender = ? WHERE userID LIKE ?";
+            String sql = "SELECT * FROM users WHERE (username = ? OR email = ?) AND userID != ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, "%" + first_name + "%");
-            stmt.setString(2, "%" + last_name + "%");
-            stmt.setString(3, "%" + username + "%");
-            stmt.setString(4, "%" + password + "%");
-            stmt.setString(5, "%" + email + "%");
-            stmt.setString(6, "%" + address + "%");
-            stmt.setDate(7, (java.sql.Date) dateOfBirth);
-            stmt.setBoolean(8, gender);
-            stmt.setInt(9, userID);
+            stmt.setString(1, user.username);
+            stmt.setString(2, user.email);
+            stmt.setInt(3, user.userID);
+            ResultSet rs = stmt.executeQuery();
+            if(rs.next()) {
+                return "A user with the same username or email has already exists";
+            }
+
+            sql = "UPDATE users " + "SET first_name = ?, last_name = ?, username = ?, password = ?, email = ?, address = ?, dateOfBirth = ?, gender = ? WHERE userID = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, user.firstName);
+            stmt.setString(2, user.lastName);
+            stmt.setString(3, user.username);
+            stmt.setString(4, user.password);
+            stmt.setString(5, user.email);
+            stmt.setString(6, user.address);
+            stmt.setDate(7, new java.sql.Date(user.dateOfBirth.getTime()));
+            stmt.setBoolean(8, user.gender);
+            stmt.setInt(9, user.userID);
             stmt.executeUpdate();
+            conn.commit();
+            return "success";
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void deleteByAdmin(String username) {
+    public void deleteByAdmin(int userID) {
         try {
-            String sql = "DELETE FROM users " + "WHERE username LIKE ?";
+            String sql =
+                    "DELETE FROM username_userid WHERE userID = ?;" +
+                    "DELETE FROM friendlist WHERE userID = ? OR friendID = ?;" +
+                    "DELETE FROM blocked WHERE blockerID = ? OR blockedID = ?;" +
+                    "DELETE FROM spammer WHERE userID = ? OR spammerID = ?;" +
+                    "DELETE FROM friendrequest WHERE senderID = ? OR receiverID = ?;" +
+                    "DELETE FROM reports WHERE userID = ? OR spammerID = ?;" +
+                    "DELETE FROM loginhistory WHERE userID = ?;" +
+                    "DELETE FROM message WHERE senderID = ?;" +
+                    "DELETE FROM chatmember WHERE userID = ?;";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, "%" + username + "%");
+            for(int i = 1; i <= 14; i++) {
+                stmt.setInt(i, userID);
+            }
             stmt.executeUpdate();
+
+            sql = "SELECT chatID FROM groupadmin WHERE userid = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int chatID = rs.getInt("chatID");
+                sql = "SELECT COUNT(*) AS count FROM groupadmin WHERE chatID = ?";
+                stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, chatID);
+                rs = stmt.executeQuery();
+                if(rs.next()) {
+                    int count = rs.getInt("count");
+                    // The only admin, disband the group
+                    if(count == 1) {
+                        deleteGroupChat(chatID);
+                    }
+                }
+            }
+
+            sql = "DELETE FROM groupadmin WHERE userID = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            stmt.executeUpdate();
+
+            sql = "DELETE FROM users WHERE userId = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            stmt.executeUpdate();
+            conn.commit();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteGroupChat(int chatID) {
+        try {
+            String sql = "DELETE FROM chat WHERE chatID = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, chatID);
+            stmt.executeUpdate();
+
+            sql = "DELETE FROM chatmember WHERE chatID = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, chatID);
+            stmt.executeUpdate();
+            conn.commit();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -489,7 +616,7 @@ public class UserService {
     public ArrayList<HistoryLogin> getUserLoginHistory(int userID) {
         ArrayList<HistoryLogin> userList = new ArrayList<HistoryLogin>();
         try {
-            String sql = ("SELECT * FROM LoginHistory WHERE userID LIKE ?");
+            String sql = ("SELECT * FROM LoginHistory WHERE userID = ?");
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, userID);
             ResultSet rs = stmt.executeQuery();
@@ -499,60 +626,28 @@ public class UserService {
                 HistoryLogin temp = new HistoryLogin(userid, timeLog);
                 userList.add(temp);
             }
-
-            for (int i = 0; i < userList.size(); i++) {
-                sql = ("SELECT * FROM users WHERE userID LIKE ?");
-                stmt = conn.prepareStatement(sql);
-                stmt.setInt(1, userList.get(i).userID);
-                rs = stmt.executeQuery();
-                while (rs.next()) {
-                    String username = rs.getString("username");
-                    String first_name = rs.getString("first_name");
-                    String last_name = rs.getString("last_name");
-                    userList.get(i).userName = username;
-                    userList.get(i).firstName = first_name;
-                    userList.get(i).lastName = last_name;
-                }
-            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         return userList;
     }
 
-    public ArrayList<UserModel> getUserFriendList(int userid) {
-        ArrayList<UserModel> friends = new ArrayList<UserModel>();
-        ArrayList<Integer> friendList = new ArrayList<Integer>();
+    public ArrayList<String> getUserFriendList(int userid) {
+        ArrayList<String> friends = new ArrayList<>();
         try {
-            String sql = ("SELECT friendID FROM friendlist WHERE userID LIKE ?");
+            String sql =
+                    "SELECT UU.username as friendname " +
+                    "FROM friendlist AS FL " +
+                    "JOIN username_userid AS UU ON FL.friendID = UU.userID " +
+                    "WHERE FL.userID = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, userid);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                int friendID = rs.getInt("friendID");
-                friendList.add(friendID);
+                friends.add(rs.getString("friendname"));
             }
 
-            sql = "SELECT * FROM users WHERE userID LIKE ?";
-            stmt = conn.prepareStatement(sql);
-            for (int i = 0; i < friendList.size(); i++) {
-                stmt.setString(1, "%" + friendList.get(i) + "%");
-                rs = stmt.executeQuery();
-                while (rs.next()) {
-                    int userID = rs.getInt("userID");
-                    String first_name = rs.getString("first_name");
-                    String last_name = rs.getString("last_name");
-                    String username = rs.getString("username");
-                    String password = rs.getString("password");
-                    String email = rs.getString("email");
-                    String address = rs.getString("address");
-                    Date dateOfBirth = rs.getDate("dateOfBirth");
-                    boolean gender = rs.getBoolean("gender");
-                    Timestamp first_joined = rs.getTimestamp("first_joined");
-                    UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
-                    friends.add(temp);
-                }
-            }
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -903,36 +998,22 @@ public class UserService {
     public ArrayList<UserModel> userListByNumberOfDirectFriends(int num, int type) {
         ArrayList<UserModel> userList = new ArrayList<>();
         try {
-            ArrayList<UserModel> tmp = new ArrayList<>();
-            String sql = "SELECT * FROM users";
+            String sql =    "SELECT U.*, COUNT(FL.friendid) AS num_friends, COUNT(FL2.friendid) as num_friends_of_friends " +
+                            "FROM users as U " +
+                            "JOIN friendlist as FL ON U.userID = FL.userID " +
+                            "JOIN friendlist as FL2 ON FL.friendid = FL2.userid " +
+                            "GROUP BY U.userID";
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             while(rs.next()) {
                 int userID = rs.getInt("userID");
-                String first_name = rs.getString("first_name");
-                String last_name = rs.getString("last_name");
                 String username = rs.getString("username");
-                String password = rs.getString("password");
-                String email = rs.getString("email");
-                String address = rs.getString("address");
-                Date dateOfBirth = rs.getDate("dateOfBirth");
-                boolean gender = rs.getBoolean("gender");
                 Timestamp first_joined = rs.getTimestamp("first_joined");
-                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
-                tmp.add(user);
+                int num_friends = rs.getInt("num_friends");
+                int num_friends_of_friends = rs.getInt("num_friends_of_friends");
+                UserModel user = new UserModel(userID, username, first_joined, num_friends, num_friends_of_friends);
+                userList.add(user);
             }
-            for(int i = 0; i < tmp.size(); i++){
-                if (type == 0 && numberOfDirectFriends(tmp.get(i).getUserID()) == num){
-                    userList.add(tmp.get(i));
-                }
-                else if (type == 1 && numberOfDirectFriends(tmp.get(i).getUserID()) > num){
-                    userList.add(tmp.get(i));
-                }
-                else if (type == -1 && numberOfDirectFriends(tmp.get(i).getUserID()) < num){
-                    userList.add(tmp.get(i));
-                }
-            }
-            tmp.clear();
         } catch (Exception e) {
             System.out.println("Error finding user");
             throw new RuntimeException(e);

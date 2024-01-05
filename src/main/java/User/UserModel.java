@@ -12,9 +12,12 @@ public class UserModel {
     String email;
     String address;
     Date dateOfBirth;
-    // Male is 0 Female is 1
+    // Male is 1 Female is 0
     boolean gender;
     Timestamp first_joined;
+    Timestamp online_since;
+    int friends_count;
+    int friends_of_friends_count;
 
     public UserModel(String username, String password, String email) {
         this.username = username;
@@ -22,11 +25,12 @@ public class UserModel {
         this.email = email;
     }
 
-    public UserModel(String username, String firstName, String lastName, boolean gender) {
+    public UserModel(int userID, String username, Timestamp first_joined, int friends_count, int friends_of_friends_count) {
+        this.userID = userID;
         this.username = username;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.gender = gender;
+        this.first_joined = first_joined;
+        this.friends_count = friends_count;
+        this.friends_of_friends_count = friends_of_friends_count;
     }
 
     public UserModel(int userID, String firstName, String lastName, String username, String password, String email, String address, Date dateOfBirth, boolean gender, Timestamp first_joined) {
@@ -57,6 +61,70 @@ public class UserModel {
 
     public String getLastName() {
         return lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public Date getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public String isGender() {
+        if (gender) {
+            return "Male";
+        } else {
+            return "Female";
+        }
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setUsername(String text) {
+        this.username = text;
+    }
+
+    public void setDateOfBirth(Date date) {
+        this.dateOfBirth = date;
+    }
+
+    public void setGender(boolean male) {
+        this.gender = male;
+    }
+
+    public void setAddress(String text) {
+        this.address = text;
+    }
+
+    public void setPassword(String text) {
+        this.password = text;
+    }
+
+    public void setEmail(String text) {
+        this.email = text;
+    }
+
+    public void setLastName(String text) {
+        this.lastName = text;
+    }
+
+    public void setFirstName(String text) {
+        this.firstName = text;
+    }
+
+    public int getFriendsCount() {
+        return friends_count;
+    }
+
+    public int getFriendsOfFriendsCount() {
+        return friends_of_friends_count;
     }
 }
 

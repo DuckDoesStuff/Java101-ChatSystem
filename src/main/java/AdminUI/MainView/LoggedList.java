@@ -4,17 +4,29 @@
  */
 package AdminUI.MainView;
 
+import Database.DB;
+import User.UserModel;
+import User.UserService;
+
+import javax.swing.table.DefaultTableModel;
+import java.util.ArrayList;
+
 /**
  *
  * @author Admin
  */
 public class LoggedList extends javax.swing.JFrame {
-
+    UserService userService;
+    ArrayList<UserModel> onlineUsers;
     /**
      * Creates new form LoggedUser
      */
-    public LoggedList() {
+    public LoggedList(UserService userService) {
+        this.userService = userService;
         initComponents();
+
+        onlineUsers = userService.getOnlineUsers();
+        loadOnlineUsers();
     }
 
     /**
@@ -27,7 +39,7 @@ public class LoggedList extends javax.swing.JFrame {
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        onlineTable = new javax.swing.JTable();
         searchField = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
         searchButton = new javax.swing.JButton();
@@ -38,7 +50,7 @@ public class LoggedList extends javax.swing.JFrame {
 
         jScrollPane1.setHorizontalScrollBar(null);
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        onlineTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
                 {null, null, null, null},
@@ -64,10 +76,10 @@ public class LoggedList extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
-        jTable1.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jTable1.setShowGrid(true);
-        jTable1.getTableHeader().setReorderingAllowed(false);
-        jScrollPane1.setViewportView(jTable1);
+        onlineTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        onlineTable.setShowGrid(true);
+        onlineTable.getTableHeader().setReorderingAllowed(false);
+        jScrollPane1.setViewportView(onlineTable);
 
         searchField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -132,6 +144,9 @@ public class LoggedList extends javax.swing.JFrame {
 
     private void searchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchButtonActionPerformed
         // TODO add your handling code here:
+        String username = searchField.getText();
+        onlineUsers = userService.filterUser(username);
+        loadOnlineUsers();
     }//GEN-LAST:event_searchButtonActionPerformed
 
     private void searchFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchFieldActionPerformed
@@ -141,6 +156,14 @@ public class LoggedList extends javax.swing.JFrame {
     private void sortSelectorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sortSelectorActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_sortSelectorActionPerformed
+
+    private void loadOnlineUsers() {
+        DefaultTableModel model = (DefaultTableModel) onlineTable.getModel();
+        model.setRowCount(0);
+        for (UserModel user : onlineUsers) {
+            model.addRow(new Object[]{user.getFirst_joined(), user.getUsername(), user.getFirstName(), user.getLastName()});
+        }
+    }
 
     /**
      * @param args the command line arguments
@@ -173,7 +196,9 @@ public class LoggedList extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new LoggedList().setVisible(true);
+                DB db = new DB();
+                UserService userService = new UserService(db.getConnection());
+                new LoggedList(userService).setVisible(true);
             }
         });
     }
@@ -181,7 +206,7 @@ public class LoggedList extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
+    private javax.swing.JTable onlineTable;
     private javax.swing.JButton searchButton;
     private javax.swing.JTextField searchField;
     private javax.swing.JComboBox<String> sortSelector;

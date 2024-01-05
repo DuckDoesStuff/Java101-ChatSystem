@@ -4,17 +4,28 @@
  */
 package AdminUI.MainView;
 
+import Database.DB;
+import User.UserModel;
+import User.UserService;
+
+import javax.swing.table.DefaultTableModel;
+import java.util.ArrayList;
+
 /**
  *
  * @author Admin
  */
 public class FriendList extends javax.swing.JFrame {
-
+    UserService userService;
+    ArrayList<UserModel> users;
     /**
      * Creates new form LoggedUser
      */
-    public FriendList() {
+    public FriendList(UserService userService) {
+        this.userService = userService;
         initComponents();
+        users = userService.userListByNumberOfDirectFriends(-1, 1);
+        loadMainTable();
     }
 
     /**
@@ -27,7 +38,7 @@ public class FriendList extends javax.swing.JFrame {
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        mainTable = new javax.swing.JTable();
         searchField = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
         searchButton = new javax.swing.JButton();
@@ -41,7 +52,7 @@ public class FriendList extends javax.swing.JFrame {
 
         jScrollPane1.setHorizontalScrollBar(null);
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        mainTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
                 {null, null, null, null},
@@ -67,10 +78,10 @@ public class FriendList extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
-        jTable1.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jTable1.setShowGrid(true);
-        jTable1.getTableHeader().setReorderingAllowed(false);
-        jScrollPane1.setViewportView(jTable1);
+        mainTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        mainTable.setShowGrid(true);
+        mainTable.getTableHeader().setReorderingAllowed(false);
+        jScrollPane1.setViewportView(mainTable);
 
         searchField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -171,6 +182,17 @@ public class FriendList extends javax.swing.JFrame {
 
     private void sortSelectorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sortSelectorActionPerformed
         // TODO add your handling code here:
+        String selected = sortSelector.getSelectedItem().toString();
+        if (selected.equals("Sort by Username (Asc)")) {
+            users.sort((o1, o2) -> o1.getUsername().compareTo(o2.getUsername()));
+        } else if (selected.equals("Sort by Username (Desc)")) {
+            users.sort((o1, o2) -> -o1.getUsername().compareTo(o2.getUsername()));
+        } else if (selected.equals("Sort by Time (Asc)")) {
+            users.sort((o1, o2) -> o1.getFirst_joined().compareTo(o2.getFirst_joined()));
+        } else if (selected.equals("Sort by Time (Desc)")) {
+            users.sort((o1, o2) -> -o1.getFirst_joined().compareTo(o2.getFirst_joined()));
+        }
+        loadMainTable();
     }//GEN-LAST:event_sortSelectorActionPerformed
 
     private void countFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_countFieldActionPerformed
@@ -180,6 +202,14 @@ public class FriendList extends javax.swing.JFrame {
     private void filterSelectorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_filterSelectorActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_filterSelectorActionPerformed
+
+    private void loadMainTable() {
+        DefaultTableModel model = (DefaultTableModel) mainTable.getModel();
+        model.setRowCount(0);
+        for (UserModel user : users) {
+            model.addRow(new Object[]{user.getUsername(), user.getFirst_joined(), user.getFriendsCount(), user.getFriendsOfFriendsCount()});
+        }
+    }
 
     /**
      * @param args the command line arguments
@@ -214,7 +244,9 @@ public class FriendList extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new FriendList().setVisible(true);
+                DB db = new DB();
+                UserService userService = new UserService(db.getConnection());
+                new FriendList(userService).setVisible(true);
             }
         });
     }
@@ -225,7 +257,7 @@ public class FriendList extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
+    private javax.swing.JTable mainTable;
     private javax.swing.JButton searchButton;
     private javax.swing.JTextField searchField;
     private javax.swing.JComboBox<String> sortSelector;
