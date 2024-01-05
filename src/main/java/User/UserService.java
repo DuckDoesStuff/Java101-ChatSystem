@@ -1,12 +1,17 @@
 package User;
 
+import Database.DB;
+
 import java.sql.*;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 
 public class UserService {
-    Connection conn;
+    static Connection conn;
     public UserService(Connection conn) {
         this.conn = conn;
     }
@@ -286,7 +291,7 @@ public class UserService {
                 String email = rs.getString("email");
                 String address = rs.getString("address");
                 Date dateOfBirth = rs.getDate("dateOfBirth");
-                Boolean gender = rs.getBoolean("gender");
+                boolean gender = rs.getBoolean("gender");
                 Timestamp first_joined = rs.getTimestamp("first_joined");
                 UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
                 userList.add(temp);
@@ -316,7 +321,7 @@ public class UserService {
                 String email = rs.getString("email");
                 String address = rs.getString("address");
                 Date dateOfBirth = rs.getDate("dateOfBirth");
-                Boolean gender = rs.getBoolean("gender");
+                boolean gender = rs.getBoolean("gender");
                 Timestamp first_joined = rs.getTimestamp("first_joined");
                 UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
                 userList.add(temp);
@@ -341,7 +346,7 @@ public class UserService {
                 String email = rs.getString("email");
                 String address = rs.getString("address");
                 Date dateOfBirth = rs.getDate("dateOfBirth");
-                Boolean gender = rs.getBoolean("gender");
+                boolean gender = rs.getBoolean("gender");
                 Timestamp first_joined = rs.getTimestamp("first_joined");
                 UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
                 userList.add(temp);
@@ -378,7 +383,7 @@ public class UserService {
                 String email = rs.getString("email");
                 String address = rs.getString("address");
                 Date dateOfBirth = rs.getDate("dateOfBirth");
-                Boolean gender = rs.getBoolean("gender");
+                boolean gender = rs.getBoolean("gender");
                 Timestamp first_joined = rs.getTimestamp("first_joined");
                 UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
                 userList.add(temp);
@@ -542,7 +547,7 @@ public class UserService {
                     String email = rs.getString("email");
                     String address = rs.getString("address");
                     Date dateOfBirth = rs.getDate("dateOfBirth");
-                    Boolean gender = rs.getBoolean("gender");
+                    boolean gender = rs.getBoolean("gender");
                     Timestamp first_joined = rs.getTimestamp("first_joined");
                     UserModel temp = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
                     friends.add(temp);
@@ -676,6 +681,302 @@ public class UserService {
             throw new RuntimeException(e);
         }
         return groupList;
+    }
+    //xem ds người dùng đăng kí mới, isByName = true (sx theo tên)/ false (sx theo thời gian tạo)
+    public ArrayList<UserModel> newUserWithSort(Date dateStart, Date dateEnd, boolean isByName) {
+        ArrayList<UserModel> newUsers = new ArrayList<>();
+        try {
+            String sql = "SELECT * FROM users WHERE first_joined BETWEEN ? AND ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setTimestamp(1, new Timestamp(dateStart.getTime()));
+            stmt.setTimestamp(2, new Timestamp(dateEnd.getTime()));
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                newUsers.add(user);
+            }
+
+            if (isByName) {
+                Collections.sort(newUsers, Comparator.comparing(UserModel::getFirstName));
+            }
+            else{
+                Collections.sort(newUsers, Comparator.comparing(UserModel::getFirst_joined));
+            }
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return newUsers;
+    }
+
+    //xem ds người dùng đăng kí mới, lọc theo tên
+    public ArrayList<UserModel> newUserByName(Date dateStart, Date dateEnd, String name) {
+        ArrayList<UserModel> newUsers = new ArrayList<>();
+        try {
+            String sql = "SELECT * FROM users " +
+                    "WHERE (first_joined BETWEEN ? AND ?) " +
+                    "AND (LOWER(first_name) LIKE ? OR LOWER(last_name) LIKE ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setTimestamp(1, new Timestamp(dateStart.getTime()));
+            stmt.setTimestamp(2, new Timestamp(dateEnd.getTime()));
+            stmt.setString(3, "%" + name.toLowerCase() + "%");
+            stmt.setString(4, "%" + name.toLowerCase() + "%");
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                newUsers.add(user);
+            }
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return newUsers;
+    }
+
+    //Số lượng người đăng kí mới theo năm
+    public static int [] numberOfNewUserByYear(int year){
+        int [] numberOfNewUser = new int [12];
+        try {
+            for (int i = 0; i < 12; i++){
+                String sql = "SELECT COUNT(*) AS count " +
+                        "FROM users " +
+                        "WHERE EXTRACT(MONTH FROM first_joined) = ? AND EXTRACT(YEAR FROM first_joined) = ?";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, i + 1);
+                stmt.setInt(2, year);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()){
+                    numberOfNewUser[i] = rs.getInt("count");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return numberOfNewUser;
+    }
+
+    //7. Xem danh sách người dùng và số lượng bạn bè (1 cột bạn bè trực tiếp, 1 cột tính luôn số lượng bạn của bạn)
+
+    //Số lượng bạn bè trực tiếp
+    public int numberOfDirectFriends(int userid){
+        int ans = 0;
+        try {
+            String sql =  "SELECT COUNT(DISTINCT friendid) AS count " +
+                    "FROM friendlist WHERE userid = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()){
+                ans = rs.getInt("count");
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return ans;
+    }
+    //Số lượng bạn + bạn của bạn
+    public int numberOfDirectAndIndirectFriends(int userid){
+        int ans = 0;
+        try {
+            ArrayList<Integer> userIds = new ArrayList<>();
+            String sql =  "SELECT DISTINCT friendid " +
+                    "FROM friendlist WHERE userid = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()){
+                ans = rs.getInt("friendid");
+                if (ans != userid && !userIds.contains(ans))
+                    userIds.add(ans);
+            }
+            sql =  "SELECT DISTINCT f.friendid " +
+                    "FROM friendlist AS u " +
+                    "JOIN friendlist AS f ON u.friendid = f.userid " +
+                    "WHERE u.userid = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            rs = stmt.executeQuery();
+            while (rs.next()){
+                ans = rs.getInt("friendid");
+                if (ans != userid && !userIds.contains(ans))
+                    userIds.add(ans);
+            }
+            ans = userIds.size();
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return ans;
+    }
+    //7a. Sắp xếp theo tên (isByName = true)/ thời gian tạo (isByName = false)
+    public ArrayList<UserModel> userListWithSort(boolean isByName){
+        ArrayList<UserModel> users = new ArrayList<>();
+        try {
+            String sql;
+            if (isByName){
+                sql = "SELECT * FROM users " +
+                        "ORDER BY first_name, last_name";
+            }
+            else {
+                sql = "SELECT * FROM users " +
+                        "ORDER BY first_joined DESC";
+            }
+
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                users.add(user);
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return users;
+    }
+    //7b. Lọc theo tên
+    public ArrayList<UserModel> userListByName(String name) {
+        ArrayList<UserModel> userList = new ArrayList<>();
+        try {
+            String sql = "SELECT * FROM users " +
+                    "WHERE LOWER(first_name) LIKE ? OR LOWER(last_name) LIKE ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, "%" + name.toLowerCase() + "%");
+            stmt.setString(2, "%" + name.toLowerCase() + "%");
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                userList.add(user);
+            }
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return userList;
+    }
+    //7c. c. Lọc theo số lượng bạn trực tiếp (bằng - type=0, nhỏ hơn - type=-1, lớn hơn 1 số được nhập - type=1)
+    public ArrayList<UserModel> userListByNumberOfDirectFriends(int num, int type) {
+        ArrayList<UserModel> userList = new ArrayList<>();
+        try {
+            ArrayList<UserModel> tmp = new ArrayList<>();
+            String sql = "SELECT * FROM users";
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                tmp.add(user);
+            }
+            for(int i = 0; i < tmp.size(); i++){
+                if (type == 0 && numberOfDirectFriends(tmp.get(i).getUserID()) == num){
+                    userList.add(tmp.get(i));
+                }
+                else if (type == 1 && numberOfDirectFriends(tmp.get(i).getUserID()) > num){
+                    userList.add(tmp.get(i));
+                }
+                else if (type == -1 && numberOfDirectFriends(tmp.get(i).getUserID()) < num){
+                    userList.add(tmp.get(i));
+                }
+            }
+            tmp.clear();
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return userList;
+    }
+
+    //8. Xem danh sách người dùng hoạt động: chọn khoảng thời gian, hiện ra danh sách người dùng có
+    //hoạt động và các số liệu (mở ứng dụng, chat với bao nhiêu người, chat bao nhiêu nhóm)
+
+    //Số lần mở ứng dụng
+    public int numOpenning (int userid){
+        int ans = 0;
+        try {
+            String sql =  "SELECT opened_time " +
+                    "FROM users WHERE userid = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()){
+                ans = rs.getInt("opened_time");
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return ans;
+    }
+    //Chat với bao nhiêu người
+    public int numChatPersons (int userid){
+        int ans = 0;
+        try {
+            String sql =  "SELECT COUNT(DISTINCT c.chatID) AS count " +
+                    "FROM Message AS m " +
+                    "JOIN Chat AS c ON c.chatID = m.chatID " +
+                    " WHERE senderID = ? AND isGroup = false";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()){
+                ans = rs.getInt("count");
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return ans;
     }
 
     public ArrayList<UserModel> MemberGroupChat(String groupName, Timestamp createdTime) {
@@ -978,7 +1279,173 @@ public class UserService {
             //throw new RuntimeException(e);
         }
     }
+    //Chat với bao nhiêu nhóm
+    public int numChatGroups (int userid){
+        int ans = 0;
+        try {
+            String sql =  "SELECT COUNT(DISTINCT c.chatID) AS count " +
+                    "FROM Message AS m " +
+                    "JOIN Chat AS c ON c.chatID = m.chatID " +
+                    " WHERE senderID = ? AND isGroup = true";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userid);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()){
+                ans = rs.getInt("count");
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return ans;
+    }
 
-    public static void main(String[] args) {
+    //8a.  Sắp xếp theo tên (isByName = true)/ thời gian tạo (isByName = false)
+    public ArrayList<UserModel> activeUserWithSort(Date dateStart, Date dateEnd, boolean isByName) {
+        ArrayList<UserModel> activeUsers = new ArrayList<>();
+        try {
+            String sql = "SELECT DISTINCT u.* " +
+                    "FROM LoginHistory AS lh " +
+                    "JOIN users AS u ON lh.userID = u.userID " +
+                    "WHERE timeLog BETWEEN ? AND ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setTimestamp(1, new Timestamp(dateStart.getTime()));
+            stmt.setTimestamp(2, new Timestamp(dateEnd.getTime()));
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                activeUsers.add(user);
+            }
+            if (isByName) {
+                Collections.sort(activeUsers, Comparator.comparing(UserModel::getFirstName));
+            }
+            else{
+                Collections.sort(activeUsers, Comparator.comparing(UserModel::getFirst_joined));
+            }
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return activeUsers;
+    }
+    //8b. Lọc theo tên
+    public ArrayList<UserModel> activeUserByName(Date dateStart, Date dateEnd, String name) {
+        ArrayList<UserModel> activeUsers = new ArrayList<>();
+        try {
+            String sql = "SELECT DISTINCT u.* " +
+                    "FROM LoginHistory AS lh " +
+                    "JOIN users AS u ON lh.userID = u.userID " +
+                    "WHERE timeLog BETWEEN ? AND ? " +
+                    "AND (LOWER(u.first_name) LIKE ? OR LOWER(u.last_name) LIKE ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setTimestamp(1, new Timestamp(dateStart.getTime()));
+            stmt.setTimestamp(2, new Timestamp(dateEnd.getTime()));
+            stmt.setString(3, "%" + name.toLowerCase() + "%");
+            stmt.setString(4, "%" + name.toLowerCase() + "%");
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                activeUsers.add(user);
+            }
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return activeUsers;
+    }
+    //8c. Lọc theo số lượng hoạt động (bằng - type=0, nhỏ hơn - type=-1, lớn hơn 1 số được nhập - type=1)
+    public ArrayList<UserModel> activeUsersByNumberOfActivities(Date dateStart, Date dateEnd, int num, int type) {
+        ArrayList<UserModel> activeList = new ArrayList<>();
+        try {
+            ArrayList<UserModel> tmp = new ArrayList<>();
+            String sql = "SELECT DISTINCT u.* " +
+                    "FROM LoginHistory AS lh " +
+                    "JOIN users AS u ON lh.userID = u.userID " +
+                    "WHERE timeLog BETWEEN ? AND ? ";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setTimestamp(1, new Timestamp(dateStart.getTime()));
+            stmt.setTimestamp(2, new Timestamp(dateEnd.getTime()));
+            ResultSet rs = stmt.executeQuery();
+            while(rs.next()) {
+                int userID = rs.getInt("userID");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                String email = rs.getString("email");
+                String address = rs.getString("address");
+                Date dateOfBirth = rs.getDate("dateOfBirth");
+                boolean gender = rs.getBoolean("gender");
+                Timestamp first_joined = rs.getTimestamp("first_joined");
+                UserModel user = new UserModel(userID, first_name, last_name, username, password, email, address, dateOfBirth, gender, first_joined);
+                tmp.add(user);
+            }
+            for(int i = 0; i < tmp.size(); i++){
+                if (type == 0 && numOpenning(tmp.get(i).getUserID()) == num){
+                    activeList.add(tmp.get(i));
+                }
+                else if (type == 1 && numOpenning(tmp.get(i).getUserID()) > num){
+                    activeList.add(tmp.get(i));
+                }
+                else if (type == -1 && numOpenning(tmp.get(i).getUserID()) < num){
+                    activeList.add(tmp.get(i));
+                }
+            }
+            tmp.clear();
+        } catch (Exception e) {
+            System.out.println("Error finding user");
+            throw new RuntimeException(e);
+        }
+        return activeList;
+    }
+
+    //9. Biểu đồ số lượng người hoạt động theo năm: chọn năm, vẽ biểu đồ với trục hoành là tháng, trục tung là số lượng người có mở ứng dụng.
+    //Số lượng người hoạt động theo năm
+    public static int [] numberOfActiveUserByYear(int year){
+        int [] numberOfNewUser = new int [12];
+        try {
+            for (int i = 0; i < 12; i++){
+                String sql = "SELECT COUNT(DISTINCT userid) AS count " +
+                        "FROM LoginHistory " +
+                        "WHERE EXTRACT(MONTH FROM timeLog) = ? AND EXTRACT(YEAR FROM timeLog) = ?";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, i + 1);
+                stmt.setInt(2, year);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()){
+                    numberOfNewUser[i] = rs.getInt("count");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            throw new RuntimeException(e);
+        }
+        return numberOfNewUser;
+    }
+
+    public static void main(String[] args) throws ParseException {
+//        DB db = new DB();
+//        new UserService(db.getConnection());
+//        db.closeConnection();
     }
 }
