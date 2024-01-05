@@ -937,31 +937,31 @@ public class UserService {
         return spamList;
     }
     //TODO
-//    public ArrayList<Spam> filterSpam(String keyword) {
-//        ArrayList<Spam> spamList = new ArrayList<Spam>();
-//        try {
-//            String sql = "SELECT s.userID, s.spammerID, s.timeSpam, u.username, u2.username * FROM spammer s " +
-//                    "INNER JOIN users u ON s.userID = u.userID " +
-//                    "INNER JOIN users u2 ON s.spammerID = u2.userID " +
-//                    "WHERE u.username LIKE ? OR s.timeSpam LIKE ?";;
-//            PreparedStatement stmt = conn.prepareStatement(sql);
-//            stmt.setString(1, "%" + keyword + "%");
-//            stmt.setString(2, "%" + keyword + "%");
-//            ResultSet rs = stmt.executeQuery();
-//            while (rs.next()) {
-//                int userID = rs.getInt("userID");
-//                int spammerID = rs.getInt("spammerID");
-//                String userName = rs.getString("u.username");
-//                String spammerName = rs.getString("u2.username");
-//                Timestamp timeSpam = rs.getTimestamp("timeSpam");
-//                Spam temp = new Spam(userID, spammerID, userName, spammerName, timeSpam);
-//                spamList.add(temp);
-//            }
-//        } catch (SQLException e) {
-//            throw new RuntimeException(e);
-//        }
-//        return spamList;
-//    }
+    public ArrayList<Spam> filterSpam(String keyword) {
+        ArrayList<Spam> spamList = new ArrayList<Spam>();
+        try {
+            String sql = "SELECT s.userID as userID, s.spammerID as spammerID, s.time as time, u.username as username, u2.username as spammer FROM spammer s " +
+                    "INNER JOIN users u ON s.userID = u.userID " +
+                    "INNER JOIN users u2 ON s.spammerID = u2.userID " +
+                    "WHERE u.username LIKE ?";;
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, "%" + keyword + "%");
+            //stmt.setString(2, "%" + keyword + "%");
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                int userID = rs.getInt("userID");
+                int spammerID = rs.getInt("spammerID");
+                String userName = rs.getString("username");
+                String spammerName = rs.getString("spammer");
+                Timestamp timeSpam = rs.getTimestamp("time");
+                Spam temp = new Spam(userID, spammerID, userName, spammerName, timeSpam);
+                spamList.add(temp);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return spamList;
+    }
 
     public boolean banUser(String username){
         try {
