@@ -213,6 +213,7 @@ public class NewAccountList extends javax.swing.JFrame {
 
     private void seeChartBtnActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
+        new NewUserByYearChart(userService.getConnection());
     }
 
     private void searchBarActionPerformed(java.awt.event.ActionEvent evt) {

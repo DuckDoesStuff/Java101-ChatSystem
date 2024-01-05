@@ -1506,4 +1506,8 @@ public class UserService {
 //        new UserService(db.getConnection());
 //        db.closeConnection();
     }
+
+    public Connection getConnection() {
+        return conn;
+    }
 }

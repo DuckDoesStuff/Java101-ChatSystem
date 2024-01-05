@@ -56,8 +56,14 @@ public class ActiveUsersByYearChart {
         JPanel inputPanel = new JPanel();
         JTextField yearTextField = new JTextField(10);
         JButton viewChart_btn = new JButton("View Chart");
-        JButton back_btn = new JButton("Back to Menu");
+        JButton back_btn = new JButton("Close");
         back_btn.setBackground(new Color(171, 195, 234));
+        back_btn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose();
+            }
+        });
         viewChart_btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
