@@ -38,6 +38,8 @@ public class SpamReports extends javax.swing.JFrame {
         sortByTitle = new javax.swing.JLabel();
         banUserTitle = new javax.swing.JLabel();
         backToMainMenuBtn = new javax.swing.JButton();
+        nameToSearch = new javax.swing.JTextField();
+        searchButton = new javax.swing.JButton();
 
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -107,6 +109,16 @@ public class SpamReports extends javax.swing.JFrame {
 
         backToMainMenuBtn.setText("Back To Main Menu");
 
+        nameToSearch.setText("Search by name...");
+
+
+        searchButton.setText("Search");
+        searchButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                searchButtonActionPerformed(evt);
+            }
+        });
+
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -114,19 +126,21 @@ public class SpamReports extends javax.swing.JFrame {
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(layout.createSequentialGroup()
                                 .addGap(26, 26, 26)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(title, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                         .addGroup(layout.createSequentialGroup()
-                                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 551, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addGap(18, 18, 18)
-                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                        .addComponent(bannedUsernameInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(banBtn)
-                                                        .addComponent(sortByTitle)
-                                                        .addComponent(banUserTitle)
-                                                        .addComponent(backToMainMenuBtn)
-                                                        .addComponent(sortModeCombobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        )))
+                                                .addComponent(title, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(nameToSearch))
+                                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 551, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(18, 18, 18)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(bannedUsernameInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(banBtn)
+                                        .addComponent(sortByTitle)
+                                        .addComponent(banUserTitle)
+                                        .addComponent(backToMainMenuBtn)
+                                        .addComponent(sortModeCombobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(searchButton))
                                 .addContainerGap(14, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -135,7 +149,10 @@ public class SpamReports extends javax.swing.JFrame {
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                         .addGroup(layout.createSequentialGroup()
                                                 .addContainerGap()
-                                                .addComponent(title, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                        .addComponent(title, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(nameToSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(searchButton))
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                                         .addGroup(layout.createSequentialGroup()
@@ -143,9 +160,7 @@ public class SpamReports extends javax.swing.JFrame {
                                                 .addComponent(sortByTitle)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addComponent(sortModeCombobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-
-                                                .addGap(44, 44, 44)
+                                                .addGap(73, 73, 73)
                                                 .addComponent(banUserTitle)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addComponent(bannedUsernameInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -153,11 +168,11 @@ public class SpamReports extends javax.swing.JFrame {
                                                 .addComponent(banBtn)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                                 .addComponent(backToMainMenuBtn)))
-                                .addContainerGap(10, Short.MAX_VALUE))
+                                .addContainerGap(8, Short.MAX_VALUE))
         );
 
         pack();
-    }// </editor-fold>
+    }
 //"Username of Reporter: A-Z", "Username of Reporter: Z-A", "Creation Time: oldest to latest", "Creation Time: latest to oldest"
     private void sortModeComboboxActionPerformed(ActionEvent e) {
         clearTable();
@@ -176,6 +191,17 @@ public class SpamReports extends javax.swing.JFrame {
         }
         System.out.println(sortBy);
         ArrayList<Spam> allSpam = userService.getAllSpam(sortBy);
+        for (Spam spam : allSpam) {
+            addRow(spam.getUserName(), spam.getSpammerName(), spam.getTimeSpam());
+        }
+    }
+
+
+    private void searchButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        // TODO add your handling code here:
+        clearTable();
+        String name = nameToSearch.getText();
+        ArrayList<Spam> allSpam = userService.filterSpam(name);
         for (Spam spam : allSpam) {
             addRow(spam.getUserName(), spam.getSpammerName(), spam.getTimeSpam());
         }
