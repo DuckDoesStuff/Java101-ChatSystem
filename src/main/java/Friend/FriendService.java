@@ -184,6 +184,16 @@ public class FriendService {
             stmt.setInt(2, userID);
             stmt.executeUpdate();
             conn.commit();
+
+            sql = "DELETE FROM friendrequest WHERE (senderID = ? AND receiverID = ?) OR (senderID = ? AND receiverID = ?)";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            stmt.setInt(2, friendID);
+            stmt.setInt(3, friendID);
+            stmt.setInt(4, userID);
+            stmt.executeUpdate();
+            conn.commit();
+
             return "success";
         } catch (Exception e) {
             System.out.println("Error removing friend");
