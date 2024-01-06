@@ -30,6 +30,7 @@ public class GroupList extends javax.swing.JFrame {
     private void initComponents() {
         ArrayList<GroupChat> allGroups = userService.getAllGroupChat("nameasc");
 
+
         title = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tableOfGroups = new javax.swing.JTable();
@@ -164,6 +165,11 @@ public class GroupList extends javax.swing.JFrame {
                 backToMainMenuBtnActionPerformed(evt);
             }
         });
+
+
+        for (GroupChat groupChat : allGroups) {
+            addRowForGroupTable(groupChat.getName(), groupChat.getTimeCreated());
+        }
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
