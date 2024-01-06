@@ -51,6 +51,8 @@ class ChatHandler implements Runnable {
     public void sendToClient(PackageDataStructure packageData, String username) {
         for (ChatHandler client : clients) {
             if (client.username.equals(username)) {
+                System.out.println("Sending to " + client.username);
+                System.out.println("Package data: " + packageData.content);
                 client.sendPackageDataForChat(packageData);
                 return;
             }
@@ -99,6 +101,7 @@ class ChatHandler implements Runnable {
                         pd.content.add(msg);
                         String receiver = packageDataForChat.content.get(3);
                         chatController.sendMessage(receiver, msg);
+                        System.out.println(pd.content);
                         sendToClient(pd, receiver);
                     }
 

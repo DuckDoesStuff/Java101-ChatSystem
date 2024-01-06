@@ -277,7 +277,7 @@ public class UserService {
             stmt.setInt(4, userid);
             ResultSet rs = stmt.executeQuery();
             if(!rs.next()) {
-                System.out.println("No such user");
+                System.out.println("Is not banned");
                 return false;
             }
             return true;
