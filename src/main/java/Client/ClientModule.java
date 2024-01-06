@@ -251,11 +251,11 @@ public class ClientModule implements Runnable {
         return chatHistory.content;
     }
 
-    public ArrayList<String> getGroupHistory(String groupName){
+    public ArrayList<String> getGroupHistory(int groupid){
         PackageDataStructure getGroupHistoryPD = new PackageDataStructure(
                 "/grouphistory"
         );
-        getGroupHistoryPD.content.add(groupName);
+        getGroupHistoryPD.content.add(Integer.toString(groupid));
         sendPackageData(getGroupHistoryPD);
         System.out.println("Sent get group history pd request");
         PackageDataStructure groupHistory = receivePackageData();

@@ -254,7 +254,7 @@ public class Chat extends JFrame {
                 if (mainChatType == 0) {
                     history = clientModule.getChatHistory(avatar.getText());
                 } else if (mainChatType == 1) {
-                    history = clientModule.getGroupHistory(avatar.getText());
+                    history = clientModule.getGroupHistory(mainChatID);
                 } else {
                     history = new ArrayList<>();
                 }
@@ -452,7 +452,7 @@ public class Chat extends JFrame {
                         if (mainChatType == 0) {
                             history = clientModule.getChatHistory(avatar.getText());
                         } else if (mainChatType == 1) {
-                            history = clientModule.getGroupHistory(avatar.getText());
+                            history = clientModule.getGroupHistory(mainChatID);
                         } else {
                             history = new ArrayList<>();
                         }
@@ -528,7 +528,7 @@ public class Chat extends JFrame {
                             if (mainChatType == 0) {
                                 history = clientModule.getChatHistory(avatar.getText());
                             } else if (mainChatType == 1) {
-                                history = clientModule.getGroupHistory(avatar.getText());
+                                history = clientModule.getGroupHistory(mainChatID);
                             } else {
                                 history = new ArrayList<>();
                             }
@@ -593,7 +593,7 @@ public class Chat extends JFrame {
                             if (mainChatType == 0) {
                                 history = clientModule.getChatHistory(avatar.getText());
                             } else if (mainChatType == 1) {
-                                history = clientModule.getGroupHistory(avatar.getText());
+                                history = clientModule.getGroupHistory(mainChatID);
                             } else {
                                 history = new ArrayList<>();
                             }

@@ -261,8 +261,9 @@ class ClientHandler implements Runnable {
                 }
                 sendPackageData(result);
             } else if (packageData.content.getFirst().equals("/grouphistory")) {
-                String groupName = packageData.content.get(1);
-                ArrayList<MessageModel> history = chatController.getGroupMessageHistory(groupName);
+                //String groupName = packageData.content.get(1);
+                int groupID = Integer.parseInt(packageData.content.get(1));
+                ArrayList<MessageModel> history = chatController.getGroupMessageHistory(groupID);
                 PackageDataStructure result = new PackageDataStructure("");
                 for (MessageModel messageModel : history) {
                     String msg = userService.findUsernameWithUserID(messageModel.getSendUserID()) + "," + messageModel.getContent();

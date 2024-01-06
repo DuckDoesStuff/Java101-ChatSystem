@@ -127,8 +127,8 @@ public class ChatController {
         return messageService.getMessages(chat.getChatID());
     }
 
-    public ArrayList<MessageModel> getGroupMessageHistory(String groupName) {
-        return messageService.getMessages(chatService.getChatIdFromName(groupName));
+    public ArrayList<MessageModel> getGroupMessageHistory(int groupid) {
+        return messageService.getMessages(groupid);
     }
 
     public ArrayList<ChatModel> getAllGroupChat(){
