@@ -19,7 +19,7 @@ public class SignUpUI extends JFrame {
     private final JRadioButton maleRadioButton;
     private final JRadioButton femaleRadioButton;
     private final JTextField email_jtf;
-    private final JTextField pw_jtf;
+    private final JPasswordField pw_jtf;
     private final JTextField firstN_jtf;
     private final JTextField lastN_jtf;
     ClientModule clientModule;
@@ -127,7 +127,7 @@ public class SignUpUI extends JFrame {
         pw_jlb.setFont(new Font("Arial", Font.PLAIN, 18));
         pw_jlb.setBounds(40, 325, 100, pw_jlb.getPreferredSize().height);
 
-        pw_jtf = new JTextField(15);
+        pw_jtf = new JPasswordField(15);
         pw_jtf.setFont(new Font("Arial", Font.PLAIN, 17));
         pw_jtf.setBounds(220, 315, 270, 35);
 
@@ -203,8 +203,8 @@ public class SignUpUI extends JFrame {
         String email = email_jtf.getText();
         String pw = pw_jtf.getText();
 
-        if (!Objects.equals(userN, "") && !Objects.equals(pw, "") && !Objects.equals(email, "") && dob != null &&
-                !Objects.equals(firstN, "") && !Objects.equals(lastN, "") && !Objects.equals(address, "")) {
+        if (!userN.trim().isEmpty() && !pw.trim().isEmpty() && !email.trim().isEmpty() && dob != null &&
+                !firstN.trim().isEmpty() && !lastN.trim().isEmpty() && !address.trim().isEmpty()) {
             String result = clientModule.registerUser(userN, email, pw, firstN, lastN, address, dob, gender);
             if (result.equals("success")) {
                 JOptionPane.showMessageDialog(null, "Register successfully");

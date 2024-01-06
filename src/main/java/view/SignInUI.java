@@ -12,7 +12,7 @@ public class SignInUI extends JFrame {
     private JButton signIn_jbtn;
     private JButton signUp_jbtn;
     private  JButton pass_jbtn;
-    private JTextField pw_jtf;
+    private JPasswordField pw_jtf;
     ClientModule clientModule;
 
     public SignInUI(){
@@ -63,7 +63,7 @@ public class SignInUI extends JFrame {
         pw_jlb.setFont(new Font("Arial", Font.PLAIN, 18));
         pw_jlb.setBounds(40, 75, 100, pw_jlb.getPreferredSize().height);
 
-        pw_jtf = new JTextField(15);
+        pw_jtf = new JPasswordField(15);
         pw_jtf.setFont(new Font("Arial", Font.PLAIN, 17));
         pw_jtf.setBounds(220, 65, 270, 35);
 
