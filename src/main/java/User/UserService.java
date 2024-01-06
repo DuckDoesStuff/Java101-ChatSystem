@@ -71,6 +71,18 @@ public class UserService {
                 return "User does not exist";
             }
 
+            boolean banned = rs.getBoolean("banned");
+            if(banned) {
+                System.out.println("User is banned");
+                return "User is banned";
+            }
+
+            boolean online = rs.getBoolean("online_status");
+            if(online) {
+                System.out.println("User is already online");
+                return "User is already online";
+            }
+
             //Check if the password is correct
             String UserPassword = rs.getString("password");
             if(!password.equals(UserPassword)) {
