@@ -119,7 +119,7 @@ public class Chat extends JFrame {
         topPart.setBackground(new Color(227, 235, 240));
         leftArea.add(topPart);
         //title
-        JLabel title = new JLabel(clientModule.getUsername());
+        JLabel title = new JLabel();
         title.setFont(new Font("Arial", Font.BOLD, 20));
         title.setBounds(10, 0, 200, 60);
         topPart.add(title);
@@ -651,6 +651,7 @@ public class Chat extends JFrame {
 //            inputChat_jtf.setText("");
 //        });
         System.out.println("Chat started");
+        title.setText(clientModule.getUsername());
     }
 
     boolean sendMessage(int chatType) throws IOException, BadLocationException {
