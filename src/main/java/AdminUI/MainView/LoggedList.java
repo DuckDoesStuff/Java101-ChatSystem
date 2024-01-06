@@ -180,6 +180,22 @@ public class LoggedList extends javax.swing.JFrame {
 
     private void sortSelectorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sortSelectorActionPerformed
         // TODO add your handling code here:
+        String selected = sortSelector.getSelectedItem().toString();
+        switch (selected) {
+            case "Sort by Username (Asc)":
+                onlineUsers.sort((o1, o2) -> o1.getUsername().compareTo(o2.getUsername()));
+                break;
+            case "Sort by Username (Desc)":
+                onlineUsers.sort((o1, o2) -> -o1.getUsername().compareTo(o2.getUsername()));
+                break;
+            case "Sort by Time (Asc)":
+                onlineUsers.sort((o1, o2) -> o1.getOnlineSince().compareTo(o2.getOnlineSince()));
+                break;
+            case "Sort by Time (Desc)":
+                onlineUsers.sort((o1, o2) -> -o1.getOnlineSince().compareTo(o2.getOnlineSince()));
+                break;
+        }
+        loadOnlineUsers();
     }//GEN-LAST:event_sortSelectorActionPerformed
 
     private void viewChartButtonActionPerformed(java.awt.event.ActionEvent evt) {

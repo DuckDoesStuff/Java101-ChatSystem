@@ -266,6 +266,12 @@ public class UserList extends javax.swing.JFrame {
                     }
                 });
                 break;
+            case "Sort by Username (Asc)":
+                userList.sort((o1, o2) -> {return o1.getUsername().compareTo(o2.getUsername());});
+                break;
+            case "Sort by Username (Desc)":
+                userList.sort((o1, o2) -> {return o2.getUsername().compareTo(o1.getUsername());});
+                break;
             case "Sort by First name (Asc)":
                 userList = userService.sortUserByFirstName();
                 break;
