@@ -99,13 +99,19 @@ public class ChatController {
 
         // Add member code goes from here
         int userID = userService.getUserIDFromUsername(username);
-        int result = chatMemberService.addChatMember(groupID, userID);
-        if (result != -1){
-            return true;
-        }
-        else {
+        if (userID == -1){
             return false;
         }
+        else {
+            int result = chatMemberService.addChatMember(groupID, userID);
+
+            if (result != -1){
+                return true;
+            }
+            else    {
+                return false;
+            }
+    }
     }
 
     public boolean changeGroupName(String newname, int chatID){
